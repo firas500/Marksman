@@ -243,6 +243,12 @@ namespace Marksman
                 {
                     drawing.AddItem(new MenuItem("Marksman.Drawings", "Marksman Default Draw Options"));
                     drawing.AddItem(new MenuItem("Draw.TurnOffDrawingsOnTeamFight", MenuSpace + "Turn Off Drawings On Team Fight", true).SetValue(false));
+                    drawing.AddItem(
+                        new MenuItem("Draw.TurnOffDrawingsOnTeamFightR", MenuSpace + MenuSpace + "Control Range:")
+                            .SetValue(new Slider((int) (ObjectManager.Player.GetAutoAttackDamage(null) + 150),
+                                (int) (ObjectManager.Player.GetAutoAttackDamage(null) + 650),
+                                (int) (ObjectManager.Player.GetAutoAttackDamage(null) + 350))));
+
                     drawing.AddItem(new MenuItem("Draw.TurnOffDrawingsOnTeamFightS", MenuSpace + MenuSpace + "Min. Enemy Count:").SetValue(new Slider(3, 5, 0)));
 
                     drawing.AddItem(new MenuItem("drawMinionLastHit", MenuSpace + "Minion Last Hit").SetValue(new Circle(false,Color.GreenYellow)));
@@ -352,14 +358,13 @@ namespace Marksman
                 CClass.Config.SubMenu("Drawings").Item("Draw.TurnOffDrawingsOnTeamFight").GetValue<bool>();
             if (turnOffDrawingsOnTeamFight)
             {
-                var vValue =
+                var enemyCount =
                     CClass.Config.SubMenu("Drawings").Item("Draw.TurnOffDrawingsOnTeamFightS").GetValue<Slider>().Value;
+                var controlRange =
+                    CClass.Config.SubMenu("Drawings").Item("Draw.TurnOffDrawingsOnTeamFightR").GetValue<Slider>().Value;
 
-                var xEnemies =
-                    HeroManager.Enemies.Count(
-                        enemies =>
-                            enemies.IsValidTarget((float) (ObjectManager.Player.GetAutoAttackDamage(null) + 250f)));
-                if (xEnemies >= vValue)
+                var xEnemies = HeroManager.Enemies.Count(enemies => enemies.IsValidTarget(controlRange));
+                if (xEnemies >= enemyCount)
                     return;
             }
 
