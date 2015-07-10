@@ -279,7 +279,7 @@ namespace Marksman.Champions
             {
                 config.SubMenu("DontUlt")
                     .AddItem(
-                        new MenuItem(string.Format("DontUlt{0}", enemy.BaseSkinName), enemy.BaseSkinName).SetValue(false));
+                        new MenuItem(string.Format("DontUlt{0}", enemy.CharData.BaseSkinName), enemy.CharData.BaseSkinName).SetValue(false));
             }
 
             return true;

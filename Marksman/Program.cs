@@ -119,7 +119,7 @@ namespace Marksman
             }
 
 
-            CClass.Id = ObjectManager.Player.BaseSkinName;
+            CClass.Id = ObjectManager.Player.CharData.BaseSkinName;
             CClass.Config = Config;
 
             var targetSelectorMenu = new Menu("Target Selector", "Target Selector");

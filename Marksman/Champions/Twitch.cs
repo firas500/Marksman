@@ -84,22 +84,22 @@ namespace Marksman.Champions
                         switch (GetValue<StringList>("E.Mobs").SelectedIndex)
                         {
                             case 0:
-                                if ((m.BaseSkinName.Contains("MinionSiege") || m.BaseSkinName.Contains("Dragon") ||
-                                     m.BaseSkinName.Contains("Baron")) && E.IsKillable(m))
+                                if ((m.CharData.BaseSkinName.Contains("MinionSiege") || m.CharData.BaseSkinName.Contains("Dragon") ||
+                                     m.CharData.BaseSkinName.Contains("Baron")) && E.IsKillable(m))
                                 {
                                     E.Cast();
                                 }
                                 break;
 
                             case 1:
-                                if ((m.BaseSkinName.Contains("Dragon") || m.BaseSkinName.Contains("Baron")) &&
+                                if ((m.CharData.BaseSkinName.Contains("Dragon") || m.CharData.BaseSkinName.Contains("Baron")) &&
                                     E.IsKillable(m))
                                 {
                                     E.Cast();
                                 }
                                 break;
                             case 2:
-                                if (m.BaseSkinName.Contains("MinionSiege") &&
+                                if (m.CharData.BaseSkinName.Contains("MinionSiege") &&
                                     E.IsKillable(m))
                                 {
                                     E.Cast();

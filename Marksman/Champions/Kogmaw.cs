@@ -92,6 +92,16 @@ namespace Marksman.Champions
                         return;
             }
 
+            if (GetValue<bool>("UseRSC") && R.IsReady())
+            {
+                var t = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Magical);
+                if (t.IsValidTarget() && (t.HasBuffOfType(BuffType.Stun) || t.HasBuffOfType(BuffType.Snare) ||
+                                          t.HasBuffOfType(BuffType.Taunt)))
+                {
+                    R.Cast(t, false, true);
+                }
+            }
+
             if (useR && R.IsReady() && UltimateBuffStacks < rLim)
             {
                 var t = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Magical);
@@ -140,6 +150,7 @@ namespace Marksman.Champions
             config.AddItem(new MenuItem("UseWC" + Id, "Use W").SetValue(true));
             config.AddItem(new MenuItem("UseEC" + Id, "Use E").SetValue(true));
             config.AddItem(new MenuItem("UseRC" + Id, "Use R").SetValue(true));
+            config.AddItem(new MenuItem("UseRSC" + Id, "Use R for Stunned Enemy").SetValue(true));
             config.AddItem(new MenuItem("RlimC" + Id, "R Limiter").SetValue(new Slider(3, 5, 1)));
             return true;
         }
