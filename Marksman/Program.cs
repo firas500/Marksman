@@ -242,9 +242,10 @@ namespace Marksman
                 if (CClass.DrawingMenu(drawing))
                 {
                     drawing.AddItem(new MenuItem("Marksman.Drawings", "Marksman Default Draw Options"));
-                    drawing.AddItem(
-                        new MenuItem("drawMinionLastHit", MenuSpace + "Minion Last Hit").SetValue(new Circle(false,
-                            Color.GreenYellow)));
+                    drawing.AddItem(new MenuItem("Draw.TurnOffDrawingsOnTeamFight", MenuSpace + "Turn Off Drawings On Team Fight", true).SetValue(false));
+                    drawing.AddItem(new MenuItem("Draw.TurnOffDrawingsOnTeamFightS", MenuSpace + MenuSpace + "Min. Enemy Count:").SetValue(new Slider(3, 5, 0)));
+
+                    drawing.AddItem(new MenuItem("drawMinionLastHit", MenuSpace + "Minion Last Hit").SetValue(new Circle(false,Color.GreenYellow)));
                     drawing.AddItem(
                         new MenuItem("drawMinionNearKill", MenuSpace + "Minion Near Kill").SetValue(new Circle(false,
                             Color.Gray)));
@@ -347,6 +348,21 @@ namespace Marksman
 
         private static void Drawing_OnDraw(EventArgs args)
         {
+            var turnOffDrawingsOnTeamFight =
+                CClass.Config.SubMenu("Drawings").Item("Draw.TurnOffDrawingsOnTeamFight").GetValue<bool>();
+            if (turnOffDrawingsOnTeamFight)
+            {
+                var vValue =
+                    CClass.Config.SubMenu("Drawings").Item("Draw.TurnOffDrawingsOnTeamFightS").GetValue<Slider>().Value;
+
+                var xEnemies =
+                    HeroManager.Enemies.Count(
+                        enemies =>
+                            enemies.IsValidTarget((float) (ObjectManager.Player.GetAutoAttackDamage(null) + 250f)));
+                if (xEnemies >= vValue)
+                    return;
+            }
+
             /*
             var t = TargetSelector.SelectedTarget;
             if (!t.IsValidTarget())
