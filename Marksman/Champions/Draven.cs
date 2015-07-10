@@ -94,10 +94,13 @@ namespace Marksman.Champions
         {
             var drawOrbwalk = Config.Item("DrawOrbwalk").GetValue<Circle>();
             var drawReticles = Config.Item("DrawReticles").GetValue<Circle>();
+            var drawCatchRadius = Config.Item("DrawCatchRadius").GetValue<Circle>();
+            
             if (drawOrbwalk.Active)
             {
                 Render.Circle.DrawCircle(GetOrbwalkPos(), 100, drawOrbwalk.Color);
             }
+            
             if (drawReticles.Active)
             {
                 foreach (var existingReticle in ExistingReticles)
@@ -105,16 +108,19 @@ namespace Marksman.Champions
                     Render.Circle.DrawCircle(existingReticle.ReticlePos, 100, drawReticles.Color);
                 }
             }
-
-            if (GetOrbwalkPos() != Game.CursorPos &&
-                (ComboActive || LaneClearActive || Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LastHit))
+            
+            if (drawCatchRadius.Active)
             {
-                Render.Circle.DrawCircle(Game.CursorPos, Config.Item("CatchRadius").GetValue<Slider>().Value, Color.Red);
-            }
-            else
-            {
-                Render.Circle.DrawCircle(
-                    Game.CursorPos, Config.Item("CatchRadius").GetValue<Slider>().Value, Color.CornflowerBlue);
+                if (GetOrbwalkPos() != Game.CursorPos &&
+                    (ComboActive || LaneClearActive || Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LastHit))
+                {
+                    Render.Circle.DrawCircle(Game.CursorPos, Config.Item("CatchRadius").GetValue<Slider>().Value, Color.Red);
+                }
+                else
+                {
+                    Render.Circle.DrawCircle(
+                        Game.CursorPos, Config.Item("CatchRadius").GetValue<Slider>().Value, Color.CornflowerBlue);
+                }
             }
 
             var drawE = Config.Item("DrawE").GetValue<Circle>();
@@ -246,6 +252,7 @@ namespace Marksman.Champions
             config.AddItem(
                 new MenuItem("DrawOrbwalk", "Draw orbwalk position").SetValue(new Circle(true, Color.Yellow)));
             config.AddItem(new MenuItem("DrawReticles", "Draw on reticles").SetValue(new Circle(true, Color.Green)));
+            config.AddItem(new MenuItem("DrawCatchRadius", "Draw Catch Radius").SetValue(new Circle(true, Color.Green)));
             return true;
         }
 
