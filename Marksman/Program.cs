@@ -353,7 +353,7 @@ namespace Marksman
         }
 
         private static void Drawing_OnDraw(EventArgs args)
-        {
+        {/*
             var turnOffDrawingsOnTeamFight =
                 CClass.Config.SubMenu("Drawings").Item("Draw.TurnOffDrawingsOnTeamFight").GetValue<bool>();
             if (turnOffDrawingsOnTeamFight)
@@ -367,7 +367,7 @@ namespace Marksman
                 if (xEnemies >= enemyCount)
                     return;
             }
-
+*/
             /*
             var t = TargetSelector.SelectedTarget;
             if (!t.IsValidTarget())
