@@ -19,7 +19,7 @@ namespace Marksman
         public static Menu Config;
         public static Menu OrbWalking;
         public static Menu QuickSilverMenu;
-        public static string ChampionName;
+        
 //        public static Menu MenuInterruptableSpell;
         public static Champion CClass;
         public static Activator AActivator;
@@ -53,68 +53,68 @@ namespace Marksman
                http://stackoverflow.com/questions/801070/dynamically-invoking-any-function-by-passing-function-name-as-string 
                For now stays cancer.
              */
-            ChampionName = ObjectManager.Player.ChampionName;
+            var championName = ObjectManager.Player.ChampionName.ToLowerInvariant();
 
-            switch (ChampionName)
+            switch (championName)
             {
-                case "Ashe":
+                case "ashe":
                     CClass = new Ashe();
                     break;
-                case "Caitlyn":
+                case "caitlyn":
                     CClass = new Caitlyn();
                     break;
-                case "Corki":
+                case "corki":
                     CClass = new Corki();
                     break;
-                case "Draven":
+                case "draven":
                     CClass = new Draven();
                     break;
-                case "Ezreal":
+                case "ezreal":
                     CClass = new Ezreal();
                     break;
-                case "Graves":
+                case "graves":
                     CClass = new Graves();
                     break;
-                case "Gnar":
+                case "gnar":
                     CClass = new Gnar();
                     break;
-                case "Jinx":
+                case "jinx":
                     CClass = new Jinx();
                     break;
-                case "Kalista":
+                case "kalista":
                     CClass = new Kalista();
                     break;
-                case "Kogmaw":
+                case "kogmaw":
                     CClass = new Kogmaw();
                     break;
-                case "Lucian":
+                case "lucian":
                     CClass = new Lucian();
                     break;
-                case "Missfortune":
+                case "missfortune":
                     CClass = new MissFortune();
                     break;
-                case "Quinn":
+                case "quinn":
                     CClass = new Quinn();
                     break;
-                case "Sivir":
+                case "sivir":
                     CClass = new Sivir();
                     break;
-                case "Teemo":
+                case "teemo":
                     CClass = new Teemo();
                     break;
-                case "Tristana":
+                case "tristana":
                     CClass = new Tristana();
                     break;
-                case "Twitch":
+                case "twitch":
                     CClass = new Twitch();
                     break;
-                case "Urgot":
+                case "urgot":
                     CClass = new Urgot();
                     break;
-                case "Vayne":
+                case "vayne":
                     CClass = new Vayne();
                     break;
-                case "Varus":
+                case "varus":
                     CClass = new Varus();
                     break;
             }
@@ -227,24 +227,13 @@ namespace Marksman
                 if (CClass.DrawingMenu(drawing))
                 {
                     drawing.AddItem(new MenuItem("Marksman.Drawings", "Marksman Default Draw Options"));
-                    drawing.AddItem(
-                        new MenuItem("Draw.ToD", MenuSpace + "Turn Off Drawings On Team Fight").SetValue(false));
-                    drawing.AddItem(
-                        new MenuItem("Draw.ToDControlRange", MenuSpace + MenuSpace + "Control Range:").SetValue(
-                            new Slider(1200, 1600, 600)));
-                    drawing.AddItem(
-                        new MenuItem("Draw.ToDControlRangeColor", MenuSpace + MenuSpace + "Draw Control Range:")
-                            .SetValue(new Circle(false, Color.GreenYellow)));
-                    drawing.AddItem(
-                        new MenuItem("Draw.ToDMinEnemy", MenuSpace + MenuSpace + "Min. Enemy Count:").SetValue(
-                            new Slider(3, 5, 0)));
+                    drawing.AddItem(new MenuItem("Draw.ToD", MenuSpace + "Turn Off Drawings On Team Fight").SetValue(false));
+                    drawing.AddItem(new MenuItem("Draw.ToDControlRange", MenuSpace + MenuSpace + "Control Range:").SetValue(new Slider(1200, 1600, 600)));
+                    drawing.AddItem(new MenuItem("Draw.ToDControlRangeColor", MenuSpace + MenuSpace + "Draw Control Range:").SetValue(new Circle(false, Color.GreenYellow)));
+                    drawing.AddItem(new MenuItem("Draw.ToDMinEnemy", MenuSpace + MenuSpace + "Min. Enemy Count:").SetValue(new Slider(3, 5, 0)));
 
-                    drawing.AddItem(
-                        new MenuItem("drawMinionLastHit", MenuSpace + "Minion Last Hit").SetValue(new Circle(false,
-                            Color.GreenYellow)));
-                    drawing.AddItem(
-                        new MenuItem("drawMinionNearKill", MenuSpace + "Minion Near Kill").SetValue(new Circle(false,
-                            Color.Gray)));
+                    drawing.AddItem(new MenuItem("drawMinionLastHit", MenuSpace + "Minion Last Hit").SetValue(new Circle(false,Color.GreenYellow)));
+                    drawing.AddItem(new MenuItem("drawMinionNearKill", MenuSpace + "Minion Near Kill").SetValue(new Circle(false,Color.Gray)));
                     drawing.AddItem(
                         new MenuItem("drawJunglePosition", MenuSpace + "Jungle Farm Position").SetValue(false));
                     drawing.AddItem(new MenuItem("Draw.DrawMinion", MenuSpace + "Draw Minions Sprite").SetValue(false));
