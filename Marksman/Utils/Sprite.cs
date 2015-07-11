@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
@@ -11,22 +12,14 @@ namespace Marksman
 {
     internal class Sprite
     {
-        private static readonly Dictionary<string, SpellSlot> SupportedHeros = new Dictionary<string, SpellSlot>
-        {
-            {"Caitlyn", SpellSlot.R},
-            {"Ezreal", SpellSlot.R},
-            {"Graves", SpellSlot.R},
-            {"Jinx", SpellSlot.R},
-            {"Varus", SpellSlot.Q},
-            {"Ashe", SpellSlot.R}
-        };
-
         private static Vector2 DrawPosition
         {
             get
             {
-                if (KillableEnemy == null ||
-                    !Program.Config.SubMenu("Drawings").Item("Draw.DrawTarget", true).GetValue<bool>())
+                if (KillableEnemy == null)
+                    return new Vector2(0f, 0f);
+
+                if (!Program.CClass.Config.SubMenu("Drawings").Item("Draw.DrawTarget").GetValue<bool>())
                     return new Vector2(0f, 0f);
 
                 return new Vector2(KillableEnemy.HPBarPosition.X + KillableEnemy.BoundingRadius/2f,
@@ -38,8 +31,10 @@ namespace Marksman
         {
             get
             {
-                if (KillableMinion == null ||
-                    !Program.Config.SubMenu("Drawings").Item("Draw.DrawMinions", true).GetValue<bool>())
+                if (KillableMinion == null)
+                    return new Vector2(0f, 0f);
+
+                if (!Program.CClass.Config.SubMenu("Drawings").Item("Draw.DrawMinion").GetValue<bool>())
                     return new Vector2(0f, 0f);
 
                 return new Vector2(

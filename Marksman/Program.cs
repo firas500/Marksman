@@ -19,6 +19,7 @@ namespace Marksman
         public static Menu Config;
         public static Menu OrbWalking;
         public static Menu QuickSilverMenu;
+        public static string ChampionName;
 //        public static Menu MenuInterruptableSpell;
         public static Champion CClass;
         public static Activator AActivator;
@@ -29,10 +30,10 @@ namespace Marksman
 
         public static Spell Smite;
 
-        private static readonly int[] SmitePurple = { 3713, 3726, 3725, 3726, 3723 };
-        private static readonly int[] SmiteGrey = { 3711, 3722, 3721, 3720, 3719 };
-        private static readonly int[] SmiteRed = { 3715, 3718, 3717, 3716, 3714 };
-        private static readonly int[] SmiteBlue = { 3706, 3710, 3709, 3708, 3707 };
+        private static readonly int[] SmitePurple = {3713, 3726, 3725, 3726, 3723};
+        private static readonly int[] SmiteGrey = {3711, 3722, 3721, 3720, 3719};
+        private static readonly int[] SmiteRed = {3715, 3718, 3717, 3716, 3714};
+        private static readonly int[] SmiteBlue = {3706, 3710, 3709, 3708, 3707};
 
         private static void Main(string[] args)
         {
@@ -52,68 +53,68 @@ namespace Marksman
                http://stackoverflow.com/questions/801070/dynamically-invoking-any-function-by-passing-function-name-as-string 
                For now stays cancer.
              */
-            var championName = ObjectManager.Player.ChampionName.ToLowerInvariant();
+            ChampionName = ObjectManager.Player.ChampionName;
 
-            switch (championName)
+            switch (ChampionName)
             {
-                case "ashe":
+                case "Ashe":
                     CClass = new Ashe();
                     break;
-                case "caitlyn":
+                case "Caitlyn":
                     CClass = new Caitlyn();
                     break;
-                case "corki":
+                case "Corki":
                     CClass = new Corki();
                     break;
-                case "draven":
+                case "Draven":
                     CClass = new Draven();
                     break;
-                case "ezreal":
+                case "Ezreal":
                     CClass = new Ezreal();
                     break;
-                case "graves":
+                case "Graves":
                     CClass = new Graves();
                     break;
-                case "gnar":
+                case "Gnar":
                     CClass = new Gnar();
                     break;
-                case "jinx":
+                case "Jinx":
                     CClass = new Jinx();
                     break;
-                case "kalista":
+                case "Kalista":
                     CClass = new Kalista();
                     break;
-                case "kogmaw":
+                case "Kogmaw":
                     CClass = new Kogmaw();
                     break;
-                case "lucian":
+                case "Lucian":
                     CClass = new Lucian();
                     break;
-                case "missfortune":
+                case "Missfortune":
                     CClass = new MissFortune();
                     break;
-                case "quinn":
+                case "Quinn":
                     CClass = new Quinn();
                     break;
-                case "sivir":
+                case "Sivir":
                     CClass = new Sivir();
                     break;
-                case "teemo":
+                case "Teemo":
                     CClass = new Teemo();
                     break;
-                case "tristana":
+                case "Tristana":
                     CClass = new Tristana();
                     break;
-                case "twitch":
+                case "Twitch":
                     CClass = new Twitch();
                     break;
-                case "urgot":
+                case "Urgot":
                     CClass = new Urgot();
                     break;
-                case "vayne":
+                case "Vayne":
                     CClass = new Vayne();
                     break;
-                case "varus":
+                case "Varus":
                     CClass = new Varus();
                     break;
             }
@@ -183,7 +184,7 @@ namespace Marksman
             if (BaseType != CClass.GetType())
             {
                 SetSmiteSlot();
-                
+
 
                 var combo = new Menu("Combo", "Combo");
                 if (CClass.ComboMenu(combo))
@@ -214,23 +215,7 @@ namespace Marksman
                 {
                     Config.AddSubMenu(misc);
                 }
-                /*
-                if (championName != "caitlyn" || championName != "jinx")
-                {
-                    MenuInterruptableSpell = new Menu("Interruptable Spell",
-                        "Interrupt with " + championName == "caitlyn" ? "Caitlyn's W" : "Jinx's E");
 
-                    MenuInterruptableSpell.AddItem(new MenuItem("InterruptSpells", "Active").SetValue(true));
-
-                    foreach (var xSpell in Interrupter.Spells)
-                    {
-                        MenuInterruptableSpell.AddItem(
-                            new MenuItem("IntNode" + xSpell.BuffName, xSpell.ChampionName + " | " + xSpell.Slot)
-                                .SetValue(true));
-                    }
-                    Config.AddSubMenu(MenuInterruptableSpell);
-                }
-                */
                 var extras = new Menu("Extras", "Extras");
                 if (CClass.ExtrasMenu(extras))
                 {
@@ -242,71 +227,45 @@ namespace Marksman
                 if (CClass.DrawingMenu(drawing))
                 {
                     drawing.AddItem(new MenuItem("Marksman.Drawings", "Marksman Default Draw Options"));
-                    drawing.AddItem(new MenuItem("Draw.TurnOffDrawingsOnTeamFight", MenuSpace + "Turn Off Drawings On Team Fight", true).SetValue(false));
                     drawing.AddItem(
-                        new MenuItem("Draw.TurnOffDrawingsOnTeamFightR", MenuSpace + MenuSpace + "Control Range:")
-                            .SetValue(new Slider((int) (ObjectManager.Player.GetAutoAttackDamage(null) + 150),
-                                (int) (ObjectManager.Player.GetAutoAttackDamage(null) + 650),
-                                (int) (ObjectManager.Player.GetAutoAttackDamage(null) + 350))));
+                        new MenuItem("Draw.ToD", MenuSpace + "Turn Off Drawings On Team Fight").SetValue(false));
+                    drawing.AddItem(
+                        new MenuItem("Draw.ToDControlRange", MenuSpace + MenuSpace + "Control Range:").SetValue(
+                            new Slider(1200, 1600, 600)));
+                    drawing.AddItem(
+                        new MenuItem("Draw.ToDControlRangeColor", MenuSpace + MenuSpace + "Draw Control Range:")
+                            .SetValue(new Circle(false, Color.GreenYellow)));
+                    drawing.AddItem(
+                        new MenuItem("Draw.ToDMinEnemy", MenuSpace + MenuSpace + "Min. Enemy Count:").SetValue(
+                            new Slider(3, 5, 0)));
 
-                    drawing.AddItem(new MenuItem("Draw.TurnOffDrawingsOnTeamFightS", MenuSpace + MenuSpace + "Min. Enemy Count:").SetValue(new Slider(3, 5, 0)));
-
-                    drawing.AddItem(new MenuItem("drawMinionLastHit", MenuSpace + "Minion Last Hit").SetValue(new Circle(false,Color.GreenYellow)));
+                    drawing.AddItem(
+                        new MenuItem("drawMinionLastHit", MenuSpace + "Minion Last Hit").SetValue(new Circle(false,
+                            Color.GreenYellow)));
                     drawing.AddItem(
                         new MenuItem("drawMinionNearKill", MenuSpace + "Minion Near Kill").SetValue(new Circle(false,
                             Color.Gray)));
-                    drawing.AddItem(new MenuItem("drawJunglePosition", MenuSpace + "Jungle Farm Position").SetValue(false));
                     drawing.AddItem(
-                        new MenuItem("Draw.DrawMinions", MenuSpace + "Draw Minions Sprite", true).SetValue(false));
-                    drawing.AddItem(
-                        new MenuItem("Draw.DrawTarget", MenuSpace + "Draw Target Sprite", true).SetValue(false));
+                        new MenuItem("drawJunglePosition", MenuSpace + "Jungle Farm Position").SetValue(false));
+                    drawing.AddItem(new MenuItem("Draw.DrawMinion", MenuSpace + "Draw Minions Sprite").SetValue(false));
+                    drawing.AddItem(new MenuItem("Draw.DrawTarget", MenuSpace + "Draw Target Sprite").SetValue(false));
                     //drawing.AddItem(new MenuItem("Draw.DrawSTarget", MenuSpace + "Draw Selected Target", true).SetValue(new Circle(false,Color.GreenYellow)));
                     Config.AddSubMenu(drawing);
                 }
             }
 
-            
+
             CClass.MainMenu(Config);
             Config.AddToMainMenu();
-            //Sprite.Load();
+            Sprite.Load();
 
             Drawing.OnDraw += Drawing_OnDraw;
             Game.OnUpdate += Game_OnGameUpdate;
             Orbwalking.AfterAttack += Orbwalking_AfterAttack;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
-            //Interrupter.OnPossibleToInterrupt += Interrupter_OnPosibleToInterrupt;
             //Game.OnWndProc += Game_OnWndProc;
         }
 
-        /*
-        private static void Interrupter_OnPosibleToInterrupt(Obj_AI_Base t, InterruptableSpell args)
-        {
-            if (!Config.Item("InterruptSpells").GetValue<KeyBind>().Active) 
-                return;
-
-            if (ObjectManager.Player.ChampionName != "Caitlyn" || ObjectManager.Player.ChampionName != "Jinx")
-                return;
-
-            Spell xSpellSlot = null;
-
-            if (ObjectManager.Player.ChampionName == "Caitlyn")
-            {
-                xSpellSlot = new Spell(SpellSlot.W);
-                xSpellSlot.Range = 800f;
-            }
-
-            if (ObjectManager.Player.ChampionName == "Jinx")
-            {
-                xSpellSlot = new Spell(SpellSlot.E);
-                xSpellSlot.Range = 900f;
-            }
-            if (xSpellSlot == null)
-                return;
-
-            if (ObjectManager.Player.Distance(t) < xSpellSlot.Range)
-                xSpellSlot.Cast(t);
-        }
-        */
 
         private static void Game_OnWndProc(WndEventArgs args)
         {
@@ -354,20 +313,24 @@ namespace Marksman
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            var turnOffDrawingsOnTeamFight =
-                CClass.Config.SubMenu("Drawings").Item("Draw.TurnOffDrawingsOnTeamFight").GetValue<bool>();
-            if (turnOffDrawingsOnTeamFight)
+            var toD = CClass.Config.SubMenu("Drawings").Item("Draw.ToD").GetValue<bool>();
+            if (toD)
             {
                 var enemyCount =
-                    CClass.Config.SubMenu("Drawings").Item("Draw.TurnOffDrawingsOnTeamFightS").GetValue<Slider>().Value;
+                    CClass.Config.SubMenu("Drawings").Item("Draw.ToDMinEnemy").GetValue<Slider>().Value;
                 var controlRange =
-                    CClass.Config.SubMenu("Drawings").Item("Draw.TurnOffDrawingsOnTeamFightR").GetValue<Slider>().Value;
+                    CClass.Config.SubMenu("Drawings").Item("Draw.ToDControlRange").GetValue<Slider>().Value;
 
                 var xEnemies = HeroManager.Enemies.Count(enemies => enemies.IsValidTarget(controlRange));
                 if (xEnemies >= enemyCount)
                     return;
-            }
 
+                var toDRangeColor =
+                    CClass.Config.SubMenu("Drawings").Item("Draw.ToDControlRangeColor").GetValue<Circle>();
+                if (toDRangeColor.Active)
+                    Render.Circle.DrawCircle(ObjectManager.Player.Position, controlRange, toDRangeColor.Color);
+
+            }
             /*
             var t = TargetSelector.SelectedTarget;
             if (!t.IsValidTarget())
@@ -410,7 +373,7 @@ namespace Marksman
                     }
                 }
             }
-            
+
             if (CClass != null)
             {
                 CClass.Drawing_OnDraw(args);
@@ -455,7 +418,7 @@ namespace Marksman
             var sword = Config.Item("SWORD").GetValue<bool>();
             var muramana = Config.Item("MURAMANA").GetValue<bool>();
             var target = CClass.Orbwalker.GetTarget() as Obj_AI_Base;
-            
+
             var smiteReady = (SmiteSlot != SpellSlot.Unknown &&
                               ObjectManager.Player.Spellbook.CanUseSpell(SmiteSlot) == SpellState.Ready);
 
@@ -645,13 +608,13 @@ namespace Marksman
 
                 if (SmiteRed.Any(i => Items.HasItem(i)))
                     return "s5_summonersmiteduel";
-                
+
                 if (SmiteGrey.Any(i => Items.HasItem(i)))
                     return "s5_summonersmitequick";
-                
+
                 if (SmitePurple.Any(i => Items.HasItem(i)))
                     return "itemsmiteaoe";
-                
+
                 return "summonersmite";
             }
         }
@@ -667,6 +630,7 @@ namespace Marksman
                 Smite = new Spell(SmiteSlot, 700);
             }
         }
+
         private static void Smiteontarget(Obj_AI_Hero t)
         {
             var useSmite = Config.Item("ComboSmite").GetValue<bool>();
