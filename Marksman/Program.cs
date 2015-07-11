@@ -242,7 +242,7 @@ namespace Marksman
                 if (CClass.DrawingMenu(drawing))
                 {
                     drawing.AddItem(new MenuItem("Marksman.Drawings", "Marksman Default Draw Options"));
-                    drawing.AddItem(new MenuItem("Draw.TurnOffDrawingsOnTeamFight", MenuSpace + "Turn Off Drawings On Team Fight", true).SetValue(false));
+                 /*   drawing.AddItem(new MenuItem("Draw.TurnOffDrawingsOnTeamFight", MenuSpace + "Turn Off Drawings On Team Fight", true).SetValue(false));
                     drawing.AddItem(
                         new MenuItem("Draw.TurnOffDrawingsOnTeamFightR", MenuSpace + MenuSpace + "Control Range:")
                             .SetValue(new Slider((int) (ObjectManager.Player.GetAutoAttackDamage(null) + 150),
@@ -250,7 +250,7 @@ namespace Marksman
                                 (int) (ObjectManager.Player.GetAutoAttackDamage(null) + 350))));
 
                     drawing.AddItem(new MenuItem("Draw.TurnOffDrawingsOnTeamFightS", MenuSpace + MenuSpace + "Min. Enemy Count:").SetValue(new Slider(3, 5, 0)));
-
+                */
                     drawing.AddItem(new MenuItem("drawMinionLastHit", MenuSpace + "Minion Last Hit").SetValue(new Circle(false,Color.GreenYellow)));
                     drawing.AddItem(
                         new MenuItem("drawMinionNearKill", MenuSpace + "Minion Near Kill").SetValue(new Circle(false,
