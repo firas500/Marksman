@@ -227,6 +227,7 @@ namespace Marksman
                 if (CClass.DrawingMenu(drawing))
                 {
                     drawing.AddItem(new MenuItem("Marksman.Drawings", "Marksman Default Draw Options"));
+<<<<<<< HEAD
                     drawing.AddItem(
                         new MenuItem("Draw.ToD", MenuSpace + "Turn Off Drawings On Team Fight").SetValue(false));
                     drawing.AddItem(
@@ -242,6 +243,18 @@ namespace Marksman
                     drawing.AddItem(
                         new MenuItem("drawMinionLastHit", MenuSpace + "Minion Last Hit").SetValue(new Circle(false,
                             Color.GreenYellow)));
+=======
+                 /*   drawing.AddItem(new MenuItem("Draw.TurnOffDrawingsOnTeamFight", MenuSpace + "Turn Off Drawings On Team Fight", true).SetValue(false));
+                    drawing.AddItem(
+                        new MenuItem("Draw.TurnOffDrawingsOnTeamFightR", MenuSpace + MenuSpace + "Control Range:")
+                            .SetValue(new Slider((int) (ObjectManager.Player.GetAutoAttackDamage(null) + 150),
+                                (int) (ObjectManager.Player.GetAutoAttackDamage(null) + 650),
+                                (int) (ObjectManager.Player.GetAutoAttackDamage(null) + 350))));
+
+                    drawing.AddItem(new MenuItem("Draw.TurnOffDrawingsOnTeamFightS", MenuSpace + MenuSpace + "Min. Enemy Count:").SetValue(new Slider(3, 5, 0)));
+                */
+                    drawing.AddItem(new MenuItem("drawMinionLastHit", MenuSpace + "Minion Last Hit").SetValue(new Circle(false,Color.GreenYellow)));
+>>>>>>> 9d843b47833b030b4116b3ba1b89a05270961a62
                     drawing.AddItem(
                         new MenuItem("drawMinionNearKill", MenuSpace + "Minion Near Kill").SetValue(new Circle(false,
                             Color.Gray)));
@@ -312,9 +325,16 @@ namespace Marksman
         }
 
         private static void Drawing_OnDraw(EventArgs args)
+<<<<<<< HEAD
         {
             var toD = CClass.Config.SubMenu("Drawings").Item("Draw.ToD").GetValue<bool>();
             if (toD)
+=======
+        {/*
+            var turnOffDrawingsOnTeamFight =
+                CClass.Config.SubMenu("Drawings").Item("Draw.TurnOffDrawingsOnTeamFight").GetValue<bool>();
+            if (turnOffDrawingsOnTeamFight)
+>>>>>>> 9d843b47833b030b4116b3ba1b89a05270961a62
             {
                 var enemyCount =
                     CClass.Config.SubMenu("Drawings").Item("Draw.ToDMinEnemy").GetValue<Slider>().Value;
@@ -324,6 +344,7 @@ namespace Marksman
                 var xEnemies = HeroManager.Enemies.Count(enemies => enemies.IsValidTarget(controlRange));
                 if (xEnemies >= enemyCount)
                     return;
+<<<<<<< HEAD
 
                 var toDRangeColor =
                     CClass.Config.SubMenu("Drawings").Item("Draw.ToDControlRangeColor").GetValue<Circle>();
@@ -331,6 +352,10 @@ namespace Marksman
                     Render.Circle.DrawCircle(ObjectManager.Player.Position, controlRange, toDRangeColor.Color);
 
             }
+=======
+            }
+*/
+>>>>>>> 9d843b47833b030b4116b3ba1b89a05270961a62
             /*
             var t = TargetSelector.SelectedTarget;
             if (!t.IsValidTarget())
