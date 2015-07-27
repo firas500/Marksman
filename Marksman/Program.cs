@@ -302,7 +302,7 @@ namespace Marksman
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            Drawing.DrawText(Drawing.Width * 0.93f, Drawing.Height * 0.04f, Color.GreenYellow, "Ping: " + Game.Ping.ToString());
+            Drawing.DrawText(Drawing.Width*0.94f, Drawing.Height*0.05f, Color.GreenYellow, "Ping: " + Game.Ping);
             var toD = CClass.Config.SubMenu("Drawings").Item("Draw.ToD").GetValue<bool>();
             if (toD)
             {
