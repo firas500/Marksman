@@ -123,6 +123,8 @@ namespace Marksman
             CClass.Id = ObjectManager.Player.CharData.BaseSkinName;
             CClass.Config = Config;
 
+            
+
             var targetSelectorMenu = new Menu("Target Selector", "Target Selector");
             TargetSelector.AddToMenu(targetSelectorMenu);
             Config.AddSubMenu(targetSelectorMenu);
@@ -243,8 +245,12 @@ namespace Marksman
                 }
             }
 
+            
 
             CClass.MainMenu(Config);
+            Evade.Evade.Initiliaze();
+            Config.AddSubMenu(Evade.Config.Menu);
+            
             Config.AddToMainMenu();
             Sprite.Load();
 

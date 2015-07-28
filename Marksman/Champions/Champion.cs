@@ -6,7 +6,7 @@ using LeagueSharp.Common;
 
 #endregion
 
-namespace Marksman
+namespace Marksman.Champions
 {
     internal class Champion
     {
