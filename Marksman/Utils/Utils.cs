@@ -20,7 +20,11 @@ namespace Marksman.Utils
 
         public static void PrintMessage(string message)
         {
-            Notifications.AddNotification("Marksman: " + message, 4000);
+            Game.PrintChat(
+                "<font color='#ff3232'>Marksman: </font><font color='#d4d4d4'><font color='#FFFFFF'>" + message +
+                "</font>");
+
+            //Notifications.AddNotification("Marksman: " + message, 4000);
         }
 
         public static void DrawText(Font vFont, String vText, int vPosX, int vPosY, Color vColor)
