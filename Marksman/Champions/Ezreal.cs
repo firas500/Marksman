@@ -109,10 +109,11 @@ namespace Marksman.Champions
                     foreach (var minions in
                         vMinions.Where(
                             minions => minions.Health < ObjectManager.Player.GetSpellDamage(minions, SpellSlot.Q)))
-                        var qPredict = Q.GetPrediction(minions);
-                        var hithere = qPredict.CastPosition.Extend(ObjectManager.Player.Position, -140);
-                        if (qPredict.Hitchance >= HitChance.High)
-                            Q.Cast(hithere);
+                        
+                        var qP = Q.GetPrediction(minions);
+                        var hit = qP.CastPosition.Extend(ObjectManager.Player.Position, -140);
+                        if (qP.Hitchance >= HitChance.High)
+                            Q.Cast(hit);
                 }
             }
             
