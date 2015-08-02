@@ -100,6 +100,19 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
+            if (LaneClearActive)
+            {
+                var useQ = GetValue<bool>("UseQL");
+                if (Q.IsReady() && useQ)
+                {
+                    var vMinions = MinionManager.GetMinions(ObjectManager.Player.Position, Q.Range);
+                    foreach (var minions in
+                        vMinions.Where(
+                            minions => minions.Health < ObjectManager.Player.GetSpellDamage(minions, SpellSlot.Q)))
+                        Q.Cast(minions.Position);
+                }
+            }
+            
             Obj_AI_Hero t;
 
             if (Q.IsReady() && Program.Config.Item("UseQTH").GetValue<KeyBind>().Active && ToggleActive)
@@ -165,20 +178,6 @@ namespace Marksman.Champions
                             R.Cast(t);
                         }
                     }
-                }
-            }
-
-            if (LaneClearActive)
-            {
-                var useQ = GetValue<bool>("UseQL");
-
-                if (Q.IsReady() && useQ)
-                {
-                    var vMinions = MinionManager.GetMinions(ObjectManager.Player.Position, Q.Range);
-                    foreach (var minions in
-                        vMinions.Where(
-                            minions => minions.Health < ObjectManager.Player.GetSpellDamage(minions, SpellSlot.Q)))
-                        Q.Cast(minions);
                 }
             }
 
