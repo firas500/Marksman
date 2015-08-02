@@ -1,4 +1,4 @@
-﻿#region
+#region
 
 using System;
 using System.Drawing;
@@ -13,7 +13,7 @@ namespace Marksman.Champions
     internal class Kogmaw : Champion
     {
         public Spell E;
-        public Spell Q;
+        public static Spell Q;
         public Spell R;
         public int UltimateBuffStacks;
         public Spell W;
@@ -22,13 +22,13 @@ namespace Marksman.Champions
         {
             Utils.Utils.PrintMessage("KogMaw loaded.");
 
-            Q = new Spell(SpellSlot.Q, 1000f);
+            Q = new Spell(SpellSlot.Q, 950f);
             W = new Spell(SpellSlot.W, float.MaxValue);
-            E = new Spell(SpellSlot.E, 1360f);
+            E = new Spell(SpellSlot.E, 1260f);
             R = new Spell(SpellSlot.R, float.MaxValue);
 
             Q.SetSkillshot(0.25f, 70f, 1650f, true, SkillshotType.SkillshotLine);
-            E.SetSkillshot(0.25f, 120f, 1400f, false, SkillshotType.SkillshotLine);
+            E.SetSkillshot(0.50f, 120f, 1400f, false, SkillshotType.SkillshotLine);
             R.SetSkillshot(1.2f, 120f, float.MaxValue, false, SkillshotType.SkillshotCircle);
         }
 
@@ -42,6 +42,20 @@ namespace Marksman.Champions
                     Render.Circle.DrawCircle(ObjectManager.Player.Position,
                         spell.Slot == SpellSlot.W ? Orbwalking.GetRealAutoAttackRange(null) + 65 + W.Range : spell.Range,
                         menuItem.Color);
+            }
+        }
+
+        private static void CastQ()
+        {
+            var t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
+
+            if (t.IsValidTarget() && Q.IsReady() &&
+                ObjectManager.Player.Distance(t.ServerPosition) <= Q.Range)
+            {
+                var qPredict = Q.GetPrediction(t);
+                var hithere = qPredict.CastPosition.Extend(ObjectManager.Player.Position, -140);
+                if (qPredict.Hitchance >= HitChance.High)
+                    Q.Cast(hithere);
             }
         }
 
@@ -80,8 +94,9 @@ namespace Marksman.Champions
             {
                 var t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
                 if (t != null)
-                    if (Q.Cast(t) == Spell.CastStates.SuccessfullyCasted)
-                        return;
+                    CastQ();
+                    //if (Q.Cast(t) == Spell.CastStates.SuccessfullyCasted)
+                    //    return;
             }
 
             if (useE && E.IsReady())
@@ -95,8 +110,10 @@ namespace Marksman.Champions
             if (GetValue<bool>("UseRSC") && R.IsReady())
             {
                 var t = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Magical);
-                if (t.IsValidTarget() && (t.HasBuffOfType(BuffType.Stun) || t.HasBuffOfType(BuffType.Snare) ||
-                                          t.HasBuffOfType(BuffType.Taunt)))
+                if (t.IsValidTarget() &&
+                    (t.HasBuffOfType(BuffType.Stun) || t.HasBuffOfType(BuffType.Snare) || t.HasBuffOfType(BuffType.Slow) ||
+                     t.HasBuffOfType(BuffType.Fear) ||
+                     t.HasBuffOfType(BuffType.Taunt)))
                 {
                     R.Cast(t, false, true);
                 }
