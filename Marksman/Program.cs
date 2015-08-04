@@ -249,8 +249,8 @@ namespace Marksman
             
 
             CClass.MainMenu(Config);
-            Evade.Evade.Initiliaze();
-            Config.AddSubMenu(Evade.Config.Menu);
+            //Evade.Evade.Initiliaze();
+            //Config.AddSubMenu(Evade.Config.Menu);
             
             Config.AddToMainMenu();
             Sprite.Load();
