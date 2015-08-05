@@ -20,15 +20,16 @@ namespace Marksman.Champions
 
         public Sivir()
         {
-            Utils.Utils.PrintMessage("Sivir loaded.");
-
             Q = new Spell(SpellSlot.Q, 1250);
             Q.SetSkillshot(0.25f, 90f, 1350f, false, SkillshotType.SkillshotLine);
 
             W = new Spell(SpellSlot.W, 593);
 
             E = new Spell(SpellSlot.E);
-            Obj_AI_Base.OnProcessSpellCast += Game_OnProcessSpellCast;
+//            Obj_AI_Base.OnProcessSpellCast += Game_OnProcessSpellCast;
+
+            Utils.Utils.PrintMessage("Sivir loaded.");
+            Utils.Utils.PrintMessage("Sivir E properties loaded! Please check the Marksman Menu for her E Spell");
         }
 
         public override void Game_OnGameUpdate(EventArgs args)
@@ -131,7 +132,7 @@ namespace Marksman.Champions
         public override bool MiscMenu(Menu config)
         {
             config.AddItem(new MenuItem("AutoQ" + Id, "Auto Q on Stun/Slow/Fear/Taunt/Snare").SetValue(true));
-
+            /*
             _menuSupportedSpells = new Menu("E Supported Spells", "suppspells");
 
             foreach (var xEnemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy))
@@ -143,7 +144,7 @@ namespace Marksman.Champions
                 }
             }
             Program.Config.AddSubMenu(_menuSupportedSpells);
-
+            */
             return true;
         }
 
