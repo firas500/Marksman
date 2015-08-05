@@ -249,7 +249,7 @@ namespace Marksman
             
 
             CClass.MainMenu(Config);
-            if (championName == "Sivir")
+            if (championName == "sivir")
             {
                 Evade.Evade.Initiliaze();
                 Evade.Config.Menu.DisplayName = "E";
