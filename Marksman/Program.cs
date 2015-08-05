@@ -249,6 +249,12 @@ namespace Marksman
             
 
             CClass.MainMenu(Config);
+            if (championName == "Sivir")
+            {
+                Evade.Evade.Initiliaze();
+                Evade.Config.Menu.DisplayName = "E";
+                Config.AddSubMenu(Evade.Config.Menu);
+            }            
             //Evade.Evade.Initiliaze();
             //Config.AddSubMenu(Evade.Config.Menu);
             
