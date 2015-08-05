@@ -229,7 +229,7 @@ namespace Marksman
                 if (CClass.DrawingMenu(drawing))
                 {
                     drawing.AddItem(new MenuItem("Marksman.Drawings", "Marksman Default Draw Options"));
-                    drawing.AddItem(new MenuItem("Draw.Ping", MenuSpace + "Show Game Ping").SetValue(true));
+                    //drawing.AddItem(new MenuItem("Draw.Ping", MenuSpace + "Show Game Ping").SetValue(true));
                     drawing.AddItem(new MenuItem("Draw.ToD", MenuSpace + "Turn Off Drawings On Team Fight").SetValue(false));
                     drawing.AddItem(new MenuItem("Draw.ToDControlRange", MenuSpace + MenuSpace + "Control Range:").SetValue(new Slider(1200, 1600, 600)));
                     drawing.AddItem(new MenuItem("Draw.ToDControlRangeColor", MenuSpace + MenuSpace + "Draw Control Range:").SetValue(new Circle(false, Color.GreenYellow)));
@@ -309,8 +309,8 @@ namespace Marksman
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            if (CClass.Config.SubMenu("Drawings").Item("Draw.Ping").GetValue<bool>())
-                Drawing.DrawText(Drawing.Width*0.94f, Drawing.Height*0.05f, Color.GreenYellow, "Ping: " + Game.Ping);
+            //if (CClass.Config.SubMenu("Drawings").Item("Draw.Ping").GetValue<bool>())
+            //    Drawing.DrawText(Drawing.Width*0.94f, Drawing.Height*0.05f, Color.GreenYellow, "Ping: " + Game.Ping);
                 
             var toD = CClass.Config.SubMenu("Drawings").Item("Draw.ToD").GetValue<bool>();
             if (toD)
