@@ -130,7 +130,7 @@ namespace Marksman.Evade
             //Initialze the collision
             Collision.Init();
 
-            Notifications.AddNotification("Marksman: Evade Loaded", 8000);
+            //Notifications.AddNotification("Marksman: Evade Loaded", 8000);
         }
         private static void DetectedSkillshots_OnAdd(object sender, EventArgs e)
         {
