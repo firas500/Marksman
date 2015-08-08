@@ -50,6 +50,8 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
+            R.Range = 300 * ObjectManager.Player.Level;
+            
             if (Q.IsReady() && GetValue<KeyBind>("UseQTH").Active && ToggleActive)
             {
                 if (ObjectManager.Player.HasBuff("Recall"))
