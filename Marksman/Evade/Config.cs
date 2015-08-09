@@ -46,14 +46,14 @@ namespace Marksman.Evade
         public const int EvadePointChangeInterval = 300;
         public static int LastEvadePointChangeT = 0;
 
-        public static Menu Menu;
+        public static Menu Menu, MenuEvadeSpells, MenuSkillShots;
 
         public static void CreateMenu()
         {
             Menu = new Menu("Evade", "Evade");
 
             //Create the evade spells submenus.
-            var evadeSpells = new Menu("Evade spells", "evadeSpells");
+            MenuEvadeSpells = new Menu("Evade spells", "evadeSpells");
             foreach (var spell in EvadeSpellDatabase.Spells)
             {
                 var subMenu = new Menu(spell.Name, spell.Name);
@@ -66,34 +66,39 @@ namespace Marksman.Evade
                 subMenu.AddItem(new MenuItem("Enabled" + spell.Name, "Enabled").SetValue(true));
                 //subMenu.AddItem(new MenuItem("OnlyDangerous" + spell.Name, "Only For Dangerous Spells").SetValue(true));
 
-                evadeSpells.AddSubMenu(subMenu);
+                MenuEvadeSpells.AddSubMenu(subMenu);
             }
-            Menu.AddSubMenu(evadeSpells);
+            Menu.AddSubMenu(MenuEvadeSpells);
 
             //Create the skillshots submenus.
-            var skillShots = new Menu("Skillshots", "Skillshots");
+            MenuSkillShots = new Menu("Skillshots", "Skillshots");
 
-            foreach (var hero in ObjectManager.Get<Obj_AI_Hero>())
+            foreach (var hero in HeroManager.Enemies)
             {
-                if (hero.Team != ObjectManager.Player.Team || Config.TestOnAllies)
+                if (hero.ChampionName == "Vayne")
                 {
-                    foreach (var spell in SpellDatabase.Spells)
+                    Menu vayneE = new Menu("Vayne - Block 3. Silver Buff Stack", "VayneE");
+                    MenuSkillShots.AddSubMenu(vayneE);
+                    vayneE.AddItem(new MenuItem("VayneBlockSilverBuff", "Enabled").SetValue(true));
+                }
+
+                foreach (var spell in SpellDatabase.Spells)
+                {
+                    if (spell.ChampionName.ToLower() == hero.ChampionName.ToLower())
                     {
-                        if (spell.ChampionName.ToLower() == hero.ChampionName.ToLower())
-                        {
-                            var subMenu = new Menu(spell.MenuItemName, spell.MenuItemName);
+                        var subMenu = new Menu(spell.MenuItemName, spell.MenuItemName);
 
-                            //subMenu.AddItem(new MenuItem("IsDangerous" + spell.MenuItemName, "Is Dangerous").SetValue(spell.IsDangerous));
-                            subMenu.AddItem(new MenuItem("Draw" + spell.MenuItemName, "Draw").SetValue(true));
-                            subMenu.AddItem(new MenuItem("Enabled" + spell.MenuItemName, "Enabled").SetValue(!spell.DisabledByDefault));
+                        //subMenu.AddItem(new MenuItem("IsDangerous" + spell.MenuItemName, "Is Dangerous").SetValue(spell.IsDangerous));
+                        subMenu.AddItem(new MenuItem("Draw" + spell.MenuItemName, "Draw").SetValue(true));
+                        subMenu.AddItem(
+                            new MenuItem("Enabled" + spell.MenuItemName, "Enabled").SetValue(!spell.DisabledByDefault));
 
-                            skillShots.AddSubMenu(subMenu);
-                        }
+                        MenuSkillShots.AddSubMenu(subMenu);
                     }
                 }
             }
 
-            Menu.AddSubMenu(skillShots);
+            Menu.AddSubMenu(MenuSkillShots);
 
             var shielding = new Menu("Ally shielding", "Shielding");
 
