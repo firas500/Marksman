@@ -20,16 +20,28 @@ namespace Marksman.Champions
 
         public Sivir()
         {
-            Q = new Spell(SpellSlot.Q, 1250);
+            Q = new Spell(SpellSlot.Q, 1220);
             Q.SetSkillshot(0.25f, 90f, 1350f, false, SkillshotType.SkillshotLine);
 
             W = new Spell(SpellSlot.W, 593);
 
             E = new Spell(SpellSlot.E);
-//            Obj_AI_Base.OnProcessSpellCast += Game_OnProcessSpellCast;
+
+            Obj_AI_Base.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;
 
             Utils.Utils.PrintMessage("Sivir loaded.");
-            Utils.Utils.PrintMessage("Sivir E properties loaded! Please check the Marksman Menu for her E Spell");
+            Utils.Utils.PrintMessage("Sivir E Support Loaded! Please check the Marksman Menu for her E Spell");
+        }
+
+        public void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        {
+            if (!sender.IsMe && sender.IsEnemy && (sender is Obj_AI_Hero) && args.Target.IsMe && W.IsReady() &&
+                ((Obj_AI_Hero) sender).ChampionName == "Vayne")
+            {
+                var buffs = ObjectManager.Player.Buffs.Where(b => b.Name.Contains("silvereddebuff"));
+                if (buffs.Count() == 2 && Evade.Config.MenuSkillShots.Item("VayneBlockSilverBuff").GetValue<bool>())
+                    E.Cast();
+            }
         }
 
         public override void Game_OnGameUpdate(EventArgs args)
@@ -132,19 +144,6 @@ namespace Marksman.Champions
         public override bool MiscMenu(Menu config)
         {
             config.AddItem(new MenuItem("AutoQ" + Id, "Auto Q on Stun/Slow/Fear/Taunt/Snare").SetValue(true));
-            /*
-            _menuSupportedSpells = new Menu("E Supported Spells", "suppspells");
-
-            foreach (var xEnemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy))
-            {
-                var enemy = xEnemy;
-                foreach (var ccList in SpellList.BuffList.Where(xList => xList.ChampionName == enemy.ChampionName))
-                {
-                    _menuSupportedSpells.AddItem(new MenuItem(ccList.BuffName, ccList.DisplayName)).SetValue(true);
-                }
-            }
-            Program.Config.AddSubMenu(_menuSupportedSpells);
-            */
             return true;
         }
 
