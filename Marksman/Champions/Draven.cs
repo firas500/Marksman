@@ -289,7 +289,7 @@ namespace Marksman.Champions
         {
             var buff =
                 ObjectManager.Player.Buffs.FirstOrDefault(buff1 => buff1.Name.Equals("dravenspinningattack"));
-            return buff != null ? buff.Count : 0;
+            return ExistingReticles.Count + (buff != null ? buff.Count : 0);
         }
 
         public Vector3 GetOrbwalkPos()
