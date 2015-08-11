@@ -1,11 +1,10 @@
 #region
-
 using System;
 using System.Drawing;
 using System.Linq;
+using System.Resources;
 using LeagueSharp;
 using LeagueSharp.Common;
-
 #endregion
 
 namespace Marksman.Champions
@@ -13,6 +12,7 @@ namespace Marksman.Champions
     internal class MissFortune : Champion
     {
         public static Spell Q, W, E;
+        private static float UltiCastedTime = 0;
 
         public MissFortune()
         {
@@ -23,7 +23,15 @@ namespace Marksman.Champions
 
             E = new Spell(SpellSlot.E, 800);
             E.SetSkillshot(0.5f, 100f, float.MaxValue, false, SkillshotType.SkillshotCircle);
+            Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
+
             Utils.Utils.PrintMessage("MissFortune loaded.");
+        }
+
+        private void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        {
+            if (sender.IsMe && args.SData.Name == "MissFortuneBulletTime")
+                UltiCastedTime = Game.Time;
         }
 
         public override void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit vTarget)
@@ -69,6 +77,10 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
+            var ultCasting = Game.Time - UltiCastedTime < 0.2 || ObjectManager.Player.IsChannelingImportantSpell();
+            Orbwalking.Attack = !ultCasting;
+            Orbwalking.Move = !ultCasting;
+
             if (Q.IsReady() && GetValue<KeyBind>("UseQTH").Active)
             {
                 if (ObjectManager.Player.HasBuff("Recall"))
