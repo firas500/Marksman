@@ -35,7 +35,7 @@ namespace Marksman.Champions
 
         public void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-            if (!sender.IsMe && sender.IsEnemy && (sender is Obj_AI_Hero) && args.Target.IsMe && W.IsReady() &&
+            if (!sender.IsMe && sender.IsEnemy && (sender is Obj_AI_Hero) && args.Target.IsMe && E.IsReady() &&
                 ((Obj_AI_Hero) sender).ChampionName == "Vayne")
             {
                 var buffs = ObjectManager.Player.Buffs.Where(b => b.Name.Contains("silvereddebuff"));
