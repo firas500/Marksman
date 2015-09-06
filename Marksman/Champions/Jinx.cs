@@ -162,7 +162,7 @@ namespace Marksman.Champions
                 var t = TargetSelector.GetTarget(1500, TargetSelector.DamageType.Physical);
                 if (t.IsValidTarget())
                 {
-                    if (ObjectManager.Player.GetSpellDamage(t, SpellSlot.R) > t.Health)
+                    if (ObjectManager.Player.GetSpellDamage(t, SpellSlot.R) > t.Health && !t.IsZombie)
                     {
                         //R.Cast(target);
                         R.CastIfHitchanceEquals(t, HitChance.High, false);
@@ -257,7 +257,7 @@ namespace Marksman.Champions
 
                     if (!checkRok)
                     {
-                        if (ObjectManager.Player.GetSpellDamage(t, SpellSlot.R, 1) > t.Health)
+                        if (ObjectManager.Player.GetSpellDamage(t, SpellSlot.R, 1) > t.Health && && !t.IsZombie)
                         {
                             R.CastIfHitchanceEquals(t, HitChance.High, false);
                             //if (R.Cast(t) == Spell.CastStates.SuccessfullyCasted) { }
@@ -276,7 +276,7 @@ namespace Marksman.Champions
                             {
                                 if (CountAlliesNearTarget(t, 500) <= 3)
                                 {
-                                    if (rDamage > t.Health /*&& !ObjectManager.Player.IsAutoAttacking &&
+                                    if (rDamage > t.Health && !t.IsZombie/*&& !ObjectManager.Player.IsAutoAttacking &&
                                         !ObjectManager.Player.IsChanneling*/)
                                     {
                                         R.CastIfHitchanceEquals(t, HitChance.High, false);
@@ -292,7 +292,7 @@ namespace Marksman.Champions
                             {
                                 if (CountAlliesNearTarget(t, 500) <= 3)
                                 {
-                                    if (rDamage > t.Health /*&& !ObjectManager.Player.IsAutoAttacking &&
+                                    if (rDamage > t.Health && !t.IsZombie/*&& !ObjectManager.Player.IsAutoAttacking &&
                                         !ObjectManager.Player.IsChanneling*/)
                                     {
                                         R.CastIfHitchanceEquals(t, HitChance.High, false);
