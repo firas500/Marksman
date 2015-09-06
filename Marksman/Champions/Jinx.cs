@@ -257,7 +257,7 @@ namespace Marksman.Champions
 
                     if (!checkRok)
                     {
-                        if (ObjectManager.Player.GetSpellDamage(t, SpellSlot.R, 1) > t.Health && && !t.IsZombie)
+                        if (ObjectManager.Player.GetSpellDamage(t, SpellSlot.R, 1) > t.Health && !t.IsZombie)
                         {
                             R.CastIfHitchanceEquals(t, HitChance.High, false);
                             //if (R.Cast(t) == Spell.CastStates.SuccessfullyCasted) { }
