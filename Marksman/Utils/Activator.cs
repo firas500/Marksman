@@ -8,7 +8,7 @@ namespace Marksman.Utils
         public string DisplayName { get; set; }
         public string BuffName { get; set; }
         public bool DefaultValue { get; set; }
-        public int Delay { get; set; }
+        public float Delay { get; set; }
     }
 
     internal class Activator
@@ -104,7 +104,7 @@ namespace Marksman.Utils
                 DisplayName = "Skarner (R)",
                 BuffName = "SkarnerImpale",
                 DefaultValue = true,
-                Delay = 0
+                Delay = 0.5f
             });
             BuffList.Add(new BuffList
             {
