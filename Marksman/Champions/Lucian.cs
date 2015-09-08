@@ -222,7 +222,6 @@ namespace Marksman.Champions
         {
             config.AddItem(new MenuItem("UseQC" + Id, "Use Q").SetValue(true));
             config.AddItem(new MenuItem("UseQExtendedC" + Id, "Use Extended Q").SetValue(true));
-            config.AddItem(new MenuItem("Cx", ""));
             config.AddItem(new MenuItem("UseWC" + Id, "Use W").SetValue(true));
             config.AddItem(new MenuItem("UseEC" + Id, "Use E").SetValue(true));
             return true;
@@ -234,12 +233,10 @@ namespace Marksman.Champions
             config.AddItem(
                 new MenuItem("UseQTH" + Id, "Use Q (Toggle)").SetValue(new KeyBind("T".ToCharArray()[0],
                     KeyBindType.Toggle)));
-            config.AddItem(new MenuItem("Cx", ""));
             config.AddItem(new MenuItem("UseQExtendedH" + Id, "Use Extended Q").SetValue(true));
             config.AddItem(
                 new MenuItem("UseQExtendedTH" + Id, "Use Ext. Q (Toggle)").SetValue(new KeyBind("H".ToCharArray()[0],
                     KeyBindType.Toggle)));
-            config.AddItem(new MenuItem("Cx", ""));
             config.AddItem(new MenuItem("UseWH" + Id, "Use W").SetValue(true));
             config.AddItem(new MenuItem("UseEH" + Id, "Use E").SetValue(true));
             return true;
