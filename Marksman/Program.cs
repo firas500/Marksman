@@ -557,14 +557,14 @@ namespace Marksman
                             {
                                 if (bx.Delay > 0)
                                 {
-                                    if (ActivatorTime + bx.Delay < (int) Game.Time)
-                                        ActivatorTime = (int) Game.Time;
+                                    if (ActivatorTime + bx.Delay < Game.Time)
+                                        ActivatorTime = Game.Time;
 
-                                    if (ActivatorTime + bx.Delay <= (int) Game.Time)
+                                    if (ActivatorTime + bx.Delay <= Game.Time)
                                     {
                                         if (Items.HasItem(3139)) Items.UseItem(3139);
                                         if (Items.HasItem(3140)) Items.UseItem(3140);
-                                        ActivatorTime = (int) Game.Time;
+                                        ActivatorTime = Game.Time;
                                     }
                                 }
                                 else
