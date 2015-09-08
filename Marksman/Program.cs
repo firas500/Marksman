@@ -544,7 +544,10 @@ namespace Marksman
 
         private static void CheckChampionBuff()
         {
-            foreach (var t1 in ObjectManager.Player.Buffs)
+            var canUse3139 = Items.HasItem(3139) && Items.CanUseItem(3139);
+            var canUse3140 = Items.HasItem(3140) && Items.CanUseItem(3140);
+
+            foreach (var t1 in Player.Buffs)
             {
                 foreach (var t in QuickSilverMenu.Items)
                 {
@@ -557,48 +560,48 @@ namespace Marksman
                             {
                                 if (bx.Delay > 0)
                                 {
-                                    if (ActivatorTime + bx.Delay < Game.Time)
-                                        ActivatorTime = Game.Time;
+                                    if (ActivatorTime + bx.Delay < (int) Game.Time)
+                                        ActivatorTime = (int) Game.Time;
 
-                                    if (ActivatorTime + bx.Delay <= Game.Time)
+                                    if (ActivatorTime + bx.Delay <= (int) Game.Time)
                                     {
-                                        if (Items.HasItem(3139)) Items.UseItem(3139);
-                                        if (Items.HasItem(3140)) Items.UseItem(3140);
-                                        ActivatorTime = Game.Time;
+                                        if (canUse3139) Items.UseItem(3139);
+                                        if (canUse3140) Items.UseItem(3140);
+                                        ActivatorTime = (int) Game.Time;
                                     }
                                 }
                                 else
                                 {
-                                    if (Items.HasItem(3139)) Items.UseItem(3139);
-                                    if (Items.HasItem(3140)) Items.UseItem(3140);
+                                    if (canUse3139) Items.UseItem(3139);
+                                    if (canUse3140) Items.UseItem(3140);
                                 }
                             }
                         }
                     }
 
                     if (QuickSilverMenu.Item("AnySlow").GetValue<bool>() &&
-                        ObjectManager.Player.HasBuffOfType(BuffType.Slow))
+                        Player.HasBuffOfType(BuffType.Slow))
                     {
-                        if (Items.HasItem(3139)) Items.UseItem(3139);
-                        if (Items.HasItem(3140)) Items.UseItem(3140);
+                        if (canUse3139) Items.UseItem(3139);
+                        if (canUse3140) Items.UseItem(3140);
                     }
                     if (QuickSilverMenu.Item("AnySnare").GetValue<bool>() &&
-                        ObjectManager.Player.HasBuffOfType(BuffType.Snare))
+                        Player.HasBuffOfType(BuffType.Snare))
                     {
-                        if (Items.HasItem(3139)) Items.UseItem(3139);
-                        if (Items.HasItem(3140)) Items.UseItem(3140);
+                        if (canUse3139) Items.UseItem(3139);
+                        if (canUse3140) Items.UseItem(3140);
                     }
                     if (QuickSilverMenu.Item("AnyStun").GetValue<bool>() &&
-                        ObjectManager.Player.HasBuffOfType(BuffType.Stun))
+                        Player.HasBuffOfType(BuffType.Stun))
                     {
-                        if (Items.HasItem(3139)) Items.UseItem(3139);
-                        if (Items.HasItem(3140)) Items.UseItem(3140);
+                        if (canUse3139) Items.UseItem(3139);
+                        if (canUse3140) Items.UseItem(3140);
                     }
                     if (QuickSilverMenu.Item("AnyTaunt").GetValue<bool>() &&
-                        ObjectManager.Player.HasBuffOfType(BuffType.Taunt))
+                        Player.HasBuffOfType(BuffType.Taunt))
                     {
-                        if (Items.HasItem(3139)) Items.UseItem(3139);
-                        if (Items.HasItem(3140)) Items.UseItem(3140);
+                        if (canUse3139) Items.UseItem(3139);
+                        if (canUse3140) Items.UseItem(3140);
                     }
                 }
             }
