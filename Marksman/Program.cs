@@ -565,15 +565,19 @@ namespace Marksman
 
                                     if (ActivatorTime + bx.Delay <= Game.Time)
                                     {
-                                        if (canUse3139) Items.UseItem(3139);
-                                        if (canUse3140) Items.UseItem(3140);
+                                        if (canUse3139) 
+                                            Items.UseItem(3139);
+                                        else if (canUse3140) 
+                                            Items.UseItem(3140);
                                         ActivatorTime = Game.Time;
                                     }
                                 }
                                 else
                                 {
-                                    if (canUse3139) Items.UseItem(3139);
-                                    if (canUse3140) Items.UseItem(3140);
+                                        if (canUse3139) 
+                                            Items.UseItem(3139);
+                                        else if (canUse3140) 
+                                            Items.UseItem(3140);
                                 }
                             }
                         }
@@ -582,26 +586,34 @@ namespace Marksman
                     if (QuickSilverMenu.Item("AnySlow").GetValue<bool>() &&
                         ObjectManager.Player.HasBuffOfType(BuffType.Slow))
                     {
-                        if (canUse3139) Items.UseItem(3139);
-                        if (canUse3140) Items.UseItem(3140);
+                        if (canUse3139) 
+                            Items.UseItem(3139);
+                        else if (canUse3140) 
+                            Items.UseItem(3140);
                     }
                     if (QuickSilverMenu.Item("AnySnare").GetValue<bool>() &&
                         ObjectManager.Player.HasBuffOfType(BuffType.Snare))
                     {
-                        if (canUse3139) Items.UseItem(3139);
-                        if (canUse3140) Items.UseItem(3140);
+                        if (canUse3139) 
+                            Items.UseItem(3139);
+                        else if (canUse3140) 
+                            Items.UseItem(3140);
                     }
                     if (QuickSilverMenu.Item("AnyStun").GetValue<bool>() &&
                         ObjectManager.Player.HasBuffOfType(BuffType.Stun))
                     {
-                        if (canUse3139) Items.UseItem(3139);
-                        if (canUse3140) Items.UseItem(3140);
+                        if (canUse3139) 
+                            Items.UseItem(3139);
+                        else if (canUse3140) 
+                            Items.UseItem(3140);
                     }
                     if (QuickSilverMenu.Item("AnyTaunt").GetValue<bool>() &&
                         ObjectManager.Player.HasBuffOfType(BuffType.Taunt))
                     {
-                        if (canUse3139) Items.UseItem(3139);
-                        if (canUse3140) Items.UseItem(3140);
+                        if (canUse3139) 
+                            Items.UseItem(3139);
+                        else if (canUse3140) 
+                            Items.UseItem(3140);
                     }
                 }
             }
