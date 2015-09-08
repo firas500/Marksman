@@ -178,7 +178,7 @@ namespace Marksman.Champions
         {
             config.AddItem(
                 new MenuItem("DrawE" + Id, "E range").SetValue(
-                    new Circle(true, Color.FromArgb(100, 255, 0, 255))));
+                    new Circle(true, System.Drawing.Color.FromArgb(100, 255, 0, 255))));
 
             return true;
         }
