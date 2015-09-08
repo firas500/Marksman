@@ -547,7 +547,7 @@ namespace Marksman
             var canUse3139 = Items.HasItem(3139) && Items.CanUseItem(3139);
             var canUse3140 = Items.HasItem(3140) && Items.CanUseItem(3140);
 
-            foreach (var t1 in Player.Buffs)
+            foreach (var t1 in ObjectManager.Player.Buffs)
             {
                 foreach (var t in QuickSilverMenu.Items)
                 {
@@ -560,14 +560,14 @@ namespace Marksman
                             {
                                 if (bx.Delay > 0)
                                 {
-                                    if (ActivatorTime + bx.Delay < (int) Game.Time)
-                                        ActivatorTime = (int) Game.Time;
+                                    if (ActivatorTime + bx.Delay < (int)Game.Time)
+                                        ActivatorTime = (int)Game.Time;
 
-                                    if (ActivatorTime + bx.Delay <= (int) Game.Time)
+                                    if (ActivatorTime + bx.Delay <= (int)Game.Time)
                                     {
                                         if (canUse3139) Items.UseItem(3139);
                                         if (canUse3140) Items.UseItem(3140);
-                                        ActivatorTime = (int) Game.Time;
+                                        ActivatorTime = (int)Game.Time;
                                     }
                                 }
                                 else
@@ -580,25 +580,25 @@ namespace Marksman
                     }
 
                     if (QuickSilverMenu.Item("AnySlow").GetValue<bool>() &&
-                        Player.HasBuffOfType(BuffType.Slow))
+                        ObjectManager.Player.HasBuffOfType(BuffType.Slow))
                     {
                         if (canUse3139) Items.UseItem(3139);
                         if (canUse3140) Items.UseItem(3140);
                     }
                     if (QuickSilverMenu.Item("AnySnare").GetValue<bool>() &&
-                        Player.HasBuffOfType(BuffType.Snare))
+                        ObjectManager.Player.HasBuffOfType(BuffType.Snare))
                     {
                         if (canUse3139) Items.UseItem(3139);
                         if (canUse3140) Items.UseItem(3140);
                     }
                     if (QuickSilverMenu.Item("AnyStun").GetValue<bool>() &&
-                        Player.HasBuffOfType(BuffType.Stun))
+                        ObjectManager.Player.HasBuffOfType(BuffType.Stun))
                     {
                         if (canUse3139) Items.UseItem(3139);
                         if (canUse3140) Items.UseItem(3140);
                     }
                     if (QuickSilverMenu.Item("AnyTaunt").GetValue<bool>() &&
-                        Player.HasBuffOfType(BuffType.Taunt))
+                        ObjectManager.Player.HasBuffOfType(BuffType.Taunt))
                     {
                         if (canUse3139) Items.UseItem(3139);
                         if (canUse3140) Items.UseItem(3140);
@@ -606,7 +606,6 @@ namespace Marksman
                 }
             }
         }
-
         private static string Smitetype
         {
             get
