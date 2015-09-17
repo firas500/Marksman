@@ -104,6 +104,7 @@
     <Compile Include="Champions\Graves.cs" />
     <Compile Include="Champions\Jinx.cs" />
     <Compile Include="Champions\Kalista.cs" />
+    <Compile Include="Champions\Kindred.cs" />
     <Compile Include="Champions\Kogmaw.cs" />
     <Compile Include="Utils\PotionManager.cs" />
     <Compile Include="Program.cs" />
