@@ -84,6 +84,9 @@ namespace Marksman
                 case "kalista":
                     CClass = new Kalista();
                     break;
+                case "kindred":
+                    CClass = new Kindred();
+                    break;
                 case "kogmaw":
                     CClass = new Kogmaw();
                     break;
