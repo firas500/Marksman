@@ -15,7 +15,8 @@ namespace Marksman
 {
     internal class Program
     {
-        public const string MenuSpace = "       ";
+        public const string MenuSpace = "       "; //I'll remove after
+        public const string Tab = "    ";
         public static Menu Config;
         public static Menu OrbWalking;
         public static Menu QuickSilverMenu;
