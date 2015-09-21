@@ -266,24 +266,13 @@ namespace Marksman.Champions
 
         private static void JungleFarm()
         {
-            var mobs = MinionManager.GetMinions(ObjectManager.Player.ServerPosition,
+            if (!Q.IsReady() || !AsheQCastReady) return;
+
+            string[] bigBoys = { "Baron", "Dragon", "Red", "Blue" };
+            if (MinionManager.GetMinions(ObjectManager.Player.ServerPosition,
                 Orbwalking.GetRealAutoAttackRange(null) + 65, MinionTypes.All,
-                MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
-
-            if (!mobs.Any())
-                return;
-
-            var mob = mobs[0];
-
-            string[] bigBoys = {"Baron", "Dragon", "Red", "Blue"};
-
-            foreach (
-                var xbigBoys in
-                    bigBoys.Where(xbigBoys => mob.Name.Contains(xbigBoys))
-                        .Where(xbigBoys => Q.IsReady() && AsheQCastReady))
-            {
+                MinionTeam.Neutral, MinionOrderTypes.MaxHealth).Any(mob => bigBoys.Any(mob.Name.Contains)))
                 Q.Cast();
-            }
         }
 
         public override bool ExtrasMenu(Menu config)
