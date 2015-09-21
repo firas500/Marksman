@@ -270,7 +270,7 @@ namespace Marksman.Champions
                 Orbwalking.GetRealAutoAttackRange(null) + 65, MinionTypes.All,
                 MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
 
-            if (mobs == null)
+            if (!mobs.Any())
                 return;
 
             var mob = mobs[0];
