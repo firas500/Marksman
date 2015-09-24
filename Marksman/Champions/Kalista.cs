@@ -83,8 +83,8 @@ namespace Marksman.Champions
 
             foreach (var m in Minions.Where(x => E.CanCast(x) && x.Health <= E.GetDamage(x)))
             {
-                if (Minions.Count >= 3 && E.IsReady())
-                    E.Cast();
+                //if (Minions.Count >= 3 && E.IsReady())
+                 //   E.Cast();
 
                 Render.Circle.DrawCircle(m.Position, (float) (m.BoundingRadius*1.5), Color.White, 5);
             }
