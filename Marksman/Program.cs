@@ -239,10 +239,10 @@ namespace Marksman
                     drawing.AddItem(new MenuItem("Draw.ToDControlRangeColor", MenuSpace + MenuSpace + "Draw Control Range:").SetValue(new Circle(false, Color.GreenYellow)));
                     drawing.AddItem(new MenuItem("Draw.ToDMinEnemy", MenuSpace + MenuSpace + "Min. Enemy Count:").SetValue(new Slider(3, 5, 0)));
 
-                    drawing.AddItem(new MenuItem("drawMinionLastHit", MenuSpace + "Minion Last Hit").SetValue(new Circle(false,Color.GreenYellow)));
-                    drawing.AddItem(new MenuItem("drawMinionNearKill", MenuSpace + "Minion Near Kill").SetValue(new Circle(false,Color.Gray)));
+                    drawing.AddItem(new MenuItem("drawMinionLastHit", MenuSpace + "Minion Last Hit").SetValue(new Circle(true, Color.GreenYellow)));
+                    drawing.AddItem(new MenuItem("drawMinionNearKill", MenuSpace + "Minion Near Kill").SetValue(new Circle(true, Color.Gray)));
                     drawing.AddItem(
-                        new MenuItem("drawJunglePosition", MenuSpace + "Jungle Farm Position").SetValue(false));
+                        new MenuItem("drawJunglePosition", MenuSpace + "Jungle Farm Position").SetValue(true));
                     drawing.AddItem(new MenuItem("Draw.DrawMinion", MenuSpace + "Draw Minions Sprite").SetValue(false));
                     drawing.AddItem(new MenuItem("Draw.DrawTarget", MenuSpace + "Draw Target Sprite").SetValue(false));
                     //drawing.AddItem(new MenuItem("Draw.DrawSTarget", MenuSpace + "Draw Selected Target", true).SetValue(new Circle(false,Color.GreenYellow)));
