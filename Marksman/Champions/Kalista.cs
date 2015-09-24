@@ -225,10 +225,9 @@ namespace Marksman.Champions
                             var xCoolDown = TimeSpan.FromSeconds(markedEnemies.ExpireTime - Game.Time);
                             var display = string.Format("E:{0}", markedEnemies.BuffCount);
 
-                            Utils.Utils.DrawText(font, "aaaaa", (int) enemy.HPBarPosition.X, (int) enemy.HPBarPosition.Y,
-                                SharpDX.Color.GreenYellow);
+                            //Utils.Utils.DrawText(font, "aaaaa", (int) enemy.HPBarPosition.X, (int) enemy.HPBarPosition.Y,                                 SharpDX.Color.GreenYellow);
 
-                            //Drawing.DrawText(enemy.HPBarPosition.X + 145, enemy.HPBarPosition.Y + 20, drawEStackCount.Color, display);
+                            Drawing.DrawText(enemy.HPBarPosition.X + 145, enemy.HPBarPosition.Y + 20, drawEStackCount.Color, display);
                         }
                     }
                 }
