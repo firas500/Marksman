@@ -81,13 +81,20 @@ namespace Marksman.Champions
             var Minions = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range, MinionTypes.All,
                 MinionTeam.Enemy);
 
+            var killableMinionCount = 0;
             foreach (var m in Minions.Where(x => E.CanCast(x) && x.Health <= E.GetDamage(x)))
             {
-                //if (Minions.Count >= 3 && E.IsReady())
-                 //   E.Cast();
+                if (m.SkinName == "SRU_ChaosMinionSiege" || m.SkinName == "SRU_ChaosMinionSuper")
+                    killableMinionCount += 2;
+                else
+                    killableMinionCount++;
 
                 Render.Circle.DrawCircle(m.Position, (float) (m.BoundingRadius*1.5), Color.White, 5);
             }
+
+            if (killableMinionCount >= 3 && E.IsReady() && ObjectManager.Player.ManaPercent > 15)
+                E.Cast();
+
             var mobs = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range, MinionTypes.All,
                 MinionTeam.Neutral);
 
@@ -224,9 +231,7 @@ namespace Marksman.Champions
                             }
                             var xCoolDown = TimeSpan.FromSeconds(markedEnemies.ExpireTime - Game.Time);
                             var display = string.Format("E:{0}", markedEnemies.BuffCount);
-
-                            //Utils.Utils.DrawText(font, "aaaaa", (int) enemy.HPBarPosition.X, (int) enemy.HPBarPosition.Y,                                 SharpDX.Color.GreenYellow);
-
+                            //Utils.Utils.DrawText(font, "aaaaa", (int) enemy.HPBarPosition.X, (int) enemy.HPBarPosition.Y, SharpDX.Color.GreenYellow);
                             Drawing.DrawText(enemy.HPBarPosition.X + 145, enemy.HPBarPosition.Y + 20, drawEStackCount.Color, display);
                         }
                     }
@@ -278,6 +283,7 @@ namespace Marksman.Champions
             config.AddItem(new MenuItem("UseQC" + Id, "Use Q").SetValue(true));
             config.AddItem(new MenuItem("UseWC" + Id, "Use W").SetValue(true));
             config.AddItem(new MenuItem("UseEC" + Id, "Use E").SetValue(true));
+            config.AddItem(new MenuItem("UseRC" + Id, "Use R").SetValue(true));
             return true;
         }
 
