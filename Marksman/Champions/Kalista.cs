@@ -272,11 +272,6 @@ namespace Marksman.Champions
                     }
                 }
             }
-
-            if (!R.IsReady() || !GetValue<KeyBind>("CastR").Active) return;
-            t = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Physical);
-            if (t != null)
-                R.Cast(t);
         }
 
         public override bool ComboMenu(Menu config)
@@ -284,7 +279,6 @@ namespace Marksman.Champions
             config.AddItem(new MenuItem("UseQC" + Id, "Use Q").SetValue(true));
             config.AddItem(new MenuItem("UseWC" + Id, "Use W").SetValue(true));
             config.AddItem(new MenuItem("UseEC" + Id, "Use E").SetValue(true));
-            config.AddItem(new MenuItem("UseRC" + Id, "Use R").SetValue(true));
             return true;
         }
 
