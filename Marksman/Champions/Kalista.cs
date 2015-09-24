@@ -3,10 +3,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
 using Color = System.Drawing.Color;
+using SharpDX.Direct3D9;
 
 #endregion
 
@@ -21,6 +23,7 @@ namespace Marksman.Champions
 
     internal class Kalista : Champion
     {
+        public static Font font;
         public static Spell E;
         public static Dictionary<Vector3, Vector3> JumpPos = new Dictionary<Vector3, Vector3>();
         private static readonly List<EnemyMarker> xEnemyMarker = new List<EnemyMarker>();
@@ -35,31 +38,36 @@ namespace Marksman.Champions
         {
             Utils.Utils.PrintMessage("Kalista loaded.");
 
-            Q = new Spell(SpellSlot.Q, 1150);
+            Q = new Spell(SpellSlot.Q, 1170);
             W = new Spell(SpellSlot.W, 5500);
             E = new Spell(SpellSlot.E, 950);
             R = new Spell(SpellSlot.R, 1250);
 
-            Q.SetSkillshot(0.25f, 40f, 1300f, true, SkillshotType.SkillshotLine);
+            Q.SetSkillshot(0.25f, 40f, 1200f, true, SkillshotType.SkillshotLine);
             W.SetSkillshot(0.25f, 80f, 1600f, false, SkillshotType.SkillshotLine);
             R.SetSkillshot(1f, 160f, 2000f, false, SkillshotType.SkillshotLine);
+
+            font = new Font(
+        Drawing.Direct3DDevice,
+        new FontDescription
+        {
+            FaceName = "Segoe UI",
+            Height = 45,
+            OutputPrecision = FontPrecision.Default,
+            Quality = FontQuality.Default
+        });
+
         }
 
         public int KalistaMarkerCount
         {
             get
             {
-                var xbuffCount = 0;
-                foreach (
-                    var buff in from enemy in ObjectManager.Get<Obj_AI_Hero>().Where(tx => tx.IsEnemy && !tx.IsDead)
-                        where ObjectManager.Player.Distance(enemy) < E.Range
-                        from buff in enemy.Buffs
-                        where buff.Name.Contains("kalistaexpungemarker")
-                        select buff)
-                {
-                    xbuffCount = buff.Count;
-                }
-                return xbuffCount;
+                return (from enemy in ObjectManager.Get<Obj_AI_Hero>().Where(tx => tx.IsEnemy && !tx.IsDead)
+                    where ObjectManager.Player.Distance(enemy) < E.Range
+                    from buff in enemy.Buffs
+                    where buff.Name.Contains("kalistaexpungemarker")
+                    select buff).Select(buff => buff.Count).FirstOrDefault();
             }
         }
 
@@ -69,6 +77,25 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
+
+            var Minions = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range, MinionTypes.All, MinionTeam.Enemy);
+
+            foreach (var m in Minions.Where(x => E.CanCast(x) && x.Health <= E.GetDamage(x)))
+            {
+                if (Minions.Count >= 3 && E.IsReady())
+                    E.Cast();
+
+                Render.Circle.DrawCircle(m.Position, (float) (m.BoundingRadius*1.5), Color.White, 5);
+            }
+            var mobs = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range, MinionTypes.All, MinionTeam.Neutral);
+
+            foreach (var m in mobs.Where(x => E.CanCast(x) && x.Health <= E.GetDamage(x)))
+            {
+                Render.Circle.DrawCircle(m.Position, (float)(m.BoundingRadius * 1.5), Color.White, 5);
+                if (E.CanCast(m))
+                    E.Cast(m);
+            }
+
             Spell[] spellList = {Q, W, E, R};
             foreach (var spell in spellList)
             {
@@ -138,6 +165,15 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
+            var t1 =
+                HeroManager.Enemies.FirstOrDefault(
+                    x =>
+                        !x.HasBuffOfType(BuffType.Invulnerability) && !x.HasBuffOfType(BuffType.SpellShield) &&
+                        E.CanCast(x) && (x.Health + (x.HPRegenRate/2) + x.Level * 1.5) <= E.GetDamage(x));
+
+            if (E.CanCast(t1))
+                E.Cast();
+
             if (GetValue<Circle>("DrawJumpPos").Active)
                 fillPositions();
 
@@ -205,10 +241,7 @@ namespace Marksman.Champions
             if (drawEStackCount.Active)
             {
                 xEnemyMarker.Clear();
-                foreach (
-                    var xEnemy in
-                        ObjectManager.Get<Obj_AI_Hero>()
-                            .Where(tx => tx.IsEnemy && !tx.IsDead && ObjectManager.Player.Distance(tx) < E.Range))
+                foreach (var xEnemy in HeroManager.Enemies.Where(tx => tx.IsEnemy && !tx.IsDead && ObjectManager.Player.Distance(tx) < E.Range))
                 {
                     foreach (var buff in xEnemy.Buffs.Where(buff => buff.Name.Contains("kalistaexpungemarker")))
                     {
@@ -228,12 +261,16 @@ namespace Marksman.Champions
                         if (enemy.IsEnemy && !enemy.IsDead && ObjectManager.Player.Distance(enemy) <= E.Range &&
                             enemy.ChampionName == markedEnemies.ChampionName)
                         {
-                            if (!(markedEnemies.ExpireTime > Game.Time)) continue;
+                            if (!(markedEnemies.ExpireTime > Game.Time))
+                            {
+                                continue;
+                            }
                             var xCoolDown = TimeSpan.FromSeconds(markedEnemies.ExpireTime - Game.Time);
                             var display = string.Format("E:{0}", markedEnemies.BuffCount);
-                            Drawing.DrawText(enemy.HPBarPosition.X + 145, enemy.HPBarPosition.Y + 20,
-                                drawEStackCount.Color,
-                                display);
+
+                            Utils.Utils.DrawText(font, "aaaaa", (int)enemy.HPBarPosition.X , (int)enemy.HPBarPosition.Y, SharpDX.Color.GreenYellow);
+
+                            //Drawing.DrawText(enemy.HPBarPosition.X + 145, enemy.HPBarPosition.Y + 20, drawEStackCount.Color, display);
                         }
                     }
                 }
@@ -305,8 +342,8 @@ namespace Marksman.Champions
 
         public override bool MiscMenu(Menu config)
         {
-            config.AddItem(
-                new MenuItem("JumpTo" + Id, "JumpTo").SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Press)));
+            config.AddItem(new MenuItem("JumpTo" + Id, "JumpTo").SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Press)));
+            config.AddItem(new MenuItem("JumpTo2" + Id, "JumpTo2").SetValue(true));
             return true;
         }
 
@@ -362,5 +399,6 @@ namespace Marksman.Champions
         public static void fillPositions()
         {
         }
+        
     }
 }
