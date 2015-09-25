@@ -98,13 +98,17 @@ namespace Marksman.Champions
             var mobs = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range, MinionTypes.All,
                 MinionTeam.Neutral);
 
-            foreach (var m in mobs.Where(x => E.CanCast(x) && x.Health <= E.GetDamage(x)))
+            foreach (
+                var m in
+                    MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range, MinionTypes.All,
+                        MinionTeam.Neutral).Where(m => E.CanCast(m) && m.Health <= E.GetDamage(m)))
             {
-                Render.Circle.DrawCircle(m.Position, (float) (m.BoundingRadius*1.5), Color.White, 5);
-                if (E.CanCast(m))
+                if (m.SkinName.ToLower().Contains("baron") || m.SkinName.ToLower().Contains("dragon") && E.CanCast(m))
                     E.Cast(m);
+                else
+                    Render.Circle.DrawCircle(m.Position, (float) (m.BoundingRadius*1.5), Color.White, 5);
             }
-
+            
             Spell[] spellList = {Q, W, E, R};
             foreach (var spell in spellList)
             {
