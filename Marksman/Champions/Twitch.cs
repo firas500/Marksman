@@ -1,10 +1,14 @@
 #region
 
 using System;
-using System.Drawing;
+using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SharpDX;
+using Color = System.Drawing.Color;
+using SharpDX.Direct3D9;
 
 #endregion
 
@@ -12,8 +16,17 @@ namespace Marksman.Champions
 {
     internal class Twitch : Champion
     {
+        internal class MarkedEnemy
+        {
+            public string ChampionName { get; set; }
+            public double ExpireTime { get; set; }
+            public int BuffCount { get; set; }
+        }
+
+        public static Font font;
         public static Spell W;
         public static Spell E;
+        private static readonly List<MarkedEnemy> MarkedEnemies = new List<MarkedEnemy>();
 
         public Twitch()
         {
@@ -21,9 +34,19 @@ namespace Marksman.Champions
             W.SetSkillshot(0.25f, 120f, 1400f, false, SkillshotType.SkillshotCircle);
             E = new Spell(SpellSlot.E, 1200);
 
+
             Utility.HpBarDamageIndicator.DamageToUnit = GetComboDamage;
             Utility.HpBarDamageIndicator.Enabled = true;
 
+            font = new Font(
+                Drawing.Direct3DDevice,
+                new FontDescription
+                {
+                    FaceName = "Segoe UI",
+                    Height = 45,
+                    OutputPrecision = FontPrecision.Default,
+                    Quality = FontQuality.Default
+                });
             Utils.Utils.PrintMessage("Twitch loaded.");
         }
 
@@ -41,6 +64,42 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
+            MarkedEnemies.Clear();
+            foreach (
+                var xEnemy in
+                    HeroManager.Enemies.Where(
+                        tx => tx.IsEnemy && !tx.IsDead && ObjectManager.Player.Distance(tx) < E.Range))
+            {
+                foreach (var buff in xEnemy.Buffs.Where(buff => buff.Name.Contains("twitchdeadlyvenom")))
+                {
+                    MarkedEnemies.Add(new MarkedEnemy
+                    {
+                        ChampionName = xEnemy.ChampionName,
+                        ExpireTime = Game.Time + 6,
+                        BuffCount = buff.Count
+                    });
+                }
+            }
+
+            foreach (var markedEnemies in MarkedEnemies)
+            {
+                foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>())
+                {
+                    if (enemy.IsEnemy && !enemy.IsDead && ObjectManager.Player.Distance(enemy) <= E.Range && E.IsReady() &&
+                        enemy.ChampionName == markedEnemies.ChampionName)
+                    {
+                        if (!(markedEnemies.ExpireTime > Game.Time))
+                        {
+                            continue;
+                        }
+
+                        var display = string.Format("{0}", markedEnemies.BuffCount);
+                        Utils.Utils.DrawText(font, display, (int) enemy.HPBarPosition.X, (int) enemy.HPBarPosition.Y,
+                            SharpDX.Color.White);
+                    }
+                }
+            }
+
             Spell[] spellList = {W};
             foreach (var spell in spellList)
             {
@@ -52,6 +111,37 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
+
+
+            var killableMinionCount = 0;
+            foreach (
+                var m in
+                    MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range)
+                        .Where(x => E.CanCast(x) && x.Health <= E.GetDamage(x)))
+            {
+                if (m.SkinName == "SRU_ChaosMinionSiege" || m.SkinName == "SRU_ChaosMinionSuper")
+                    killableMinionCount += 2;
+                else
+                    killableMinionCount++;
+                Render.Circle.DrawCircle(m.Position, (float) (m.BoundingRadius*1.5), Color.White);
+            }
+
+            if (killableMinionCount >= 3 && E.IsReady() && ObjectManager.Player.ManaPercent > 15)
+            {
+                E.Cast();
+            }
+
+            foreach (
+                var m in
+                    MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range, MinionTypes.All,
+                        MinionTeam.Neutral).Where(m => E.CanCast(m) && m.Health <= E.GetDamage(m)))
+            {
+                if (m.SkinName.ToLower().Contains("baron") || m.SkinName.ToLower().Contains("dragon") && E.CanCast(m))
+                    E.Cast(m);
+                else
+                    Render.Circle.DrawCircle(m.Position, (float) (m.BoundingRadius*1.5), Color.White);
+            }
+
             if (Orbwalking.CanMove(100) && (ComboActive || HarassActive))
             {
                 var useW = GetValue<bool>("UseW" + (ComboActive ? "C" : "H"));
@@ -75,36 +165,6 @@ namespace Marksman.Champions
                                     .Where(buff => buff.Count == 6))
                         {
                             E.Cast();
-                        }
-                    }
-                    // credits iMeh
-                    var minions = MinionManager.GetMinions(E.Range, MinionTypes.All, MinionTeam.NotAlly);
-                    foreach (var m in minions)
-                    {
-                        switch (GetValue<StringList>("E.Mobs").SelectedIndex)
-                        {
-                            case 0:
-                                if ((m.CharData.BaseSkinName.Contains("MinionSiege") || m.CharData.BaseSkinName.Contains("Dragon") ||
-                                     m.CharData.BaseSkinName.Contains("Baron")) && E.IsKillable(m))
-                                {
-                                    E.Cast();
-                                }
-                                break;
-
-                            case 1:
-                                if ((m.CharData.BaseSkinName.Contains("Dragon") || m.CharData.BaseSkinName.Contains("Baron")) &&
-                                    E.IsKillable(m))
-                                {
-                                    E.Cast();
-                                }
-                                break;
-                            case 2:
-                                if (m.CharData.BaseSkinName.Contains("MinionSiege") &&
-                                    E.IsKillable(m))
-                                {
-                                    E.Cast();
-                                }
-                                break;
                         }
                     }
                 }
@@ -184,9 +244,6 @@ namespace Marksman.Champions
 
         public override bool LaneClearMenu(Menu config)
         {
-            config.AddItem(
-                new MenuItem("E.Mobs" + Id, "Kill mobs with E").SetValue(
-                    new StringList(new[] {"All Mobs", "Baron + Dragon", "Siege Minion", "None"})));
 
             return true;
         }
