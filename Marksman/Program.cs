@@ -127,7 +127,17 @@ namespace Marksman
             CClass.Id = ObjectManager.Player.CharData.BaseSkinName;
             CClass.Config = Config;
 
-            
+            #region Auto Level For R
+            for (var i = 1; i < 4; i++)
+            {
+                if (ObjectManager.Player.Level == 5 * i + 1
+                    && ObjectManager.Player.Spellbook.GetSpell(SpellSlot.R).Level < i)
+                {
+                    ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.R);
+                }
+            }
+            #endregion
+
 
             var targetSelectorMenu = new Menu("Target Selector", "Target Selector");
             TargetSelector.AddToMenu(targetSelectorMenu);
