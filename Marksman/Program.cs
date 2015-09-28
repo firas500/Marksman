@@ -329,7 +329,7 @@ namespace Marksman
             if (Config.Item("Draw.KillableEnemy").GetValue<bool>())
             {
                 var t = KillableEnemyAA;
-                if (t.Item1 != null && t.Item1.IsValidTarget(1000) && t.Item2 > 0)
+                if (t.Item1 != null && t.Item1.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 400) && t.Item2 > 0)
                 {
                     Utils.Utils.DrawText(
                         Utils.Utils.Text,
@@ -688,13 +688,13 @@ namespace Marksman
             get
             {
                 var x = 0;
-                var t = TargetSelector.GetTarget(Orbwalking.GetRealAutoAttackRange(null) + 300, TargetSelector.DamageType.Physical);
+                var t = TargetSelector.GetTarget(Orbwalking.GetRealAutoAttackRange(null) + 400, TargetSelector.DamageType.Physical);
                 {
                     if (t.IsValidTarget())
                     {
                         if (t.Health
                             < ObjectManager.Player.TotalAttackDamage
-                            * (1 / ObjectManager.Player.AttackCastDelay > 1500 ? 8 : 4))
+                            * (1 / ObjectManager.Player.AttackCastDelay > 1400 ? 8 : 4))
                         {
                             x = (int)Math.Ceiling(t.Health / ObjectManager.Player.TotalAttackDamage);
                         }
