@@ -50,8 +50,11 @@ namespace Marksman.Champions
             DangerousList.Add(new DangerousSpells("nautilius", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("skarner", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("syndra", SpellSlot.R));
-            DangerousList.Add(new DangerousSpells("vayne", SpellSlot.E));
             DangerousList.Add(new DangerousSpells("warwick", SpellSlot.R));
+            DangerousList.Add(new DangerousSpells("warwick", SpellSlot.R));
+            DangerousList.Add(new DangerousSpells("zed", SpellSlot.R));
+            DangerousList.Add(new DangerousSpells("tristana", SpellSlot.R));
+            DangerousList.Add(new DangerousSpells("kalista", SpellSlot.E));
             
             Utils.Utils.PrintMessage("Sivir loaded.");
             Utils.Utils.PrintMessage("Sivir E Support Loaded! Please check the Marksman Menu for her E Spell");
@@ -61,15 +64,29 @@ namespace Marksman.Champions
         {
             if (sender.IsEnemy && sender is Obj_AI_Hero && args.Target.IsMe && this.E.IsReady())
             {
-                foreach (
-                    var c in DangerousList.Where(c => ((Obj_AI_Hero)sender).ChampionName.ToLower() == c.ChampionName))
+                foreach (var c in DangerousList.Where(c => ((Obj_AI_Hero)sender).ChampionName.ToLower() == c.ChampionName))
                 {
                     if (args.SData.Name == ((Obj_AI_Hero)sender).GetSpell(c.SpellSlot).Name)
                     {
-                        if (args.SData.CastType == 1) this.E.Cast();
+                        this.E.Cast();
                     }
                 }
             }
+            
+            if (((Obj_AI_Hero)sender).ChampionName.ToLower() == "vayne" && args.SData.Name == ((Obj_AI_Hero)sender).GetSpell(SpellSlot.E).Name)
+            {
+                for (var i = 1; i < 8; i++)
+                {
+                    var championBehind = ObjectManager.Player.Position
+                                         + Vector3.Normalize(
+                                             ((Obj_AI_Hero)sender).ServerPosition - ObjectManager.Player.Position)
+                                         * (-i * 50);
+                    if (championBehind.IsWall())
+                    {
+                        this.E.Cast();
+                    }
+                }
+            }     
         }
 
         public override void Game_OnGameUpdate(EventArgs args)
