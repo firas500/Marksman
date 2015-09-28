@@ -130,8 +130,7 @@ namespace Marksman
             #region Auto Level For R
             for (var i = 1; i < 4; i++)
             {
-                if (ObjectManager.Player.Level == 5 * i + 1
-                    && ObjectManager.Player.Spellbook.GetSpell(SpellSlot.R).Level < i)
+                if (ObjectManager.Player.Level == 5 * i + 1)
                 {
                     ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.R);
                 }
