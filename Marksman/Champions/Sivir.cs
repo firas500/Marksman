@@ -14,9 +14,10 @@ namespace Marksman.Champions
     internal class Sivir : Champion
     {
         public static Spell Q;
-        private Menu _menuSupportedSpells;
         public Spell E;
         public Spell W;
+        private Menu _menuSupportedSpells;
+        public static List<DangerousSpells> DangerousList = new List<DangerousSpells>();
 
         public Sivir()
         {
@@ -28,19 +29,33 @@ namespace Marksman.Champions
             E = new Spell(SpellSlot.E);
 
             Obj_AI_Base.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;
-
+            
+            DangerousList.Add(new DangerousSpells("darius", SpellSlot.R));
+            DangerousList.Add(new DangerousSpells("fiddlesticks", SpellSlot.Q));
+            DangerousList.Add(new DangerousSpells("garen", SpellSlot.R));
+            DangerousList.Add(new DangerousSpells("leesin", SpellSlot.R));
+            DangerousList.Add(new DangerousSpells("nautilius", SpellSlot.R));
+            DangerousList.Add(new DangerousSpells("skarner", SpellSlot.R));
+            DangerousList.Add(new DangerousSpells("syndra", SpellSlot.R));
+            DangerousList.Add(new DangerousSpells("vayne", SpellSlot.E));
+            DangerousList.Add(new DangerousSpells("warwick", SpellSlot.R));
+            
             Utils.Utils.PrintMessage("Sivir loaded.");
             Utils.Utils.PrintMessage("Sivir E Support Loaded! Please check the Marksman Menu for her E Spell");
         }
 
         public void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-            if (!sender.IsMe && sender.IsEnemy && (sender is Obj_AI_Hero) && args.Target.IsMe && E.IsReady() &&
-                ((Obj_AI_Hero) sender).ChampionName == "Vayne")
+            if (sender.IsEnemy && sender is Obj_AI_Hero && args.Target.IsMe && this.E.IsReady())
             {
-                var buffs = ObjectManager.Player.Buffs.Where(b => b.Name.Contains("silvereddebuff"));
-                if (buffs.Count() == 2 && Evade.Config.MenuSkillShots.Item("VayneBlockSilverBuff").GetValue<bool>())
-                    E.Cast();
+                foreach (
+                    var c in DangerousList.Where(c => ((Obj_AI_Hero)sender).ChampionName.ToLower() == c.ChampionName))
+                {
+                    if (args.SData.Name == ((Obj_AI_Hero)sender).GetSpell(c.SpellSlot).Name)
+                    {
+                        if (args.SData.CastType == 1) this.E.Cast();
+                    }
+                }
             }
         }
 
