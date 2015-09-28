@@ -56,7 +56,7 @@ namespace Marksman.Champions
             DangerousList.Add(new DangerousSpells("tristana", SpellSlot.R));
 
             Utils.Utils.PrintMessage("Sivir loaded.");
-            Utils.Utils.PrintMessage("Sivir E Support Loaded! Please check the Marksman Menu for her E Spell");
+//            Utils.Utils.PrintMessage("Sivir E Support Loaded! Please check the Marksman Menu for her E Spell");
         }
 
         public void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
