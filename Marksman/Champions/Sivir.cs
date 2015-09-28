@@ -1,18 +1,17 @@
 #region
-
 using System;
-using System.Drawing;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 using Marksman.Utils;
-
 #endregion
 
 namespace Marksman.Champions
 {
     using System.Collections.Generic;
     using SharpDX;
+    using Color = System.Drawing.Color;
+
     class DangerousSpells
     {
         public string ChampionName { get; private set; }
@@ -24,7 +23,7 @@ namespace Marksman.Champions
             this.SpellSlot = spellSlot;
         }
     }
-    
+
     internal class Sivir : Champion
     {
         public static Spell Q;
@@ -43,7 +42,7 @@ namespace Marksman.Champions
             E = new Spell(SpellSlot.E);
 
             Obj_AI_Base.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;
-            
+
             DangerousList.Add(new DangerousSpells("darius", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("fiddlesticks", SpellSlot.Q));
             DangerousList.Add(new DangerousSpells("garen", SpellSlot.R));
@@ -56,7 +55,7 @@ namespace Marksman.Champions
             DangerousList.Add(new DangerousSpells("zed", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("tristana", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("kalista", SpellSlot.E));
-            
+
             Utils.Utils.PrintMessage("Sivir loaded.");
             Utils.Utils.PrintMessage("Sivir E Support Loaded! Please check the Marksman Menu for her E Spell");
         }
@@ -73,7 +72,7 @@ namespace Marksman.Champions
                     }
                 }
             }
-            
+
             if (((Obj_AI_Hero)sender).ChampionName.ToLower() == "vayne" && args.SData.Name == ((Obj_AI_Hero)sender).GetSpell(SpellSlot.E).Name)
             {
                 for (var i = 1; i < 8; i++)
@@ -164,7 +163,7 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
-            Spell[] spellList = {Q};
+            Spell[] spellList = { Q };
             foreach (var spell in spellList)
             {
                 var menuItem = GetValue<Circle>("Draw" + spell.Slot);
