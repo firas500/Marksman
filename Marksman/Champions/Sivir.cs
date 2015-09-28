@@ -54,7 +54,6 @@ namespace Marksman.Champions
             DangerousList.Add(new DangerousSpells("warwick", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("zed", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("tristana", SpellSlot.R));
-            DangerousList.Add(new DangerousSpells("kalista", SpellSlot.E));
 
             Utils.Utils.PrintMessage("Sivir loaded.");
             Utils.Utils.PrintMessage("Sivir E Support Loaded! Please check the Marksman Menu for her E Spell");
