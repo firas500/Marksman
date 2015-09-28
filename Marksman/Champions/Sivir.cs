@@ -30,7 +30,6 @@ namespace Marksman.Champions
         public Spell E;
         public Spell W;
         private Menu _menuSupportedSpells;
-        private static bool haveKalistaEBuff;
         public static List<DangerousSpells> DangerousList = new List<DangerousSpells>();
 
         public Sivir()
@@ -73,10 +72,11 @@ namespace Marksman.Champions
                 }
             }
 
-            if (((Obj_AI_Hero)sender).ChampionName.ToLower() == "kalista" && args.Slot == SpellSlot.E
-                && haveKalistaEBuff)
+            if (((Obj_AI_Hero)sender).ChampionName.ToLower() == "kalista" && args.Slot == SpellSlot.E)
             {
-                E.Cast();
+                var bCount = ObjectManager.Player.Buffs.Count(b => b.Name.Contains("kalistaexpungemarker"));
+                if (bCount > 0)
+                    this.E.Cast();
             }
             
             if (((Obj_AI_Hero)sender).ChampionName.ToLower() == "vayne" && args.SData.Name == ((Obj_AI_Hero)sender).GetSpell(SpellSlot.E).Name)
@@ -97,9 +97,6 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
-            var bCount = ObjectManager.Player.Buffs.Count(b => b.Name.Contains("kalistaexpungemarker"));
-            haveKalistaEBuff = bCount > 0;
-
             if (GetValue<bool>("AutoQ"))
             {
                 var t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
