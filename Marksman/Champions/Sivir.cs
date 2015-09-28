@@ -12,6 +12,7 @@ using Marksman.Utils;
 namespace Marksman.Champions
 {
     using System.Collections.Generic;
+    using SharpDX;
     class DangerousSpells
     {
         public string ChampionName { get; private set; }
