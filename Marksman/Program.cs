@@ -333,7 +333,7 @@ namespace Marksman
                 {
                     Utils.Utils.DrawText(
                         Utils.Utils.Text,
-                        t.Item1.ChampionName + ": " + t.Item2 + " x AA Damage = Kill",
+                        string.Format("{0}: {1} x AA Damage = Kill", t.Item1.ChampionName, t.Item2),
                         (int)t.Item1.HPBarPosition.X + 145,
                         (int)t.Item1.HPBarPosition.Y + 5,
                         SharpDX.Color.White);
