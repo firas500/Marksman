@@ -24,6 +24,8 @@ namespace Marksman
 //        public static Menu MenuInterruptableSpell;
         public static Champion CClass;
         public static Activator AActivator;
+        public static Utils.AutoLevel AutoLevel;
+        
         public static double ActivatorTime;
         private static Obj_AI_Hero xSelectedTarget;
 
@@ -126,7 +128,9 @@ namespace Marksman
 
             CClass.Id = ObjectManager.Player.CharData.BaseSkinName;
             CClass.Config = Config;
-
+            #region Auto Level
+            AutoLevel = new Utils.AutoLevel();
+            #endregion
             var targetSelectorMenu = new Menu("Target Selector", "Target Selector");
             TargetSelector.AddToMenu(targetSelectorMenu);
             Config.AddSubMenu(targetSelectorMenu);
@@ -391,16 +395,6 @@ namespace Marksman
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
-            #region Auto Level For R
-            for (var i = 1; i < 4; i++)
-            {
-                if (ObjectManager.Player.Level == 5 * i + 1)
-                {
-                    ObjectManager.Player.Spellbook.LevelSpell(SpellSlot.R);
-                }
-            }
-            #endregion
-
             if (Items.HasItem(3139) || Items.HasItem(3140))
                 CheckChampionBuff();
 
