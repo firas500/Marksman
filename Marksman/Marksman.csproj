@@ -123,6 +123,7 @@
     <Compile Include="Champions\Tristana.cs" />
     <Compile Include="Champions\Twitch.cs" />
     <Compile Include="Utils\Utils.cs" />
+    <Compile Include="Utils\AutoLevels.cs" />
     <Compile Include="Champions\Urgot.cs" />
     <Compile Include="Champions\Varus.cs" />
     <Compile Include="Champions\Vayne.cs" />
