@@ -11,6 +11,19 @@ using Marksman.Utils;
 
 namespace Marksman.Champions
 {
+    using System.Collections.Generic;
+    class DangerousSpells
+    {
+        public string ChampionName { get; private set; }
+        public SpellSlot SpellSlot { get; private set; }
+
+        public DangerousSpells(string championName, SpellSlot spellSlot)
+        {
+            this.ChampionName = championName;
+            this.SpellSlot = spellSlot;
+        }
+    }
+    
     internal class Sivir : Champion
     {
         public static Spell Q;
