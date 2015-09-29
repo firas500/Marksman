@@ -72,7 +72,7 @@ namespace Marksman.Champions
                 }
             }
 
-            if (((Obj_AI_Hero)sender).ChampionName.ToLower() == "kalista" && args.Slot == SpellSlot.E)
+            if (((Obj_AI_Hero)sender).ChampionName.ToLower() == "kalista" && args.SData.Name == ((Obj_AI_Hero)sender).GetSpell(SpellSlot.E).Name)
             {
                 var bCount = ObjectManager.Player.Buffs.Count(b => b.Name.Contains("kalistaexpungemarker"));
                 if (bCount > 0)
