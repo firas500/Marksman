@@ -25,6 +25,7 @@ namespace Marksman
         public static Champion CClass;
         public static Activator AActivator;
         public static Utils.AutoLevel AutoLevel;
+        public static Utils.EarlyEvade EarlyEvade;
         
         public static double ActivatorTime;
         private static Obj_AI_Hero xSelectedTarget;
@@ -140,6 +141,9 @@ namespace Marksman
 
             OrbWalking.AddItem(new MenuItem("Orb.AutoWindUp", "Marksman - Auto Windup").SetValue(false)).ValueChanged +=
                 (sender, argsEvent) => { if (argsEvent.GetNewValue<bool>()) CheckAutoWindUp(); };
+
+            EarlyEvade = new Utils.EarlyEvade();
+            Config.AddSubMenu(EarlyEvade.MenuLocal); ;
 
             /* Menu Summoners */
             var summoners = Config.AddSubMenu(new Menu("Summoners", "Summoners"));
