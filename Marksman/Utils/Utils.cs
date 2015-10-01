@@ -239,5 +239,17 @@ namespace Marksman.Utils
             }
             return 1;
         }
+        
+        public static Vector3 CenterOfVectors(Vector3[] vectors)
+        {
+            var sum = Vector3.Zero;
+            if (vectors == null || vectors.Length == 0)
+                return sum;
+
+            sum = vectors.Aggregate(sum, (current, vec) => current + vec);
+            return sum / vectors.Length;
+        }
+
     }
+    
 }
