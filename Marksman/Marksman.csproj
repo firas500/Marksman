@@ -93,6 +93,7 @@
     <Compile Include="Evade\SpellDatabase.cs" />
     <Compile Include="Evade\Utils.cs" />
     <Compile Include="Utils\Activator.cs" />
+    <Compile Include="Utils\EarlyEvade.cs" />
     <Compile Include="Champions\Ashe.cs" />
     <Compile Include="Champions\Caitlyn.cs" />
     <Compile Include="Champions\Champion.cs" />
