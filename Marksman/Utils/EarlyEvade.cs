@@ -51,7 +51,7 @@ namespace Marksman.Utils
                         MenuLocal.AddSubMenu(menuSub);
                     }
 
-                    if (e.ChampionName == "Udyr")
+                    if (e.ChampionName == "Vayne")
                     {
                         var menuSub = new Menu("Vayne", "Vayne");
                         var menuSubSpell = new Menu("VayneE", "E Stun");
