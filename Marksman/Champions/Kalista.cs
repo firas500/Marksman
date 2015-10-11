@@ -101,7 +101,7 @@ namespace Marksman.Champions
             foreach (
                 var m in
                     MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range, MinionTypes.All,
-                        MinionTeam.Neutral).Where(m => E.CanCast(m) && m.Health <= E.GetDamage(m)))
+                        MinionTeam.Neutral).Where(m => E.CanCast(m) && m.Health <= E.GetDamage(m) + 20))
             {
                 if (m.SkinName.ToLower().Contains("baron") || m.SkinName.ToLower().Contains("dragon") && E.CanCast(m))
                     E.Cast(m);
@@ -178,7 +178,7 @@ namespace Marksman.Champions
                 HeroManager.Enemies.FirstOrDefault(
                     x =>
                         !x.HasBuffOfType(BuffType.Invulnerability) && !x.HasBuffOfType(BuffType.SpellShield) &&
-                        E.CanCast(x) && (x.Health + (x.HPRegenRate/2) + x.Level*1.5) <= E.GetDamage(x));
+                        E.CanCast(x) && (x.Health + (x.HPRegenRate/2) + x.Level) <= E.GetDamage(x));
 
             if (E.CanCast(t1))
                 E.Cast();
