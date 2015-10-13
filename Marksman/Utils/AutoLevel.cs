@@ -1,37 +1,39 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LeagueSharp;
 using LeagueSharp.Common;
 
 namespace Marksman.Utils
 {
-    public class AutoLevel
+    using System.Linq;
+    using System.Security.AccessControl;
+
+    public class AppAutoLevel
     {
         public static Menu LocalMenu;
 
         public static int[] SpellLevels;
 
-        public AutoLevel()
+        public AppAutoLevel()
         {
             LocalMenu = new Menu("Auto Level", "Auto Level");
             LocalMenu.AddItem(
+                new MenuItem("AutoLevel.Set", "at Start:").SetValue(
+                    new StringList(new[] { "Allways Off", "Allways On", "Remember Last Settings" }, 2)));
+            LocalMenu.AddItem(
                 new MenuItem("AutoLevel.Active", "Auto Level Active!").SetValue(
-                    new KeyBind("L".ToCharArray()[0], KeyBindType.Toggle))).Permashow(true, "Marksman: Auto Level");
+                    new KeyBind("L".ToCharArray()[0], KeyBindType.Toggle))).Permashow(true, "Marksman| Auto Level");
 
             var championName = ObjectManager.Player.ChampionName.ToLowerInvariant();
             switch (championName)
             {
                 case "ashe":
                     SpellLevels = new int[] { 2, 1, 3, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "caitlyn":
                     SpellLevels = new int[] { 1, 2, 3, 1, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "corki":
@@ -39,7 +41,7 @@ namespace Marksman.Utils
                                   > ObjectManager.Player.PercentPhysicalDamageMod
                                       ? new int[] { 1, 2, 3, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 }
                                       : new int[] { 1, 2, 3, 1, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "draven":
@@ -51,32 +53,32 @@ namespace Marksman.Utils
                                   > ObjectManager.Player.PercentPhysicalDamageMod
                                       ? new int[] { 2, 3, 1, 2, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 }
                                       : new int[] { 1, 2, 3, 2, 2, 4, 2, 1, 2, 1, 4, 1, 1, 3, 3, 4, 3, 3 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "graves":
                     SpellLevels = new int[] { 1, 3, 2, 1, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "gnar":
                     SpellLevels = new int[] { 1, 2, 3, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "jinx":
                     SpellLevels = new int[] { 1, 3, 2, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "kalista":
-                    SpellLevels = new int[] { 2, 3, 1, 3, 3, 4, 1, 3, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    SpellLevels = new int[] { 2, 1, 3, 3, 3, 4, 1, 3, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "kindred":
                     SpellLevels = new int[] { 2, 1, 3, 3, 3, 4, 1, 3, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "kogmaw":
@@ -84,95 +86,81 @@ namespace Marksman.Utils
                                   > ObjectManager.Player.PercentPhysicalDamageMod
                                       ? new int[] { 2, 1, 3, 2, 2, 4, 2, 1, 2, 1, 4, 1, 1, 3, 3, 4, 3, 3 }
                                       : new int[] { 3, 2, 1, 3, 3, 4, 3, 1, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "lucian":
                     SpellLevels = new int[] { 1, 3, 2, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "missfortune":
                     SpellLevels = new int[] { 1, 2, 3, 2, 2, 4, 2, 1, 2, 1, 4, 1, 1, 3, 3, 4, 3, 3 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "quinn":
                     SpellLevels = new int[] { 1, 3, 2, 1, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "sivir":
                     SpellLevels = new int[] { 1, 2, 3, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "teemo":
                     SpellLevels = new int[] { 3, 1, 2, 3, 3, 4, 3, 1, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "tristana":
                     SpellLevels = new int[] { 3, 2, 3, 1, 3, 4, 6, 1, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "twitch":
                     SpellLevels = new int[] { 3, 2, 3, 1, 3, 4, 3, 1, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "urgot":
                     SpellLevels = new int[] { 3, 1, 2, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "vayne":
                     SpellLevels = new int[] { 1, 3, 2, 2, 2, 4, 2, 1, 2, 1, 4, 1, 1, 3, 3, 4, 3, 3 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "varus":
                     SpellLevels = new int[] { 1, 2, 3, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
-                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelStr(SpellLevels)));
+                    LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
             }
-            LocalMenu.Item("AutoLevel.Active").SetValue(new KeyBind("L".ToCharArray()[0], KeyBindType.Toggle, false));
 
-            Program.Config.AddSubMenu(LocalMenu);
+            switch (LocalMenu.Item("AutoLevel.Set").GetValue<StringList>().SelectedIndex)
+            {
+                case 0:
+                    LocalMenu.Item("AutoLevel.Active")
+                        .SetValue(new KeyBind("L".ToCharArray()[0], KeyBindType.Toggle, false));
+                    break;
+
+                case 1:
+                    LocalMenu.Item("AutoLevel.Active").SetValue(new KeyBind("L".ToCharArray()[0], KeyBindType.Toggle, true));
+                    break;
+            }
+
+            Program.MenuActivator.AddSubMenu(LocalMenu);
             Game.OnUpdate += Game_OnUpdate;
-
         }
-        
-        private static string GetLevelStr(int[] spellLevels)
+
+        private static string GetLevelList(int[] spellLevels)
         {
-            var x = "";
-            foreach (var i in spellLevels)
-            {
-                switch (i)
-                {
-                    case 1:
-                        x += "Q";
-                        break;
-                    case 2:
-                        x += "W";
-                        break;
-                    case 3:
-                        x += "E";
-                        break;
-                    case 4:
-                        x += "R";
-                        break;
-                }
-                x += " - ";
-            }
-
-            if (x != "")
-            {
-                return x.Substring(0, x.Length - 2);
-            }
-
-            return "";
+            var a = new[] { "Q", "W", "E", "R" };
+            var b = spellLevels.Aggregate("", (c, i) => c + (a[i - 1] + " - "));
+            return b != "" ? b.Substring(0, b.Length - 2) : "";
         }
 
         private static void Game_OnUpdate(EventArgs args)
