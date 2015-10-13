@@ -15,7 +15,7 @@ namespace Marksman.Utils
 
         public AutoLevel()
         {
-            LocalMenu = new Menu("Auto Level", "Auto Level");
+            LocalMenu = new Menu("Auto Level", "Auto Level").SetFontStyle(FontStyle.Regular, Color.IndianRed);
             LocalMenu.AddItem(
                 new MenuItem("AutoLevel.Set", "at Game Start:").SetValue(
                     new StringList(new[] { "Allways Off", "Allways On", "Remember Last Settings" }, 2)));
