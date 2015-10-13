@@ -252,9 +252,9 @@ namespace Marksman.Champions
             config.AddItem(new MenuItem("UseQH" + Id, "Use Q").SetValue(false));
             config.AddItem(new MenuItem("UseWH" + Id, "Use W").SetValue(true));
             config.AddItem(new MenuItem("UseEH" + Id, "Use E").SetValue(true));
-            config.AddItem(
-                new MenuItem("UseETH" + Id, "Use E (Toggle)").SetValue(
-                    new KeyBind("H".ToCharArray()[0], KeyBindType.Toggle)));
+            config.AddItem(new MenuItem("UseETH" + Id, "Use E (Toggle)").SetValue(
+                    new KeyBind("H".ToCharArray()[0], KeyBindType.Toggle)))
+                        .Permashow(true, "Marksman | Toggle E");;
             return true;
         }
 
