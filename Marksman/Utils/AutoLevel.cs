@@ -158,8 +158,7 @@ namespace Marksman.Utils
 
         private static string GetLevelList(int[] spellLevels)
         {
-            var a = new[] { "Q", "W", "E", "R" };
-            var b = spellLevels.Aggregate("", (c, i) => c + (a[i - 1] + " - "));
+            var b = spellLevels.Aggregate("", (c, i) => c + (new[] { "Q", "W", "E", "R" }[i - 1] + " - "));
             return b != "" ? b.Substring(0, b.Length - 2) : "";
         }
 
