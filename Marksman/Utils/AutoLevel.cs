@@ -1,6 +1,8 @@
 using System;
+using System.Drawing;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Color = SharpDX.Color;
 
 namespace Marksman.Utils
 {
@@ -17,7 +19,7 @@ namespace Marksman.Utils
         {
             LocalMenu = new Menu("Auto Level", "Auto Level").SetFontStyle(FontStyle.Regular, Color.IndianRed);
             LocalMenu.AddItem(
-                new MenuItem("AutoLevel.Set", "at Game Start:").SetValue(
+                new MenuItem("AutoLevel.Set", "at Start:").SetValue(
                     new StringList(new[] { "Allways Off", "Allways On", "Remember Last Settings" }, 2)));
             LocalMenu.AddItem(
                 new MenuItem("AutoLevel.Active", "Auto Level Active!").SetValue(
