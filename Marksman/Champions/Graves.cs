@@ -169,7 +169,7 @@ namespace Marksman.Champions
             config.AddItem(new MenuItem("UseWH" + Id, "Use W").SetValue(false));
             config.AddItem(
                 new MenuItem("UseQTH" + Id, "Use Q (Toggle)").SetValue(new KeyBind("H".ToCharArray()[0],
-                    KeyBindType.Toggle)));
+                    KeyBindType.Toggle))).Permashow(true, "Marksman | Toggle Q");
 
             return true;
         }
