@@ -197,8 +197,7 @@ namespace Marksman
             {
                 SetSmiteSlot();
 
-
-                var combo = new Menu("Combo", "Combo");
+                var combo = new Menu("Combo", "Combo").SetFontStyle(FontStyle.Regular, SharpDX.Color.GreenYellow);
                 if (CClass.ComboMenu(combo))
                 {
                     if (SmiteSlot != SpellSlot.Unknown)
