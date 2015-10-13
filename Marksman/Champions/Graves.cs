@@ -13,8 +13,8 @@ namespace Marksman.Champions
     internal class Graves : Champion
     {
         public Spell Q;
-        public Spell R;
         public Spell W;
+        public Spell R;
 
         public Graves()
         {
@@ -70,6 +70,19 @@ namespace Marksman.Champions
                 if (t != null)
                     Q.Cast(t, false, true);
             }
+
+            if (GetValue<KeyBind>("CastR").Active && R.IsReady())
+            {
+                var t = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Physical);
+                if (t.IsValidTarget())
+                {
+                    if (ObjectManager.Player.GetSpellDamage(t, SpellSlot.R) > t.Health && !t.IsZombie)
+                    {
+                        R.CastIfHitchanceEquals(t, HitChance.High, false);
+                    }
+                }
+            }
+
 
             if ((!ComboActive && !HarassActive) || !Orbwalking.CanMove(100)) return;
             var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
@@ -144,6 +157,9 @@ namespace Marksman.Champions
             config.AddItem(new MenuItem("UseQC" + Id, "Use Q").SetValue(true));
             config.AddItem(new MenuItem("UseWC" + Id, "Use W").SetValue(true));
             config.AddItem(new MenuItem("UseRC" + Id, "Use R").SetValue(true));
+            config.AddItem(
+                new MenuItem("CastR" + Id, "Cast R (Manual)").SetValue(new KeyBind("T".ToCharArray()[0],
+                    KeyBindType.Press)));
             return true;
         }
 
