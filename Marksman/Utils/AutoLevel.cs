@@ -7,13 +7,13 @@ namespace Marksman.Utils
     using System.Linq;
     using System.Security.AccessControl;
 
-    public class AppAutoLevel
+    public class AutoLevel
     {
         public static Menu LocalMenu;
 
         public static int[] SpellLevels;
 
-        public AppAutoLevel()
+        public AutoLevel()
         {
             LocalMenu = new Menu("Auto Level", "Auto Level");
             LocalMenu.AddItem(
@@ -152,7 +152,7 @@ namespace Marksman.Utils
                     break;
             }
 
-            Program.MenuActivator.AddSubMenu(LocalMenu);
+            Program.Config.AddSubMenu(LocalMenu);
             Game.OnUpdate += Game_OnUpdate;
         }
 
