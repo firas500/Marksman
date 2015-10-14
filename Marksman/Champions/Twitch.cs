@@ -27,14 +27,16 @@ namespace Marksman.Champions
         public static Spell W;
         public static Spell E;
         private static readonly List<MarkedEnemy> MarkedEnemies = new List<MarkedEnemy>();
-
+        private static bool canCastE = false;
         public Twitch()
         {
             W = new Spell(SpellSlot.W, 950);
             W.SetSkillshot(0.25f, 120f, 1400f, false, SkillshotType.SkillshotCircle);
             E = new Spell(SpellSlot.E, 1200);
 
-
+            GameObject.OnCreate += OnCreateObject;
+            GameObject.OnDelete += OnDeleteObject;
+            
             Utility.HpBarDamageIndicator.DamageToUnit = GetComboDamage;
             Utility.HpBarDamageIndicator.Enabled = true;
 
@@ -48,6 +50,22 @@ namespace Marksman.Champions
                     Quality = FontQuality.Default
                 });
             Utils.Utils.PrintMessage("Twitch loaded.");
+        }
+
+        private static void OnDeleteObject(GameObject sender, EventArgs args)
+        {
+            if ((sender.Name.ToLower().Contains("twitch_poison_counter_06.troy")))
+            {
+                canCastE = false;
+            }
+        }
+
+        private static void OnCreateObject(GameObject sender, EventArgs args)
+        {
+                if ((sender.Name.ToLower().Contains("twitch_poison_counter_06.troy")))
+                {
+                    canCastE = true;
+                }
         }
 
         public override void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
@@ -111,8 +129,6 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
-
-
             var killableMinionCount = 0;
             foreach (
                 var m in
@@ -156,6 +172,11 @@ namespace Marksman.Champions
 
                 if (useE && E.IsReady())
                 {
+                    if (useE && canCastE && E.IsReady())
+                    {
+                        E.Cast();
+                    }
+
                     var eTarget = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
                     if (eTarget.IsValidTarget(E.Range))
                     {
