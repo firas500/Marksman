@@ -245,9 +245,6 @@ namespace Marksman.Champions
         {
             config.AddItem(
                 new MenuItem("DrawW" + Id, "W range").SetValue(new Circle(true, System.Drawing.Color.CornflowerBlue)));
-            config.AddItem(
-                new MenuItem("DrawE" + Id, "E range").SetValue(new Circle(true,
-                    System.Drawing.Color.FromArgb(100, 255, 0, 255))));
             return true;
         }
 
@@ -266,12 +263,6 @@ namespace Marksman.Champions
             if (drawW.Active)
             {
                 Render.Circle.DrawCircle(ObjectManager.Player.Position, W.Range, drawW.Color);
-            }
-
-            var drawE = Config.Item("DrawE" + Id).GetValue<Circle>();
-            if (drawE.Active)
-            {
-                Render.Circle.DrawCircle(ObjectManager.Player.Position, E.Range, drawE.Color);
             }
 
             var drawRMin = Program.Config.SubMenu("Combo").Item("DrawRMin").GetValue<Circle>();
