@@ -150,11 +150,6 @@ namespace Marksman.Champions
         public override bool MiscMenu(Menu config)
         {
             config.AddItem(new MenuItem("UseQM" + Id, "Use Q KS").SetValue(true));
-            return true;
-        }
-
-        public override bool ExtrasMenu(Menu config)
-        {
             config.AddItem(new MenuItem("AutoRI" + Id, "Use R").SetValue(true));
             return true;
         }
@@ -163,6 +158,10 @@ namespace Marksman.Champions
         {
             config.AddItem(new MenuItem("UseQL" + Id, "Use Q").SetValue(true));
             return true;
+        }
+        public override bool JungleClearMenu(Menu config)
+        {
+            return false;
         }
     }
 }

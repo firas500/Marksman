@@ -460,9 +460,9 @@ namespace Marksman.Champions
             return true;
         }
 
-        public override bool ExtrasMenu(Menu config)
+        public override bool JungleClearMenu(Menu config)
         {
-            return true;
+            return false;
         }
     }
 }

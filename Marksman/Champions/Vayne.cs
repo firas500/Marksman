@@ -163,11 +163,6 @@ namespace Marksman.Champions
             return true;
         }
 
-        public override bool ExtrasMenu(Menu config)
-        {
-            return true;
-        }
-
         public override bool LaneClearMenu(Menu config)
         {
             config.AddItem(new MenuItem("UseQL" + Id, "Use Q").SetValue(true));
@@ -190,6 +185,10 @@ namespace Marksman.Champions
             {
                 Render.Circle.DrawCircle(ObjectManager.Player.Position, E.Range, menuItem.Color, 1);
             }
+        }
+        public override bool JungleClearMenu(Menu config)
+        {
+            return false;
         }
 
         public class VayneData

@@ -205,14 +205,13 @@ namespace Marksman.Champions
             return true;
         }
 
-        public override bool ExtrasMenu(Menu config)
-        {
-            return true;
-        }
-
         public override bool LaneClearMenu(Menu config)
         {
             return true;
+        }
+        public override bool JungleClearMenu(Menu config)
+        {
+            return false;
         }
 
         private void Game_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)

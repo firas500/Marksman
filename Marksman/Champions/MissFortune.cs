@@ -174,15 +174,14 @@ namespace Marksman.Champions
             return true;
         }
 
-        public override bool ExtrasMenu(Menu config)
-        {
-            return true;
-        }
-
         public override bool LaneClearMenu(Menu config)
         {
             config.AddItem(new MenuItem("UseQL" + Id, "Use Q").SetValue(true));
             return true;
+        }
+        public override bool JungleClearMenu(Menu config)
+        {
+            return false;
         }
     }
 }

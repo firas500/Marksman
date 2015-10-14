@@ -239,28 +239,25 @@ namespace Marksman.Champions
 
         public override bool MiscMenu(Menu config)
         {
-            config.AddItem(
-                new MenuItem("UltHelp" + this.Id, "Ult Target on R").SetValue(
-                    new KeyBind("R".ToCharArray()[0], KeyBindType.Press)));
-            config.AddItem(
-                new MenuItem("UseEQC" + this.Id, "Use E-Q Combo").SetValue(
-                    new KeyBind("T".ToCharArray()[0], KeyBindType.Press)));
-            config.AddItem(
-                new MenuItem("Dash" + this.Id, "Dash to Mouse").SetValue(
-                    new KeyBind("Z".ToCharArray()[0], KeyBindType.Press)));
+            config.AddItem(new MenuItem("UltHelp" + this.Id, "Ult Target on R").SetValue(new KeyBind("R".ToCharArray()[0], KeyBindType.Press)));
+            config.AddItem(new MenuItem("UseEQC" + this.Id, "Use E-Q Combo").SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Press)));
+            config.AddItem(new MenuItem("Dash" + this.Id, "Dash to Mouse").SetValue(new KeyBind("Z".ToCharArray()[0], KeyBindType.Press)));
+            config.AddItem(new MenuItem("AutoQI" + this.Id, "Auto Q (Stun/Snare/Taunt/Slow)").SetValue(true));
+            config.AddItem(new MenuItem("AutoWI" + this.Id, "Auto W (Stun/Snare/Taunt)").SetValue(true));
+
             return true;
         }
 
-        public override bool ExtrasMenu(Menu config)
-        {
-            config.AddItem(new MenuItem("AutoQI" + this.Id, "Auto Q (Stun/Snare/Taunt/Slow)").SetValue(true));
-            config.AddItem(new MenuItem("AutoWI" + this.Id, "Auto W (Stun/Snare/Taunt)").SetValue(true));
-            return true;
-        }
 
         public override bool LaneClearMenu(Menu config)
         {
             return true;
         }
+
+        public override bool JungleClearMenu(Menu config)
+        {
+            return false;
+        }
+
     }
 }

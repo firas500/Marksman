@@ -91,12 +91,37 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
-            if (LaneClearActive)
+            if (this.JungleClearActive)
             {
-                if (Program.Config.Item("UseQForBigBoys").GetValue<bool>())
-                    JungleFarm();
+                var jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range, Marksman.Utils.Utils.MobTypes.All);
+
+                if (jungleMobs != null)
+                {
+                    switch (this.GetValue<StringList>("UseQJ").SelectedIndex)
+                    {
+                        case 1:
+                            {
+                                if (AsheQCastReady)
+                                    Q.Cast();
+                                break;
+                            }
+                        case 2:
+                            {
+                                if (AsheQCastReady)
+                                {
+                                    jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range,Marksman.Utils.Utils.MobTypes.BigBoys);
+                                    if (jungleMobs != null)
+                                    {
+                                        Q.Cast(jungleMobs);
+                                    }
+                                }
+                                break;
+                            }
+                    }
+                }
             }
-            else if (!ComboActive)
+
+            if (!ComboActive)
             {
                 var t = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
                 if (!t.IsValidTarget() || !W.IsReady())
@@ -264,20 +289,16 @@ namespace Marksman.Champions
             }
         }
 
-        private static void JungleFarm()
+        public override bool JungleClearMenu(Menu config)
         {
-            if (!Q.IsReady() || !AsheQCastReady) return;
-
-            string[] bigBoys = { "Baron", "Dragon", "Red", "Blue" };
-            if (MinionManager.GetMinions(ObjectManager.Player.ServerPosition,
-                Orbwalking.GetRealAutoAttackRange(null) + 65, MinionTypes.All,
-                MinionTeam.Neutral, MinionOrderTypes.MaxHealth).Any(mob => bigBoys.Any(mob.Name.Contains)))
-                Q.Cast();
-        }
-
-        public override bool ExtrasMenu(Menu config)
-        {
+            config.AddItem(new MenuItem("UseQJ" + this.Id, "Use Q").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 1))).ValueChanged +=
+                (sender, args) =>
+                {
+                    Program.CClass.Config.Item("Jungle.Mana").Show(args.GetNewValue<StringList>().SelectedIndex != 0);
+                };
             return true;
         }
+
+
     }
 }

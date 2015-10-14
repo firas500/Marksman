@@ -337,13 +337,16 @@ namespace Marksman.Champions
             return true;
         }
 
-        public override bool ExtrasMenu(Menu config)
+        public override bool LaneClearMenu(Menu config)
         {
             return true;
         }
 
-        public override bool LaneClearMenu(Menu config)
+
+        public override bool JungleClearMenu(Menu config)
         {
+            //config.AddItem(new MenuItem("UseQJ" + this.Id, "Use Q").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 1)));
+            //config.AddItem(new MenuItem("UseEJ" + this.Id, "Use E").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 1)));
             return true;
         }
 

@@ -100,6 +100,34 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
+            if (this.JungleClearActive)
+            {
+                var jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range, Marksman.Utils.Utils.MobTypes.All);
+
+                if (jungleMobs != null)
+                {
+                    switch (this.GetValue<StringList>("UseQJ").SelectedIndex)
+                    {
+                        case 1:
+                            {
+                                Q.Cast(jungleMobs);
+                                break;
+                            }
+                        case 2:
+                            {
+                                jungleMobs = Marksman.Utils.Utils.GetMobs(
+                                    Q.Range,
+                                    Marksman.Utils.Utils.MobTypes.BigBoys);
+                                if (jungleMobs != null)
+                                {
+                                    Q.Cast(jungleMobs);
+                                }
+                                break;
+                            }
+                    }
+                }
+            }
+
             if (LaneClearActive)
             {
                 var useQ = GetValue<bool>("UseQL");
@@ -299,14 +327,19 @@ namespace Marksman.Champions
             return true;
         }
 
-        public override bool ExtrasMenu(Menu config)
-        {
-            return true;
-        }
-
         public override bool LaneClearMenu(Menu config)
         {
             config.AddItem(new MenuItem("UseQL" + Id, "Use Q").SetValue(true));
+            return true;
+        }
+
+        public override bool JungleClearMenu(Menu config)
+        {
+            config.AddItem(new MenuItem("UseQJ" + this.Id, "Use Q").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 1))).ValueChanged +=
+                (sender, args) =>
+                {
+                    Program.CClass.Config.Item("Jungle.Mana").Show(args.GetNewValue<StringList>().SelectedIndex != 0);
+                };
             return true;
         }
     }

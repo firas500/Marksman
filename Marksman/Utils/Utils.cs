@@ -110,6 +110,7 @@ namespace Marksman.Utils
             return null;
         }
 
+
         public static void PrintMessage(string message)
         {
             Game.PrintChat(

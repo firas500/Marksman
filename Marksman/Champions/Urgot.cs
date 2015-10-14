@@ -315,5 +315,9 @@ namespace Marksman.Champions
             config.AddItem(new MenuItem("UseQL" + Id, "Use Q").SetValue(true));
             return true;
         }
+        public override bool JungleClearMenu(Menu config)
+        {
+            return false;
+        }
     }
 }

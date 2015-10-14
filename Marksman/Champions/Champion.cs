@@ -15,6 +15,7 @@ namespace Marksman.Champions
         public bool HarassActive;
         public string Id = "";
         public bool LaneClearActive;
+        public bool JungleClearActive;
         public Orbwalking.Orbwalker Orbwalker;
         public bool ToggleActive;
 
@@ -33,17 +34,17 @@ namespace Marksman.Champions
             return false;
         }
 
+        public virtual bool JungleClearMenu(Menu config)
+        {
+            return false;
+        }
+
         public virtual bool LaneClearMenu(Menu config)
         {
             return false;
         }
 
         public virtual bool MiscMenu(Menu config)
-        {
-            return false;
-        }
-
-        public virtual bool ExtrasMenu(Menu config)
         {
             return false;
         }

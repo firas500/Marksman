@@ -287,15 +287,16 @@ namespace Marksman.Champions
             return true;
         }
 
-        public override bool ExtrasMenu(Menu config)
-        {
-            return true;
-        }
-
         public override bool LaneClearMenu(Menu config)
         {
             return true;
         }
+
+        public override bool JungleClearMenu(Menu config)
+        {
+            return false;
+        }
+
 
         public class TristanaData
         {

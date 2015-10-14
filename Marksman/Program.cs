@@ -221,18 +221,26 @@ namespace Marksman
                     Config.AddSubMenu(laneclear);
                 }
 
+                var jungleClear = new Menu("Jungle Mode", "JungleClear");
+                if (CClass.JungleClearMenu(jungleClear))
+                {
+                    jungleClear.AddItem(new MenuItem("Jungle.Mana", "Min. Mana %:").SetValue(new Slider(50, 100, 0)));
+                    Config.AddSubMenu(jungleClear);
+                }
+                
                 var misc = new Menu("Misc", "Misc");
                 if (CClass.MiscMenu(misc))
                 {
+                    new PotionManager(misc);
                     Config.AddSubMenu(misc);
                 }
-
+/*
                 var extras = new Menu("Extras", "Extras");
                 if (CClass.ExtrasMenu(extras))
                 {
-                    new PotionManager(extras);
                     Config.AddSubMenu(extras);
                 }
+ */
 
                 var drawing = new Menu("Drawings", "Drawings");
                 if (CClass.DrawingMenu(drawing))
@@ -428,6 +436,8 @@ namespace Marksman
             CClass.LaneClearActive = CClass.Config.Item("LaneClear").GetValue<KeyBind>().Active &&
                                      ObjectManager.Player.ManaPercent >= vLaneClearManaPer;
 
+            CClass.JungleClearActive = CClass.Config.Item("LaneClear").GetValue<KeyBind>().Active && ObjectManager.Player.ManaPercent >= Config.Item("Jungle.Mana").GetValue<Slider>().Value;
+            
             CClass.Game_OnGameUpdate(args);
 
             UseSummoners();

@@ -25,7 +25,6 @@ namespace Marksman.Champions
         bool HarassMenu(Menu config);
         bool MiscMenu(Menu config);
         bool DrawingMenu(Menu config);
-        bool ExtrasMenu(Menu config);
         bool LaneClearMenu(Menu config);
         //bool JungleClearMenu(Menu config);
     }
@@ -41,9 +40,11 @@ namespace Marksman.Champions
         {
             Q = new Spell(SpellSlot.Q, 340);
             W = new Spell(SpellSlot.W, 593);
-            E = new Spell(SpellSlot.E, 640);
+            E = new Spell(SpellSlot.E, 740);
             R = new Spell(SpellSlot.R, 1100);
             R.SetSkillshot(1f, 160f, 2000f, false, SkillshotType.SkillshotCircle);
+
+            Obj_AI_Base.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;
 
             Marksman.Utils.Utils.PrintMessage("Kindred loaded.");
         }
@@ -80,14 +81,39 @@ namespace Marksman.Champions
                 }
             }
         }
+        public void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        {
+            if (Program.Config.Item("UserRC").GetValue<bool>())
+            {
+                if (!sender.IsMe && sender.IsEnemy && ObjectManager.Player.Health < ObjectManager.Player.MaxHealth * .1 && R.IsReady() && args.Target.IsMe) // for minions attack
+                {
+                    R.Cast(ObjectManager.Player.Position);
+                }
+                else if (!sender.IsMe && sender.IsEnemy && (sender is Obj_AI_Hero || sender is Obj_AI_Turret) && args.Target.IsMe && R.IsReady())
+                {
+                    R.Cast(ObjectManager.Player.Position);
+                }
+            }
+
+            return;
+
+            if (sender.IsEnemy && sender.IsValid && Config.Item("SmartShield").GetValue<bool>() && W.IsReady())
+            {
+                if (args.SData.Name.ToLower().Contains("basicattack") && sender.Distance(ObjectManager.Player) < 500)
+                {
+                    W.Cast();
+                }
+            }
+        }
+
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
 
-            //if (this.JungleClearActive)
-            //{
-            //    this.ExecJungleClear();
-            //}
+            if (this.JungleClearActive)
+            {
+                this.ExecJungleClear();
+            }
 
             if (this.LaneClearActive && Q.IsReady())
             {
@@ -133,11 +159,6 @@ namespace Marksman.Champions
                     {
                         Q.Cast(t.Position);
                     }
-
-                    if (R.IsReady())
-                    {
-                        R.Cast(ObjectManager.Player.Position);
-                    }
                 }
             }
 
@@ -147,23 +168,8 @@ namespace Marksman.Champions
         {
             config.AddItem(new MenuItem("UseQC" + this.Id, "Use Q").SetValue(true));
             config.AddItem(new MenuItem("UseWC" + this.Id, "Use W").SetValue(true));
-            config.AddItem(new MenuItem("UseEC" + this.Id, "Use E").SetValue(new StringList(new[] { "Off", "On", "On: Force focus to marked enemy" }, 2))).ValueChanged +=
-                (sender, args) =>
-                    {
-                        foreach (var item in config.Items.Where(i => i.Tag == 11))
-                        {
-                            item.Show(args.GetNewValue<StringList>().SelectedIndex != 0);
-                        }
-                    };
-
-            foreach (var enemy in HeroManager.Enemies)
-            {
-                config.AddItem(
-                    new MenuItem(enemy.ChampionName + "_UseEC" + this.Id, Program.Tab + enemy.ChampionName).SetValue(
-                        new StringList(new[] { "Don't", "Use: If I can kill him", "Use: Everytime" },Marksman.Utils.Utils.GetEnemyPriority(enemy.ChampionName) < 2 ? 1 : 2))).SetTag(11);
-            }
-
-            config.AddItem(new MenuItem("UseRC", "Use R").SetValue(true));
+            config.AddItem(new MenuItem("UseEC" + this.Id, "Use E").SetValue(true));
+            config.AddItem(new MenuItem("UseRC" + this.Id, "Use R").SetValue(true));
             return true;
         }
 
@@ -227,11 +233,6 @@ namespace Marksman.Champions
             return true;
         }
 
-        public override bool ExtrasMenu(Menu config)
-        {
-            return true;
-        }
-
         public override bool MiscMenu(Menu config)
         {
             return false;
@@ -273,6 +274,14 @@ namespace Marksman.Champions
             }            
         }
 
+        public override bool JungleClearMenu(Menu config)
+        {
+            config.AddItem(new MenuItem("UseQJ" + this.Id, "Use Q").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 1)));
+            config.AddItem(new MenuItem("UseEJ" + this.Id, "Use E").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 1)));
+
+            return true;
+        }
+
         public void ExecJungleClear()
         {
             var jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range, Marksman.Utils.Utils.MobTypes.All);
@@ -296,6 +305,25 @@ namespace Marksman.Champions
                             break;
                         }
                 }
+
+                switch (Program.Config.Item("UseEJ").GetValue<StringList>().SelectedIndex)
+                {
+                    case 1:
+                        {
+                            E.Cast(jungleMobs);
+                            break;
+                        }
+                    case 2:
+                        {
+                            jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range, Marksman.Utils.Utils.MobTypes.BigBoys);
+                            if (jungleMobs != null)
+                            {
+                                E.Cast(jungleMobs);
+                            }
+                            break;
+                        }
+                }
+
             }
         }
     }

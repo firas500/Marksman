@@ -320,14 +320,13 @@ namespace Marksman.Champions
                    Vector3.DistanceSquared(hero.Position, position.CastPosition);
         }
 
-        public override bool ExtrasMenu(Menu config)
-        {
-            return true;
-        }
-
         public override bool LaneClearMenu(Menu config)
         {
             return true;
+        }
+        public override bool JungleClearMenu(Menu config)
+        {
+            return false;
         }
     }
 }
