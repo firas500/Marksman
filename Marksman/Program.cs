@@ -248,11 +248,12 @@ namespace Marksman
                     drawing.AddItem(new MenuItem("Marksman.Drawings", "Marksman Default Draw Options"));
                     //drawing.AddItem(new MenuItem("Draw.Ping", MenuSpace + "Show Game Ping").SetValue(true));
                     drawing.AddItem(new MenuItem("Draw.KillableEnemy", MenuSpace + "Killable Enemy Text").SetValue(true));
-                    drawing.AddItem(new MenuItem("Draw.ToD", MenuSpace + "Turn Off Drawings On Team Fight").SetValue(false));
-                    drawing.AddItem(new MenuItem("Draw.ToDControlRange", MenuSpace + MenuSpace + "Control Range:").SetValue(new Slider(1200, 1600, 600)));
-                    drawing.AddItem(new MenuItem("Draw.ToDControlRangeColor", MenuSpace + MenuSpace + "Draw Control Range:").SetValue(new Circle(false, Color.GreenYellow)));
-                    drawing.AddItem(new MenuItem("Draw.ToDMinEnemy", MenuSpace + MenuSpace + "Min. Enemy Count:").SetValue(new Slider(3, 5, 0)));
-
+                    /*
+                        drawing.AddItem(new MenuItem("Draw.ToD", MenuSpace + "Turn Off Drawings On Team Fight").SetValue(false));
+                        drawing.AddItem(new MenuItem("Draw.ToDControlRange", MenuSpace + MenuSpace + "Control Range:").SetValue(new Slider(1200, 1600, 600)));
+                        drawing.AddItem(new MenuItem("Draw.ToDControlRangeColor", MenuSpace + MenuSpace + "Draw Control Range:").SetValue(new Circle(false, Color.GreenYellow)));
+                        drawing.AddItem(new MenuItem("Draw.ToDMinEnemy", MenuSpace + MenuSpace + "Min. Enemy Count:").SetValue(new Slider(3, 5, 0)));
+                    */
                     drawing.AddItem(new MenuItem("drawMinionLastHit", MenuSpace + "Minion Last Hit").SetValue(new Circle(true, Color.GreenYellow)));
                     drawing.AddItem(new MenuItem("drawMinionNearKill", MenuSpace + "Minion Near Kill").SetValue(new Circle(true, Color.Gray)));
                     drawing.AddItem(
