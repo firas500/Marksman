@@ -352,7 +352,7 @@ namespace Marksman
                 }
             }
                 
-            var toD = CClass.Config.SubMenu("Drawings").Item("Draw.ToD").GetValue<bool>();
+/*            var toD = CClass.Config.SubMenu("Drawings").Item("Draw.ToD").GetValue<bool>();
             if (toD)
             {
                 var enemyCount =
@@ -370,6 +370,7 @@ namespace Marksman
                     Render.Circle.DrawCircle(ObjectManager.Player.Position, controlRange, toDRangeColor.Color);
 
             }
+            */
             /*
             var t = TargetSelector.SelectedTarget;
             if (!t.IsValidTarget())
