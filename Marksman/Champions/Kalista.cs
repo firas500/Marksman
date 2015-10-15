@@ -320,7 +320,7 @@ namespace Marksman.Champions
             config.AddItem(
                 new MenuItem("DrawR" + Id, "R range").SetValue(new Circle(false, Color.FromArgb(100, 255, 255, 255))));
             config.AddItem(
-                new MenuItem("DrawEStackCount" + Id, "E Stack Count").SetValue(new Circle(false, Color.Firebrick)));
+                new MenuItem("DrawEStackCount" + Id, "E Stack Count").SetValue(new Circle(true, Color.White)));
             config.AddItem(new MenuItem("DrawJumpPos" + Id, "Jump Positions").SetValue(new Circle(false, Color.HotPink)));
 
             var damageAfterE = new MenuItem("DamageAfterE", "Damage After E").SetValue(true);
