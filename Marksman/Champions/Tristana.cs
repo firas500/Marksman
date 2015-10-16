@@ -61,6 +61,12 @@ namespace Marksman.Champions
 
         public override void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
+            if (GetValue<bool>("UseEM") && target is Obj_AI_Turret && E.IsReady())
+            {
+                var t1 = (Obj_AI_Turret)target;
+                E.CastOnUnit(t1);
+            }
+
             var t = target as Obj_AI_Hero;
             if (t != null && (ComboActive || HarassActive) && unit.IsMe)
             {
@@ -70,24 +76,42 @@ namespace Marksman.Champions
                 if (useQ)
                     Q.CastOnUnit(Player);
 
-                if (useE && canUseE(t))
+                if (useE && E.IsReady())
                     E.CastOnUnit(t);
             }
         }
 
-        private static bool canUseE(Obj_AI_Hero t)
-        {
-            if (Player.CountEnemiesInRange(W.Range + (E.Range/2)) == 1)
-                return true;
-
-            return (Program.Config.Item("DontUseE" + t.ChampionName) != null &&
-                    Program.Config.Item("DontUseE" + t.ChampionName).GetValue<bool>() == false);
-        }
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
             if (!Orbwalking.CanMove(100))
                 return;
+
+            if (this.JungleClearActive)
+            {
+                var jungleMobs = Marksman.Utils.Utils.GetMobs(E.Range, Marksman.Utils.Utils.MobTypes.All);
+
+                if (jungleMobs != null)
+                {
+                    switch (GetValue<StringList>("UseEJ").SelectedIndex)
+                    {
+                        case 1:
+                            {
+                                E.CastOnUnit(jungleMobs);
+                                break;
+                            }
+                        case 2:
+                            {
+                                jungleMobs = Utils.Utils.GetMobs(E.Range,Utils.Utils.MobTypes.BigBoys);
+                                if (jungleMobs != null)
+                                {
+                                    E.CastOnUnit(jungleMobs);
+                                }
+                                break;
+                            }
+                    }
+                }
+            }
 
             var getEMarkedEnemy = TristanaData.GetEMarkedEnemy;
             if (getEMarkedEnemy != null)
@@ -109,7 +133,7 @@ namespace Marksman.Champions
                 if (Player.HasBuff("Recall"))
                     return;
                 var t = TristanaData.GetTarget(E.Range);
-                if (t.IsValidTarget() && E.IsReady() && canUseE(t))
+                if (t.IsValidTarget() && E.IsReady())
                     E.CastOnUnit(t);
             }
 
@@ -132,7 +156,7 @@ namespace Marksman.Champions
                     t = TristanaData.GetTarget(W.Range);
                 }
 
-                if (useE && canUseE(t))
+                if (useE && E.IsReady())
                 {
                     if (E.IsReady() && t.IsValidTarget(E.Range))
                         E.CastOnUnit(t);
@@ -234,16 +258,6 @@ namespace Marksman.Champions
             config.AddItem(new MenuItem("UseWKs" + Id, "Use W Kill Steal").SetValue(true));
             config.AddItem(new MenuItem("UseWCS" + Id, "Complete E stacks with W").SetValue(true));
             config.AddItem(new MenuItem("UseEC" + Id, "Use E").SetValue(true));
-
-            config.AddSubMenu(new Menu("Don't Use E to", "DontUseE"));
-            {
-                foreach (var enemy in
-                    ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.Team != Player.Team))
-                {
-                    config.SubMenu("DontUseE")
-                        .AddItem(new MenuItem("DontUseE" + enemy.ChampionName, enemy.ChampionName).SetValue(false));
-                }
-            }
             return true;
         }
 
@@ -280,6 +294,7 @@ namespace Marksman.Champions
 
         public override bool MiscMenu(Menu config)
         {
+            config.AddItem(new MenuItem("UseEM" + Id, "Use E for Enemy Turret").SetValue(true));
             config.AddItem(new MenuItem("UseWM" + Id, "Use W KillSteal").SetValue(true));
             config.AddItem(new MenuItem("UseRM" + Id, "Use R KillSteal").SetValue(true));
             config.AddItem(new MenuItem("UseRMG" + Id, "Use R Gapclosers").SetValue(true));
@@ -294,9 +309,10 @@ namespace Marksman.Champions
 
         public override bool JungleClearMenu(Menu config)
         {
-            return false;
+            config.AddItem(new MenuItem("UseEJ" + this.Id, "Use E").SetValue(new StringList(new[] {"Off", "On", "Just big Monsters"}, 1)));
+            
+            return true;
         }
-
 
         public class TristanaData
         {
