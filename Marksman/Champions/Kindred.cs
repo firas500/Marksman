@@ -157,7 +157,7 @@ namespace Marksman.Champions
 
                     if (Q.IsReady() && t.IsValidTarget(Q.Range + Orbwalking.GetRealAutoAttackRange(null) + 65))
                     {
-                        Q.Cast(t.Position);
+                        Q.Cast(Game.CursorPos);
                     }
                 }
             }
