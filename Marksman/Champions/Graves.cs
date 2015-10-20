@@ -188,7 +188,7 @@ namespace Marksman.Champions
         }
         public override bool JungleClearMenu(Menu config)
         {
-            return false;
+            return true;
         }
     }
 }
