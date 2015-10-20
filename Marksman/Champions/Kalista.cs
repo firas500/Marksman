@@ -382,7 +382,7 @@ namespace Marksman.Champions
 
         public override bool LaneClearMenu(Menu config)
         {
-            config.AddItem(new MenuItem("UseEL" + this.Id, "Use E").SetValue(new Slider(2, 1, 3)));
+            config.AddItem(new MenuItem("UseEL" + this.Id, "Use E").SetValue(new Slider(2, 0, 3)));
             return true;
         }
 
