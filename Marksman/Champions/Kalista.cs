@@ -56,7 +56,6 @@ namespace Marksman.Champions
                     OutputPrecision = FontPrecision.Default,
                     Quality = FontQuality.Default
                 });
-
         }
 
         public int KalistaMarkerCount
@@ -77,14 +76,18 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
-
-            var Minions = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range, MinionTypes.All,
-                MinionTeam.Enemy);
+            if (ObjectManager.Player.IsDead)
+            {
+                return;
+            }
 
             var killableMinionCount = 0;
-            foreach (var m in Minions.Where(x => E.CanCast(x) && x.Health <= E.GetDamage(x)))
+            foreach (
+                var m in
+                    MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range)
+                        .Where(x => E.CanCast(x) && x.Health <= E.GetDamage(x)))
             {
-                if (m.SkinName == "SRU_ChaosMinionSiege" || m.SkinName == "SRU_ChaosMinionSuper")
+                if (m.SkinName.ToLower() == "sru_chaosminionsiege" || m.SkinName.ToLower() == "sru_chaosminionsuper")
                     killableMinionCount += 2;
                 else
                     killableMinionCount++;
@@ -92,11 +95,8 @@ namespace Marksman.Champions
                 Render.Circle.DrawCircle(m.Position, (float) (m.BoundingRadius*1.5), Color.White, 5);
             }
 
-            if (killableMinionCount >= 3 && E.IsReady() && ObjectManager.Player.ManaPercent > 15)
-                E.Cast();
-
-            var mobs = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range, MinionTypes.All,
-                MinionTeam.Neutral);
+//            if (killableMinionCount >= 3 && E.IsReady() && ObjectManager.Player.ManaPercent > 15)
+            //              E.Cast();
 
             foreach (
                 var m in
@@ -108,7 +108,7 @@ namespace Marksman.Champions
                 else
                     Render.Circle.DrawCircle(m.Position, (float) (m.BoundingRadius*1.5), Color.White, 5);
             }
-            
+
             Spell[] spellList = {Q, W, E, R};
             foreach (var spell in spellList)
             {
@@ -116,7 +116,46 @@ namespace Marksman.Champions
                 if (menuItem.Active && spell.Level > 0)
                     Render.Circle.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
             }
+            var drawEStackCount = GetValue<Circle>("DrawEStackCount");
+            if (drawEStackCount.Active)
+            {
+                xEnemyMarker.Clear();
+                foreach (
+                    var xEnemy in
+                        HeroManager.Enemies.Where(
+                            tx => tx.IsEnemy && !tx.IsDead && ObjectManager.Player.Distance(tx) < E.Range))
+                {
+                    foreach (var buff in xEnemy.Buffs.Where(buff => buff.Name.Contains("kalistaexpungemarker")))
+                    {
+                        xEnemyMarker.Add(new EnemyMarker
+                        {
+                            ChampionName = xEnemy.ChampionName,
+                            ExpireTime = Game.Time + 4,
+                            BuffCount = buff.Count
+                        });
+                    }
+                }
 
+                foreach (var markedEnemies in xEnemyMarker)
+                {
+                    foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>())
+                    {
+                        if (enemy.IsEnemy && !enemy.IsDead && ObjectManager.Player.Distance(enemy) <= E.Range &&
+                            enemy.ChampionName == markedEnemies.ChampionName)
+                        {
+                            if (!(markedEnemies.ExpireTime > Game.Time))
+                            {
+                                continue;
+                            }
+                            var xCoolDown = TimeSpan.FromSeconds(markedEnemies.ExpireTime - Game.Time);
+                            var display = string.Format("{0}", markedEnemies.BuffCount);
+                            Utils.Utils.DrawText(font, display, (int) enemy.HPBarPosition.X - 10,
+                                (int) enemy.HPBarPosition.Y, SharpDX.Color.Wheat);
+                            //Drawing.DrawText(enemy.HPBarPosition.X + 145, enemy.HPBarPosition.Y + 20, drawEStackCount.Color, display);
+                        }
+                    }
+                }
+            }
             var drawJumpPos = GetValue<Circle>("DrawJumpPos");
             if (drawJumpPos.Active)
             {
@@ -167,9 +206,7 @@ namespace Marksman.Champions
 
         private static float GetEDamage(Obj_AI_Base t)
         {
-            if (!E.IsReady())
-                return 0f;
-            return (float) ObjectManager.Player.GetSpellDamage(t, SpellSlot.E);
+            return E.IsReady() ? E.GetDamage(t) : 0;
         }
 
         public override void Game_OnGameUpdate(EventArgs args)
@@ -181,7 +218,59 @@ namespace Marksman.Champions
                         E.CanCast(x) && (x.Health + (x.HPRegenRate/2) + x.Level) <= E.GetDamage(x));
 
             if (E.CanCast(t1))
+            {
                 E.Cast();
+            }
+
+            if (this.LaneClearActive && E.IsReady())
+            {
+                var minECount = GetValue<Slider>("UseEL").Value;
+                var killableMinionCount = 0;
+                foreach (
+                    var m in
+                        MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range)
+                            .Where(x => E.CanCast(x) && x.Health <= E.GetDamage(x)))
+                {
+                    if (m.SkinName.ToLower() == "sru_chaosminionsiege" || m.SkinName.ToLower() == "sru_chaosminionsuper")
+                        killableMinionCount += 2;
+                    else
+                        killableMinionCount++;
+                }
+
+                if (killableMinionCount >= minECount && E.IsReady() && ObjectManager.Player.ManaPercent > E.ManaCost*2)
+                {
+                    E.Cast();
+                }
+            }
+
+            if (this.JungleClearActive)
+            {
+                if (Q.IsReady())
+                {
+                    //var jungleMobs = GetValue<StringList>("UseEJ").SelectedIndex == 1
+                    //    ? Utils.Utils.GetMobs(Q.Range)
+                    //    : Utils.Utils.GetMobs(Q.Range, Utils.Utils.MobTypes.BigBoys);
+
+                    var jungleMobs = Utils.Utils.GetMobs(Q.Range,
+                        GetValue<StringList>("UseEJ").SelectedIndex == 1
+                            ? Utils.Utils.MobTypes.All
+                            : Utils.Utils.MobTypes.BigBoys);
+
+                    if (jungleMobs != null && ObjectManager.Player.Mana > E.ManaCost + Q.ManaCost)
+                        Q.Cast(jungleMobs);
+                }
+
+                if (E.IsReady())
+                {
+                    var jungleMobs = Utils.Utils.GetMobs(E.Range,
+                        GetValue<StringList>("UseEJ").SelectedIndex == 1
+                            ? Utils.Utils.MobTypes.All
+                            : Utils.Utils.MobTypes.BigBoys);
+
+                    if (jungleMobs != null && E.CanCast(jungleMobs) && jungleMobs.Health <= E.GetDamage(jungleMobs) + 20)
+                        E.CastOnUnit(jungleMobs);
+                }
+            }
 
             if (GetValue<Circle>("DrawJumpPos").Active)
                 fillPositions();
@@ -202,80 +291,35 @@ namespace Marksman.Champions
                 Render.Circle.DrawCircle(myBoddy.Position, 75f, Color.Red);
             }
 
-            var drawEStackCount = GetValue<Circle>("DrawEStackCount");
-            if (drawEStackCount.Active)
-            {
-                xEnemyMarker.Clear();
-                foreach (
-                    var xEnemy in
-                        HeroManager.Enemies.Where(
-                            tx => tx.IsEnemy && !tx.IsDead && ObjectManager.Player.Distance(tx) < E.Range))
-                {
-                    foreach (var buff in xEnemy.Buffs.Where(buff => buff.Name.Contains("kalistaexpungemarker")))
-                    {
-                        xEnemyMarker.Add(new EnemyMarker
-                        {
-                            ChampionName = xEnemy.ChampionName,
-                            ExpireTime = Game.Time + 4,
-                            BuffCount = buff.Count
-                        });
-                    }
-                }
-
-                foreach (var markedEnemies in xEnemyMarker)
-                {
-                    foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>())
-                    {
-                        if (enemy.IsEnemy && !enemy.IsDead && ObjectManager.Player.Distance(enemy) <= E.Range &&
-                            enemy.ChampionName == markedEnemies.ChampionName)
-                        {
-                            if (!(markedEnemies.ExpireTime > Game.Time))
-                            {
-                                continue;
-                            }
-                            var xCoolDown = TimeSpan.FromSeconds(markedEnemies.ExpireTime - Game.Time);
-                            var display = string.Format("E:{0}", markedEnemies.BuffCount);
-                            //Utils.Utils.DrawText(font, "aaaaa", (int) enemy.HPBarPosition.X, (int) enemy.HPBarPosition.Y, SharpDX.Color.GreenYellow);
-                            Drawing.DrawText(enemy.HPBarPosition.X + 145, enemy.HPBarPosition.Y + 20, drawEStackCount.Color, display);
-                        }
-                    }
-                }
-            }
 
             Obj_AI_Hero t;
 
             if (Q.IsReady() && GetValue<KeyBind>("UseQTH").Active)
             {
                 if (ObjectManager.Player.HasBuff("Recall"))
+                {
                     return;
+                }
+
                 t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
-                if (t != null)
+                if (t.IsValidTarget(Q.Range) && ObjectManager.Player.Mana > E.ManaCost + Q.ManaCost)
+                {
                     Q.Cast(t);
+                }
             }
 
             if (ComboActive || HarassActive)
             {
                 var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
-                var useE = GetValue<bool>("UseE" + (ComboActive ? "C" : "H"));
 
                 if (Orbwalking.CanMove(100))
                 {
                     if (Q.IsReady() && useQ)
                     {
                         t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
-                        if (t != null)
-                            Q.Cast(t);
-                    }
-
-                    if (E.IsReady() && useE)
-                    {
-                        t = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
-                        if (t != null)
+                        if (t.IsValidTarget(Q.Range) && ObjectManager.Player.Mana > E.ManaCost + Q.ManaCost)
                         {
-                            if (t.Health < ObjectManager.Player.GetSpellDamage(t, SpellSlot.E))
-                            {
-                                E.Cast();
-                            }
+                            Q.Cast(t);
                         }
                     }
                 }
@@ -294,7 +338,6 @@ namespace Marksman.Champions
         public override bool HarassMenu(Menu config)
         {
             config.AddItem(new MenuItem("UseQH" + Id, "Use Q").SetValue(true));
-            config.AddItem(new MenuItem("UseWH" + Id, "Use W").SetValue(true));
             config.AddItem(
                 new MenuItem("UseQTH" + Id, "Use Q (Toggle)").SetValue(new KeyBind("H".ToCharArray()[0],
                     KeyBindType.Toggle)));
@@ -339,14 +382,19 @@ namespace Marksman.Champions
 
         public override bool LaneClearMenu(Menu config)
         {
+            config.AddItem(new MenuItem("UseEL" + this.Id, "Use E").SetValue(new Slider(2, 1, 3)));
             return true;
         }
 
 
         public override bool JungleClearMenu(Menu config)
         {
-            //config.AddItem(new MenuItem("UseQJ" + this.Id, "Use Q").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 1)));
-            //config.AddItem(new MenuItem("UseEJ" + this.Id, "Use E").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 1)));
+            config.AddItem(
+                new MenuItem("UseQJ" + this.Id, "Use Q").SetValue(
+                    new StringList(new[] {"Off", "On", "Just big Monsters"}, 1)));
+            config.AddItem(
+                new MenuItem("UseEJ" + this.Id, "Use E").SetValue(
+                    new StringList(new[] {"Off", "On", "Just big Monsters"}, 1)));
             return true;
         }
 
