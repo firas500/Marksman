@@ -14,19 +14,19 @@ using SharpDX.Direct3D9;
 
 namespace Marksman.Champions
 {
+
     internal class Twitch : Champion
     {
-        internal class MarkedEnemy
+        internal class EnemyMarker
         {
             public string ChampionName { get; set; }
             public double ExpireTime { get; set; }
             public int BuffCount { get; set; }
         }
-
         public static Font font;
         public static Spell W;
         public static Spell E;
-        private static readonly List<MarkedEnemy> MarkedEnemies = new List<MarkedEnemy>();
+        private static readonly List<EnemyMarker> xEnemyMarker = new List<EnemyMarker>();
         private static bool canCastE = false;
         public Twitch()
         {
@@ -82,41 +82,41 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
-            MarkedEnemies.Clear();
-            foreach (
-                var xEnemy in
-                    HeroManager.Enemies.Where(
-                        tx => tx.IsEnemy && !tx.IsDead && ObjectManager.Player.Distance(tx) < E.Range))
-            {
-                foreach (var buff in xEnemy.Buffs.Where(buff => buff.Name.Contains("twitchdeadlyvenom")))
+                xEnemyMarker.Clear();
+                foreach (
+                    var xEnemy in
+                        HeroManager.Enemies.Where(
+                            tx => tx.IsEnemy && !tx.IsDead && ObjectManager.Player.Distance(tx) < E.Range))
                 {
-                    MarkedEnemies.Add(new MarkedEnemy
+                    foreach (var buff in xEnemy.Buffs.Where(buff => buff.Name.Contains("twitchdeadlyvenom")))
                     {
-                        ChampionName = xEnemy.ChampionName,
-                        ExpireTime = Game.Time + 6,
-                        BuffCount = buff.Count
-                    });
-                }
-            }
-
-            foreach (var markedEnemies in MarkedEnemies)
-            {
-                foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>())
-                {
-                    if (enemy.IsEnemy && !enemy.IsDead && ObjectManager.Player.Distance(enemy) <= E.Range && E.IsReady() &&
-                        enemy.ChampionName == markedEnemies.ChampionName)
-                    {
-                        if (!(markedEnemies.ExpireTime > Game.Time))
+                        xEnemyMarker.Add(new EnemyMarker
                         {
-                            continue;
-                        }
-
-                        var display = string.Format("{0}", markedEnemies.BuffCount);
-                        Utils.Utils.DrawText(font, display, (int) enemy.HPBarPosition.X, (int) enemy.HPBarPosition.Y,
-                            SharpDX.Color.White);
+                            ChampionName = xEnemy.ChampionName,
+                            ExpireTime = Game.Time + 6,
+                            BuffCount = buff.Count
+                        });
                     }
                 }
-            }
+
+                foreach (var markedEnemies in xEnemyMarker)
+                {
+                    foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>())
+                    {
+                        if (enemy.IsEnemy && !enemy.IsDead && ObjectManager.Player.Distance(enemy) <= E.Range &&
+                            enemy.ChampionName == markedEnemies.ChampionName)
+                        {
+                            if (!(markedEnemies.ExpireTime > Game.Time))
+                            {
+                                continue;
+                            }
+                            var xCoolDown = TimeSpan.FromSeconds(markedEnemies.ExpireTime - Game.Time);
+                            var display = string.Format("{0}", markedEnemies.BuffCount);
+                            Utils.Utils.DrawText(font, display, (int)enemy.HPBarPosition.X - 10, (int)enemy.HPBarPosition.Y, SharpDX.Color.Wheat);
+                        }
+                    }
+                }
+
 
             Spell[] spellList = {W};
             foreach (var spell in spellList)
@@ -129,6 +129,14 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
+            //foreach (var e in HeroManager.Enemies)
+            //{
+            //    foreach (var b in e.Buffs.Where(b => b.DisplayName.ToLower() == "twitchdeadlyvenom"))
+            //    {
+            //        Game.PrintChat(e.ChampionName + " : " + b.Count);
+            //    }
+            //}
+
             var killableMinionCount = 0;
             foreach (
                 var m in
@@ -265,7 +273,7 @@ namespace Marksman.Champions
         }
         public override bool JungleClearMenu(Menu config)
         {
-            return false;
+            return true;
         }
     }
 }
