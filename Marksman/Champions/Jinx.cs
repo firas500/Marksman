@@ -28,6 +28,23 @@ namespace Marksman.Champions
             E.SetSkillshot(0.7f, 120f, 1750f, false, SkillshotType.SkillshotCircle);
             R.SetSkillshot(0.6f, 140f, 1700f, false, SkillshotType.SkillshotLine);
 
+            Obj_AI_Base.OnBuffAdd += (sender, args) =>
+                {
+                    BuffInstance aBuff = (from fBuffs in sender.Buffs.Where(s => sender.Team != ObjectManager.Player.Team && sender.Distance(ObjectManager.Player.Position) < this.E.Range)
+                                         from b in
+                                             new[]
+                                                 {
+                                                     "teleport_target", "pantheon_grandskyfall_jump", "crowstorm","zhonya","katarinar","MissFortuneBulletTime"
+                                                 }
+                                         where b.Contains(args.Buff.Name.ToLower())
+                                         select fBuffs).FirstOrDefault();
+
+                    if (aBuff != null && this.E.IsReady())
+                    {
+                        this.E.Cast(sender.Position);
+                    }
+                };
+                
             Utils.Utils.PrintMessage("Jinx loaded.");
         }
 
