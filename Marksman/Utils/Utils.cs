@@ -18,7 +18,7 @@ namespace Marksman.Utils
     {
         public const string Tab = "    ";
 
-        public static Font Text;
+        public static Font Text, SmallText;
 
         static Utils()
         {
@@ -29,6 +29,46 @@ namespace Marksman.Utils
                         FaceName = "Segoe UI", Height = 15, OutputPrecision = FontPrecision.Default,
                         Quality = FontQuality.ClearTypeNatural
                     });
+            
+            SmallText = new Font(
+                Drawing.Direct3DDevice,
+                new FontDescription
+                {
+                    FaceName = "Tahoma",
+                    Height = 13,
+                    OutputPrecision = FontPrecision.Default,
+                    Quality = FontQuality.ClearTypeNatural
+                });
+        }
+
+        public class MPing
+        {
+            private static Vector2 PingLocation;
+
+            private static int LastPingT = 0;
+
+            public static void Ping(Vector2 position)
+            {
+                if (LeagueSharp.Common.Utils.TickCount - LastPingT < 30 * 1000)
+                {
+                    return;
+                }
+
+                LastPingT = LeagueSharp.Common.Utils.TickCount;
+                PingLocation = position;
+                SimplePing();
+
+                Utility.DelayAction.Add(150, SimplePing);
+                Utility.DelayAction.Add(300, SimplePing);
+                Utility.DelayAction.Add(400, SimplePing);
+                Utility.DelayAction.Add(800, SimplePing);
+            }
+
+            private static void SimplePing()
+            {
+                Game.ShowPing(PingCategory.Fallback, PingLocation, true);
+            }
+
         }
 
         public enum MobTypes
@@ -117,6 +157,10 @@ namespace Marksman.Utils
                 "<font color='#ff3232'>Marksman: </font><font color='#d4d4d4'><font color='#FFFFFF'>" + message
                 + "</font>");
             //Notifications.AddNotification("Marksman: " + message, 4000);
+        }
+                public static void DrawText(Font vFont, string vText, float vPosX, float vPosY, ColorBGRA vColor)
+        {
+            vFont.DrawText(null, vText, (int) vPosX, (int) vPosY, vColor);
         }
 
         public static void DrawText(Font vFont, String vText, int vPosX, int vPosY, Color vColor)
@@ -250,7 +294,5 @@ namespace Marksman.Utils
             sum = vectors.Aggregate(sum, (current, vec) => current + vec);
             return sum / vectors.Length;
         }
-
     }
-    
 }
