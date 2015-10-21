@@ -252,7 +252,7 @@ namespace Marksman.Champions
                     //    : Utils.Utils.GetMobs(Q.Range, Utils.Utils.MobTypes.BigBoys);
 
                     var jungleMobs = Utils.Utils.GetMobs(Q.Range,
-                        GetValue<StringList>("UseEJ").SelectedIndex == 1
+                        GetValue<StringList>("UseQJ").SelectedIndex == 1
                             ? Utils.Utils.MobTypes.All
                             : Utils.Utils.MobTypes.BigBoys);
 
