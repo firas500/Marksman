@@ -83,9 +83,9 @@ namespace Marksman.Champions
         }
         public void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-            if (Program.Config.Item("UserRC").GetValue<bool>())
+            if (Program.Config.Item("UserRC").GetValue<bool>() && ObjectManager.Player.Health < ObjectManager.Player.MaxHealth * .2)
             {
-                if (!sender.IsMe && sender.IsEnemy && ObjectManager.Player.Health < ObjectManager.Player.MaxHealth * .1 && R.IsReady() && args.Target.IsMe) // for minions attack
+                if (!sender.IsMe && sender.IsEnemy && R.IsReady() && args.Target.IsMe) // for minions attack
                 {
                     R.Cast(ObjectManager.Player.Position);
                 }
