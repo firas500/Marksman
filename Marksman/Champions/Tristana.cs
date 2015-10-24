@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
@@ -15,7 +16,7 @@ namespace Marksman.Champions
     {
         public static Obj_AI_Hero Player = ObjectManager.Player;
         public static Spell Q, W, E, R;
-        public static Font vText;
+        public static Font font, fontsmall;
         public static int LastTickTime;
 
         public Tristana()
@@ -34,17 +35,36 @@ namespace Marksman.Champions
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Interrupter2.OnInterruptableTarget += Interrupter2_OnInterruptableTarget;
 
-            vText = new Font(
+            font = new Font(
                 Drawing.Direct3DDevice,
                 new FontDescription
                 {
-                    FaceName = "Courier new",
+                    FaceName = "Segoe UI",
+                    Height = 35,
+                    OutputPrecision = FontPrecision.Default,
+                    Quality = FontQuality.Default
+                });
+            fontsmall = new Font(
+                Drawing.Direct3DDevice,
+                new FontDescription
+                {
+                    FaceName = "Segoe UI",
                     Height = 15,
                     OutputPrecision = FontPrecision.Default,
                     Quality = FontQuality.Default
                 });
 
+            Game.OnWndProc += Game_OnWndProc;
+
             Utils.Utils.PrintMessage("Tristana loaded.");
+        }
+
+        private static void Game_OnWndProc(WndEventArgs args)
+        {
+            if (args.Msg != 0x20a)
+                return;
+
+            Program.Config.Item("Lane.Enabled").SetValue(!Program.Config.Item("Lane.Enabled").GetValue<bool>());
         }
 
         public void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
@@ -59,19 +79,37 @@ namespace Marksman.Champions
                 R.CastOnUnit(unit);
         }
 
-        public override void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
+        public override void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
         {
-            if (GetValue<bool>("UseEM") && target is Obj_AI_Turret && E.IsReady())
+            if (GetValue<bool>("Misc.UseQ.Inhibitor") && args.Target is Obj_BarracksDampener && Q.IsReady())
             {
-                var t1 = (Obj_AI_Turret)target;
-                E.CastOnUnit(t1);
+                Q.Cast();
             }
 
-            var t = target as Obj_AI_Hero;
-            if (t != null && (ComboActive || HarassActive) && unit.IsMe)
+            if (GetValue<bool>("Misc.UseQ.Nexus") && args.Target is Obj_HQ && Q.IsReady())
             {
-                var useQ = Q.IsReady() && GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
-                var useE = E.IsReady() && GetValue<bool>("UseE" + (ComboActive ? "C" : "H"));
+                Q.Cast();
+            }
+
+            var unit = args.Target as Obj_AI_Turret;
+            if (unit != null)
+            {
+                if (GetValue<bool>("UseEM") && E.IsReady())
+                {
+                    E.CastOnUnit(unit);
+                }
+
+                if (GetValue<bool>("Misc.UseQ.Turret") && Q.IsReady())
+                {
+                    Q.Cast();
+                }
+            }
+
+            var t = args.Target as Obj_AI_Hero;
+            if (t.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null)) && ComboActive)
+            {
+                var useQ = Q.IsReady() && GetValue<bool>("UseQC");
+                var useE = E.IsReady() && GetValue<bool>("UseEC");
 
                 if (useQ)
                     Q.CastOnUnit(Player);
@@ -84,33 +122,23 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
-            if (!Orbwalking.CanMove(100))
+            if (ObjectManager.Player.IsDead)
+            {
                 return;
+            }
+            if (!Orbwalking.CanMove(100))
+            {
+                return;
+            }
 
             if (this.JungleClearActive)
             {
-                var jungleMobs = Marksman.Utils.Utils.GetMobs(E.Range, Marksman.Utils.Utils.MobTypes.All);
+                ExecuteJungleClear();
+            }
 
-                if (jungleMobs != null)
-                {
-                    switch (GetValue<StringList>("UseEJ").SelectedIndex)
-                    {
-                        case 1:
-                            {
-                                E.CastOnUnit(jungleMobs);
-                                break;
-                            }
-                        case 2:
-                            {
-                                jungleMobs = Utils.Utils.GetMobs(E.Range,Utils.Utils.MobTypes.BigBoys);
-                                if (jungleMobs != null)
-                                {
-                                    E.CastOnUnit(jungleMobs);
-                                }
-                                break;
-                            }
-                    }
-                }
+            if (this.LaneClearActive && Program.Config.Item("Lane.Enabled").GetValue<bool>())
+            {
+                ExecuteLaneClear();
             }
 
             var getEMarkedEnemy = TristanaData.GetEMarkedEnemy;
@@ -134,16 +162,18 @@ namespace Marksman.Champions
                     return;
                 var t = TristanaData.GetTarget(E.Range);
                 if (t.IsValidTarget() && E.IsReady())
+                {
                     E.CastOnUnit(t);
+                }
             }
 
             var useW = W.IsReady() && GetValue<bool>("UseWC");
             var useWc = W.IsReady() && GetValue<bool>("UseWCS");
             var useWks = W.IsReady() && GetValue<bool>("UseWKs");
-            var useE = E.IsReady() && GetValue<bool>("UseE" + (ComboActive ? "C" : "H"));
+            var useE = E.IsReady() && GetValue<bool>("UseEC");
             var useR = R.IsReady() && GetValue<bool>("UseRM") && R.IsReady();
 
-            if (ComboActive || HarassActive)
+            if (ComboActive)
             {
                 Obj_AI_Hero t;
                 if (TristanaData.GetEMarkedEnemy != null)
@@ -200,6 +230,119 @@ namespace Marksman.Champions
             }
         }
 
+        private void ExecuteJungleClear()
+        {
+            var jungleMobs = Marksman.Utils.Utils.GetMobs(E.Range, Marksman.Utils.Utils.MobTypes.All);
+
+            if (jungleMobs != null)
+            {
+                if (E.IsReady())
+                {
+                    switch (Program.Config.Item("UseEJ").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 1:
+                        {
+                            E.CastOnUnit(jungleMobs);
+                            break;
+                        }
+                        case 2:
+                        {
+                            jungleMobs = Utils.Utils.GetMobs(E.Range, Utils.Utils.MobTypes.BigBoys);
+                            if (jungleMobs != null)
+                            {
+                                E.CastOnUnit(jungleMobs);
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                if (Q.IsReady())
+                {
+                    var jE = Program.Config.Item("UseQJ").GetValue<StringList>().SelectedIndex;
+                    if (jE != 0)
+                    {
+                        if (jE == 1)
+                        {
+                            jungleMobs = Utils.Utils.GetMobs(Orbwalking.GetRealAutoAttackRange(null) + 65,
+                                Utils.Utils.MobTypes.BigBoys);
+                            if (jungleMobs != null)
+                            {
+                                Q.Cast();
+                            }
+                        }
+                        else
+                        {
+                            var totalAa =
+                                ObjectManager.Get<Obj_AI_Minion>()
+                                    .Where(
+                                        m =>
+                                            m.Team == GameObjectTeam.Neutral &&
+                                            m.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 165))
+                                    .Sum(mob => (int) mob.Health);
+
+                            totalAa = (int) (totalAa/ObjectManager.Player.TotalAttackDamage());
+                            if (totalAa > jE)
+                            {
+                                Q.Cast();
+                            }
+
+                        }
+                    }
+                }
+            }
+        }
+
+        private void ExecuteLaneClear()
+        {
+            var minions = MinionManager.GetMinions(ObjectManager.Player.Position, E.Range, MinionTypes.All,
+                MinionTeam.Enemy);
+
+            if (minions != null)
+            {
+                if (E.IsReady())
+                {
+                    var eJ = Program.Config.Item("UseE.Lane").GetValue<StringList>().SelectedIndex;
+                    if (eJ != 0)
+                    {
+                        var mE = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range + 175,
+                            MinionTypes.All);
+                        var locW = E.GetCircularFarmLocation(mE, 175);
+                        if (locW.MinionsHit >= eJ && E.IsInRange(locW.Position.To3D()))
+                        {
+                            foreach (
+                                var x in
+                                    ObjectManager.Get<Obj_AI_Minion>()
+                                        .Where(m => m.IsEnemy && !m.IsDead && m.Distance(locW.Position) < 100))
+                            {
+                                E.CastOnUnit(x);
+                            }
+                        }
+                    }
+                }
+                if (Q.IsReady())
+                {
+                    var jE = Program.Config.Item("UseQ.Lane").GetValue<StringList>().SelectedIndex;
+                    if (jE != 0)
+                    {
+                        var totalAa =
+                            ObjectManager.Get<Obj_AI_Minion>()
+                                .Where(
+                                    m =>
+                                        m.IsEnemy && !m.IsDead &&
+                                        m.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null)))
+                                .Sum(mob => (int) mob.Health);
+
+                        totalAa = (int) (totalAa/ObjectManager.Player.TotalAttackDamage());
+                        if (totalAa > jE)
+                        {
+                            Q.Cast();
+                        }
+                    }
+                }
+            }
+        }
+
         private static float GetComboDamage(Obj_AI_Hero t)
         {
             return TristanaData.GetComboDamage;
@@ -207,12 +350,17 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
+            if (ObjectManager.Player.IsDead)
+            {
+                return;
+            }
+
             // Draw marked enemy status
             var drawEMarksStatus = Program.Config.SubMenu("Drawings").Item("DrawEMarkStatus").GetValue<bool>();
             var drawEMarkEnemy = Program.Config.SubMenu("Drawings").Item("DrawEMarkEnemy").GetValue<Circle>();
             if (drawEMarksStatus || drawEMarkEnemy.Active)
             {
-                var vText1 = vText;
+                var vText1 = font;
                 var getEMarkedEnemy = TristanaData.GetEMarkedEnemy;
                 if (getEMarkedEnemy != null)
                 {
@@ -223,10 +371,8 @@ namespace Marksman.Champions
                         var xTime = LastTickTime - Environment.TickCount;
 
                         var timer = string.Format("0:{0:D2}", xTime/1000);
-                        Utils.Utils.DrawText(
-                            vText1, timer + " : 4 / " + TristanaData.GetEMarkedCount,
-                            (int) getEMarkedEnemy.HPBarPosition.X + 145, (int) getEMarkedEnemy.HPBarPosition.Y + 5,
-                            Color.White);
+                        Utils.Utils.DrawText(vText1, TristanaData.GetEMarkedCount + " of 4 Stacks",(int) getEMarkedEnemy.HPBarPosition.X + 145, (int) getEMarkedEnemy.HPBarPosition.Y + 5,Color.Red);
+                        Utils.Utils.DrawText(fontsmall, "End: " + timer, (int)getEMarkedEnemy.HPBarPosition.X + 145, (int)getEMarkedEnemy.HPBarPosition.Y + 35, Color.White);
                     }
 
                     if (drawEMarkEnemy.Active)
@@ -255,20 +401,16 @@ namespace Marksman.Champions
         {
             config.AddItem(new MenuItem("UseQC" + Id, "Use Q").SetValue(true));
             config.AddItem(new MenuItem("UseWC" + Id, "Use W").SetValue(true));
+            config.AddItem(new MenuItem("UseEC" + Id, "Use E").SetValue(true));
             config.AddItem(new MenuItem("UseWKs" + Id, "Use W Kill Steal").SetValue(true));
             config.AddItem(new MenuItem("UseWCS" + Id, "Complete E stacks with W").SetValue(true));
-            config.AddItem(new MenuItem("UseEC" + Id, "Use E").SetValue(true));
+            
             return true;
         }
 
         public override bool HarassMenu(Menu config)
         {
-            config.AddItem(new MenuItem("UseQH" + Id, "Use Q").SetValue(false));
-            config.AddItem(new MenuItem("UseWH" + Id, "Use W").SetValue(true));
-            config.AddItem(new MenuItem("UseEH" + Id, "Use E").SetValue(true));
-            config.AddItem(new MenuItem("UseETH" + Id, "Use E (Toggle)").SetValue(
-                    new KeyBind("H".ToCharArray()[0], KeyBindType.Toggle)))
-                        .Permashow(true, "Marksman | Toggle E");;
+            config.AddItem(new MenuItem("UseETH" + Id, "Use E (Toggle)").SetValue(new KeyBind("H".ToCharArray()[0], KeyBindType.Toggle))).Permashow(true, "Tristana | Toggle E");;
             return true;
         }
 
@@ -294,22 +436,73 @@ namespace Marksman.Champions
 
         public override bool MiscMenu(Menu config)
         {
-            config.AddItem(new MenuItem("UseEM" + Id, "Use E for Enemy Turret").SetValue(true));
-            config.AddItem(new MenuItem("UseWM" + Id, "Use W KillSteal").SetValue(true));
-            config.AddItem(new MenuItem("UseRM" + Id, "Use R KillSteal").SetValue(true));
-            config.AddItem(new MenuItem("UseRMG" + Id, "Use R Gapclosers").SetValue(true));
-            config.AddItem(new MenuItem("UseRMI" + Id, "Use R Interrupt").SetValue(true));
+            var menuMiscQ = new Menu("Q Spell", "MiscQ");
+            menuMiscQ.AddItem(new MenuItem("Misc.UseQ.Turret" + Id, "Use Q for Turret").SetValue(true));
+            menuMiscQ.AddItem(new MenuItem("Misc.UseQ.Inhibitor" + Id, "Use Q for Inhibitor").SetValue(true));
+            menuMiscQ.AddItem(new MenuItem("Misc.UseQ.Nexus" + Id, "Use Q for Nexus").SetValue(true));
+            config.AddSubMenu(menuMiscQ);
+
+            var menuMiscW = new Menu("W Spell", "MiscW");
+            menuMiscW.AddItem(new MenuItem("ProtectWMana", "[Soon/WIP] Protect my mana for [W] if my Level < ").SetValue(new Slider(8, 2, 18)));
+            menuMiscW.AddItem(new MenuItem("UseWM" + Id, "Use W KillSteal").SetValue(false));
+            config.AddSubMenu(menuMiscW);
+
+            var menuMiscE = new Menu("E Spell", "MiscE");
+            menuMiscE.AddItem(new MenuItem("UseEM" + Id, "Use E for Enemy Turret").SetValue(true));
+            config.AddSubMenu(menuMiscE);
+
+            var menuMiscR = new Menu("R Spell", "MiscR");
+            {
+                menuMiscR.AddItem(new MenuItem("ProtectRMana", "[Soon/WIP] Protect my mana for [R] if my Level < ").SetValue(new Slider(11, 6, 18)));
+                menuMiscR.AddItem(new MenuItem("UseRM" + Id, "Use R KillSteal").SetValue(true));
+                menuMiscR.AddItem(new MenuItem("UseRMG" + Id, "Use R Gapclosers").SetValue(true));
+                menuMiscR.AddItem(new MenuItem("UseRMI" + Id, "Use R Interrupt").SetValue(true));
+                config.AddSubMenu(menuMiscR);
+            }
+
             return true;
         }
 
         public override bool LaneClearMenu(Menu config)
         {
+            config.AddItem(new MenuItem("Lane.Enabled", "Enable! (On/Off: Mouse Scroll").SetValue(true)).Permashow(true, "Tristana | Enable Farm");
+
+            string[] strQ = new string[7];
+            strQ[0] = "Off";
+
+            for (var i = 1; i < 7; i++)
+            {
+                strQ[i] = "If need to AA more than >= " + i;
+            }
+
+            config.AddItem(new MenuItem("UseQ.Lane", Utils.Utils.Tab + "Use Q:").SetValue(new StringList(strQ, 0)));
+
+
+            string[] strW = new string[5];
+            strW[0] = "Off";
+
+            for (var i = 1; i < 5; i++)
+            {
+                strW[i] = "Minion Count >= " + i;
+            }
+            
+            config.AddItem(new MenuItem("UseE.Lane", Utils.Utils.Tab + "Use E:").SetValue(new StringList(strW, 0)));
             return true;
         }
 
         public override bool JungleClearMenu(Menu config)
         {
-            config.AddItem(new MenuItem("UseEJ" + this.Id, "Use E").SetValue(new StringList(new[] {"Off", "On", "Just big Monsters"}, 1)));
+            string[] strLaneMinCount = new string[8];
+            strLaneMinCount[0] = "Off";
+            strLaneMinCount[1] = "Just for big Monsters";
+
+            for (var i = 2; i < 8; i++)
+            {
+                strLaneMinCount[i] = "If need to AA more than >= " + i;
+            }
+
+            config.AddItem(new MenuItem("UseQJ" , "Use Q").SetValue(new StringList(strLaneMinCount, 4)));
+            config.AddItem(new MenuItem("UseEJ" , "Use E").SetValue(new StringList(new[] { "Off", "On", "Just for big Monsters"}, 1)));
             
             return true;
         }
@@ -368,8 +561,7 @@ namespace Marksman.Champions
 
                     if (E.IsReady())
                     {
-                        fComboDamage += new double[] {60, 70, 80, 90, 100}[E.Level - 1]*2*
-                                        Player.FlatMagicDamageMod;
+                        fComboDamage += E.GetDamage(t);
                     }
 
                     if (R.IsReady())

@@ -20,6 +20,7 @@ namespace Marksman
         public static Menu Config;
         public static Menu OrbWalking;
         public static Menu QuickSilverMenu;
+        public static Menu MenuActivator;
         
 //        public static Menu MenuInterruptableSpell;
         public static Champion CClass;
@@ -129,66 +130,67 @@ namespace Marksman
 
             CClass.Id = ObjectManager.Player.CharData.BaseSkinName;
             CClass.Config = Config;
-            #region Auto Level
-            AutoLevel = new Utils.AutoLevel();
-            #endregion
-            var targetSelectorMenu = new Menu("Target Selector", "Target Selector");
-            TargetSelector.AddToMenu(targetSelectorMenu);
-            Config.AddSubMenu(targetSelectorMenu);
-
+            
             OrbWalking = Config.AddSubMenu(new Menu("Orbwalking", "Orbwalking"));
             CClass.Orbwalker = new Orbwalking.Orbwalker(OrbWalking);
 
-            OrbWalking.AddItem(new MenuItem("Orb.AutoWindUp", "Marksman - Auto Windup").SetValue(false)).ValueChanged +=
-                (sender, argsEvent) => { if (argsEvent.GetNewValue<bool>()) CheckAutoWindUp(); };
+            OrbWalking.AddItem(new MenuItem("Orb.AutoWindUp", "Marksman - Auto Windup").SetValue(false)).ValueChanged += (sender, argsEvent) => { if (argsEvent.GetNewValue<bool>()) CheckAutoWindUp(); };
 
-            EarlyEvade = new Utils.EarlyEvade();
-            Config.AddSubMenu(EarlyEvade.MenuLocal); ;
+            MenuActivator = new Menu("Activator", "Activator").SetFontStyle(FontStyle.Regular, SharpDX.Color.Aqua);
+            {
+                AutoLevel = new Utils.AutoLevel();
 
-            /* Menu Summoners */
-            var summoners = Config.AddSubMenu(new Menu("Summoners", "Summoners"));
-            var summonersHeal = summoners.AddSubMenu(new Menu("Heal", "Heal"));
-            {
-                summonersHeal.AddItem(new MenuItem("SUMHEALENABLE", "Enable").SetValue(true));
-                summonersHeal.AddItem(new MenuItem("SUMHEALSLIDER", "Min. Heal Per.").SetValue(new Slider(20, 99, 1)));
-            }
+                EarlyEvade = new Utils.EarlyEvade();
+                MenuActivator.AddSubMenu(EarlyEvade.MenuLocal);
 
-            var summonersBarrier = summoners.AddSubMenu(new Menu("Barrier", "Barrier"));
-            {
-                summonersBarrier.AddItem(new MenuItem("SUMBARRIERENABLE", "Enable").SetValue(true));
-                summonersBarrier.AddItem(
-                    new MenuItem("SUMBARRIERSLIDER", "Min. Heal Per.").SetValue(new Slider(20, 99, 1)));
-            }
-
-            var summonersIgnite = summoners.AddSubMenu(new Menu("Ignite", "Ignite"));
-            {
-                summonersIgnite.AddItem(new MenuItem("SUMIGNITEENABLE", "Enable").SetValue(true));
-            }
-            /* Menu Items */
-            var items = Config.AddSubMenu(new Menu("Items", "Items"));
-            items.AddItem(new MenuItem("BOTRK", "BOTRK").SetValue(true));
-            items.AddItem(new MenuItem("GHOSTBLADE", "Ghostblade").SetValue(true));
-            items.AddItem(new MenuItem("SWORD", "Sword of the Divine").SetValue(true));
-            items.AddItem(new MenuItem("MURAMANA", "Muramana").SetValue(true));
-            QuickSilverMenu = new Menu("QSS", "QuickSilverSash");
-            items.AddSubMenu(QuickSilverMenu);
-            QuickSilverMenu.AddItem(new MenuItem("AnyStun", "Any Stun").SetValue(true));
-            QuickSilverMenu.AddItem(new MenuItem("AnySlow", "Any Slow").SetValue(true));
-            QuickSilverMenu.AddItem(new MenuItem("AnySnare", "Any Snare").SetValue(true));
-            QuickSilverMenu.AddItem(new MenuItem("AnyTaunt", "Any Taunt").SetValue(true));
-            foreach (var t in AActivator.BuffList)
-            {
-                foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy))
+                /* Menu Items */
+                var items = MenuActivator.AddSubMenu(new Menu("Items", "Items"));
+                items.AddItem(new MenuItem("BOTRK", "BOTRK").SetValue(true));
+                items.AddItem(new MenuItem("GHOSTBLADE", "Ghostblade").SetValue(true));
+                items.AddItem(new MenuItem("SWORD", "Sword of the Divine").SetValue(true));
+                items.AddItem(new MenuItem("MURAMANA", "Muramana").SetValue(true));
+                QuickSilverMenu = new Menu("QSS", "QuickSilverSash");
+                items.AddSubMenu(QuickSilverMenu);
+                QuickSilverMenu.AddItem(new MenuItem("AnyStun", "Any Stun").SetValue(true));
+                QuickSilverMenu.AddItem(new MenuItem("AnySlow", "Any Slow").SetValue(true));
+                QuickSilverMenu.AddItem(new MenuItem("AnySnare", "Any Snare").SetValue(true));
+                QuickSilverMenu.AddItem(new MenuItem("AnyTaunt", "Any Taunt").SetValue(true));
+                foreach (var t in AActivator.BuffList)
                 {
-                    if (t.ChampionName == enemy.ChampionName)
-                        QuickSilverMenu.AddItem(new MenuItem(t.BuffName, t.DisplayName).SetValue(t.DefaultValue));
+                    foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsEnemy))
+                    {
+                        if (t.ChampionName == enemy.ChampionName)
+                            QuickSilverMenu.AddItem(new MenuItem(t.BuffName, t.DisplayName).SetValue(t.DefaultValue));
+                    }
+                }
+                items.AddItem(
+                    new MenuItem("UseItemsMode", "Use items on").SetValue(
+                        new StringList(new[] { "No", "Mixed mode", "Combo mode", "Both" }, 2)));
+
+                new PotionManager(MenuActivator);
+
+                /* Menu Summoners */
+                var summoners = MenuActivator.AddSubMenu(new Menu("Summoners", "Summoners"));
+                {
+                    var summonersHeal = summoners.AddSubMenu(new Menu("Heal", "Heal"));
+                    {
+                        summonersHeal.AddItem(new MenuItem("SUMHEALENABLE", "Enable").SetValue(true));
+                        summonersHeal.AddItem(new MenuItem("SUMHEALSLIDER", "Min. Heal Per.").SetValue(new Slider(20, 99, 1)));
+                    }
+
+                    var summonersBarrier = summoners.AddSubMenu(new Menu("Barrier", "Barrier"));
+                    {
+                        summonersBarrier.AddItem(new MenuItem("SUMBARRIERENABLE", "Enable").SetValue(true));
+                        summonersBarrier.AddItem(new MenuItem("SUMBARRIERSLIDER", "Min. Heal Per.").SetValue(new Slider(20, 99, 1)));
+                    }
+
+                    var summonersIgnite = summoners.AddSubMenu(new Menu("Ignite", "Ignite"));
+                    {
+                        summonersIgnite.AddItem(new MenuItem("SUMIGNITEENABLE", "Enable").SetValue(true));
+                    }
                 }
             }
-            items.AddItem(
-                new MenuItem("UseItemsMode", "Use items on").SetValue(
-                    new StringList(new[] {"No", "Mixed mode", "Combo mode", "Both"}, 2)));
-
-
+            Config.AddSubMenu(MenuActivator);
             //var Extras = Config.AddSubMenu(new Menu("Extras", "Extras"));
             //new PotionManager(Extras);
 
@@ -213,7 +215,7 @@ namespace Marksman
                     Config.AddSubMenu(harass);
                 }
 
-                var laneclear = new Menu("LaneClear", "LaneClear");
+                var laneclear = new Menu("Lane Mode", "LaneClear");
                 if (CClass.LaneClearMenu(laneclear))
                 {
                     laneclear.AddItem(
@@ -228,10 +230,9 @@ namespace Marksman
                     Config.AddSubMenu(jungleClear);
                 }
                 
-                var misc = new Menu("Misc", "Misc");
+                var misc = new Menu("Misc", "Misc").SetFontStyle(FontStyle.Regular, SharpDX.Color.DarkOrange);
                 if (CClass.MiscMenu(misc))
                 {
-                    new PotionManager(misc);
                     Config.AddSubMenu(misc);
                 }
 /*
@@ -265,7 +266,7 @@ namespace Marksman
                 }
             }
 
-            
+         
 
             CClass.MainMenu(Config);
             
@@ -281,6 +282,7 @@ namespace Marksman
             
             Config.AddToMainMenu();
             Sprite.Load();
+            CheckAutoWindUp();
 
             Drawing.OnDraw += Drawing_OnDraw;
             Game.OnUpdate += Game_OnGameUpdate;

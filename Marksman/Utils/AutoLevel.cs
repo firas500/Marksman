@@ -115,7 +115,7 @@ namespace Marksman.Utils
                     break;
                     
                 case "tristana":
-                    SpellLevels = new int[] { 3, 2, 3, 1, 3, 4, 6, 1, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
+                    SpellLevels = new int[] { 3, 2, 3, 1, 3, 4, 3, 1, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
                     //LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
@@ -152,7 +152,7 @@ namespace Marksman.Utils
                     break;
             }
 
-            Program.Config.AddSubMenu(LocalMenu);
+            Program.MenuActivator.AddSubMenu(LocalMenu);
             Game.OnUpdate += Game_OnUpdate;
         }
 
