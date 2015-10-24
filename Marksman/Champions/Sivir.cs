@@ -11,8 +11,9 @@ namespace Marksman.Champions
     using System.Collections.Generic;
     using SharpDX;
     using Color = System.Drawing.Color;
+    using Marksman.Utils;
 
-    class DangerousSpells
+    internal class DangerousSpells
     {
         public string ChampionName { get; private set; }
         public SpellSlot SpellSlot { get; private set; }
@@ -55,48 +56,95 @@ namespace Marksman.Champions
             DangerousList.Add(new DangerousSpells("zed", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("tristana", SpellSlot.R));
 
-            Utils.Utils.PrintMessage("Sivir loaded.");
+            Game.OnWndProc += Game_OnWndProc;
+
+            Utils.PrintMessage("Sivir loaded.");
 //            Utils.Utils.PrintMessage("Sivir E Support Loaded! Please check the Marksman Menu for her E Spell");
+        }
+
+        private static void Game_OnWndProc(WndEventArgs args)
+        {
+            if (args.Msg != 0x20a)
+                return;
+
+            Program.Config.Item("Lane.Enabled").SetValue(!Program.Config.Item("Lane.Enabled").GetValue<bool>());
+        }
+
+        public override void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
+        {
+            if (!W.IsReady())
+            {
+                return;
+            }
+
+            if (GetValue<bool>("Misc.UseW.Inhibitor") && args.Target is Obj_BarracksDampener)
+            {
+                W.Cast();
+            }
+
+            if (GetValue<bool>("Misc.UseW.Nexus") && args.Target is Obj_HQ)
+            {
+                W.Cast();
+            }
+
+            if (GetValue<bool>("Misc.UseW.Turret") && args.Target is Obj_AI_Turret)
+            {
+                W.Cast();
+            }
         }
 
         public void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
+            if (!E.IsReady())
+            {
+                return;
+            }
+
+            if (sender == null)
+            {
+                return;
+            }
+
             if (sender.IsEnemy && sender is Obj_AI_Hero && args.Target.IsMe && this.E.IsReady())
             {
-                foreach (var c in DangerousList.Where(c => ((Obj_AI_Hero)sender).ChampionName.ToLower() == c.ChampionName))
+                foreach (
+                    var c in
+                        DangerousList.Where(c => ((Obj_AI_Hero) sender).ChampionName.ToLower() == c.ChampionName)
+                            .Where(c => args.SData.Name == ((Obj_AI_Hero) sender).GetSpell(c.SpellSlot).Name))
                 {
-                    if (args.SData.Name == ((Obj_AI_Hero)sender).GetSpell(c.SpellSlot).Name)
-                    {
-                        this.E.Cast();
-                    }
+                    this.E.Cast();
                 }
             }
 
-            if (((Obj_AI_Hero)sender).ChampionName.ToLower() == "kalista" && args.SData.Name == ((Obj_AI_Hero)sender).GetSpell(SpellSlot.E).Name)
-            {
-                var bCount = ObjectManager.Player.Buffs.Count(b => b.Name.Contains("kalistaexpungemarker"));
-                if (bCount > 0)
-                    this.E.Cast();
-            }
-            
-            if (((Obj_AI_Hero)sender).ChampionName.ToLower() == "vayne" && args.SData.Name == ((Obj_AI_Hero)sender).GetSpell(SpellSlot.E).Name)
+            if (((Obj_AI_Hero) sender).ChampionName.ToLower() == "vayne" &&
+                args.SData.Name == ((Obj_AI_Hero) sender).GetSpell(SpellSlot.E).Name)
             {
                 for (var i = 1; i < 8; i++)
                 {
-                    var championBehind = ObjectManager.Player.Position
-                                         + Vector3.Normalize(
-                                             ((Obj_AI_Hero)sender).ServerPosition - ObjectManager.Player.Position)
-                                         * (-i * 50);
+                    var championBehind = ObjectManager.Player.Position +
+                                         Vector3.Normalize(((Obj_AI_Hero) sender).ServerPosition -
+                                                           ObjectManager.Player.Position)*(-i*50);
                     if (championBehind.IsWall())
                     {
+
                         this.E.Cast();
                     }
                 }
-            }     
+            }
         }
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
+            if (this.JungleClearActive)
+            {
+                ExecuteJungleClear();
+            }
+
+            if (this.LaneClearActive && Program.Config.Item("Lane.Enabled").GetValue<bool>())
+            {
+                ExecuteLaneClear();
+            }
+
             if (GetValue<bool>("AutoQ"))
             {
                 var t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
@@ -126,13 +174,108 @@ namespace Marksman.Champions
             }
         }
 
+        private void ExecuteJungleClear()
+        {
+            var jungleMobs = Utils.GetMobs(Q.Range, Marksman.Utils.Utils.MobTypes.All);
+
+            if (jungleMobs != null)
+            {
+                if (Q.IsReady())
+                {
+                    switch (Program.Config.Item("UseQ.Jungle").GetValue<StringList>().SelectedIndex)
+                    {
+                        case 1:
+                        {
+                            Q.Cast(jungleMobs);
+                            break;
+                        }
+                        case 2:
+                        {
+                            jungleMobs = Utils.GetMobs(Q.Range, Utils.MobTypes.BigBoys);
+                            if (jungleMobs != null)
+                            {
+                                Q.Cast(jungleMobs);
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                if (W.IsReady())
+                {
+                    var jW = Program.Config.Item("UseW.Jungle").GetValue<StringList>().SelectedIndex;
+                    if (jW != 0)
+                    {
+                        if (jW == 1)
+                        {
+                            jungleMobs = Utils.GetMobs(Orbwalking.GetRealAutoAttackRange(null) + 65,
+                                Utils.MobTypes.BigBoys);
+                            if (jungleMobs != null)
+                            {
+                                Q.Cast();
+                            }
+                        }
+                        else
+                        {
+                            var totalAa =
+                                ObjectManager.Get<Obj_AI_Minion>()
+                                    .Where(
+                                        m =>
+                                            m.Team == GameObjectTeam.Neutral &&
+                                            m.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 165))
+                                    .Sum(mob => (int) mob.Health);
+                            totalAa = (int) (totalAa/ObjectManager.Player.TotalAttackDamage());
+                            if (totalAa > jW)
+                            {
+                                W.Cast();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void ExecuteLaneClear()
+        {
+            var qJ = Program.Config.Item("UseQ.Lane").GetValue<StringList>().SelectedIndex;
+            if (qJ != 0)
+            {
+                var minionsQ = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, Q.Range, MinionTypes.All);
+                if (minionsQ != null)
+                {
+                    if (Q.IsReady())
+                    {
+                        var locQ = Q.GetLineFarmLocation(minionsQ);
+                        if (minionsQ.Count == minionsQ.Count(m => ObjectManager.Player.Distance(m) < Q.Range) &&
+                            locQ.MinionsHit > qJ && locQ.Position.IsValid())
+                        {
+                            Q.Cast(locQ.Position);
+                        }
+                    }
+                }
+            }
+            var wJ = Program.Config.Item("UseW.Lane").GetValue<StringList>().SelectedIndex;
+            if (wJ != 0)
+            {
+                var minionsW = MinionManager.GetMinions(ObjectManager.Player.ServerPosition,
+                    Orbwalking.GetRealAutoAttackRange(null) + 165, MinionTypes.All);
+                if (minionsW != null && minionsW.Count >= wJ)
+                {
+                    if (W.IsReady())
+                    {
+                        W.Cast();
+                    }
+                }
+            }
+        }
+
         public override void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
             var t = target as Obj_AI_Hero;
             if (t != null && (ComboActive || HarassActive) && unit.IsMe)
             {
                 var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
-                var useW = GetValue<bool>("UseW" + (ComboActive ? "C" : "H"));
+                var useW = GetValue<bool>("UseWC");
 
                 if (W.IsReady() && useW)
                 {
@@ -169,7 +312,7 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
-            Spell[] spellList = { Q };
+            Spell[] spellList = {Q};
             foreach (var spell in spellList)
             {
                 var menuItem = GetValue<Circle>("Draw" + spell.Slot);
@@ -188,13 +331,15 @@ namespace Marksman.Champions
         public override bool HarassMenu(Menu config)
         {
             config.AddItem(new MenuItem("UseQH" + Id, "Use Q").SetValue(false));
-            config.AddItem(new MenuItem("UseWH" + Id, "Use W").SetValue(false));
             return true;
         }
 
         public override bool MiscMenu(Menu config)
         {
             config.AddItem(new MenuItem("AutoQ" + Id, "Auto Q on Stun/Slow/Fear/Taunt/Snare").SetValue(true));
+            config.AddItem(new MenuItem("Misc.UseW.Turret" + Id, "Use W for Turret").SetValue(false));
+            config.AddItem(new MenuItem("Misc.UseW.Inhibitor" + Id, "Use W for Inhibitor").SetValue(true));
+            config.AddItem(new MenuItem("Misc.UseW.Nexus" + Id, "Use W for Nexus").SetValue(true));
             return true;
         }
 
@@ -207,55 +352,52 @@ namespace Marksman.Champions
 
         public override bool LaneClearMenu(Menu config)
         {
+            config.AddItem(new MenuItem("Lane.Enabled", "Enable! (On/Off: Mouse Scroll").SetValue(true))
+                .Permashow(true, "Tristana | Enable Farm");
+
+            string[] strQ = new string[5];
+            strQ[0] = "Off";
+
+            for (var i = 1; i < 5; i++)
+            {
+                strQ[i] = "Minion Count >= " + i;
+            }
+
+            config.AddItem(new MenuItem("UseQ.Lane", Utils.Tab + "Use Q:").SetValue(new StringList(strQ, 0)));
+            config.AddItem(new MenuItem("UseQR.Lane", Utils.Tab + "Use Q for out of AA Range").SetValue(true));
+
+
+            string[] strW = new string[5];
+            strW[0] = "Off";
+
+            for (var i = 1; i < 5; i++)
+            {
+                strW[i] = "Minion Count >= " + i;
+            }
+
+            config.AddItem(new MenuItem("UseW.Lane", Utils.Tab + "Use W:").SetValue(new StringList(strW, 0)));
+
             return true;
         }
+
         public override bool JungleClearMenu(Menu config)
         {
-            return false;
-        }
+            config.AddItem(
+                new MenuItem("UseQ.Jungle", "Use Q").SetValue(
+                    new StringList(new[] {"Off", "On", "Just for big Monsters"}, 1)));
 
-        private void Game_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
-        {
-            if (sender.Type == GameObjectType.obj_AI_Hero && sender.IsEnemy)
+            string[] strW = new string[8];
+            strW[0] = "Off";
+            strW[1] = "Just for big Monsters";
+
+            for (var i = 2; i < 8; i++)
             {
-                foreach (var spell in
-                    _menuSupportedSpells.Items.SelectMany(
-                        t =>
-                            SpellList.BuffList.Where(
-                                xSpell => xSpell.CanBlockWith.ToList().Contains(BlockableSpells.SivirE))
-                                .Where(
-                                    spell => t.Name == args.SData.Name && t.Name == spell.BuffName && t.GetValue<bool>()))
-                    )
-                {
-                    switch (spell.SkillType)
-                    {
-                        case SkillShotType.SkillshotCircle:
-                            if (ObjectManager.Player.Distance(args.End) <= 250f)
-                            {
-                                if (E.IsReady())
-                                    E.Cast();
-                            }
-                            break;
-
-                        case SkillShotType.SkillshotLine:
-                            if (ObjectManager.Player.Distance(args.End) <= 100f)
-                            {
-                                if (E.IsReady())
-                                    E.Cast();
-                            }
-                            break;
-
-                        case SkillShotType.SkillshotUnknown:
-                            if (ObjectManager.Player.Distance(args.End) <= 500f ||
-                                ObjectManager.Player.Distance(sender.Position) <= 500)
-                            {
-                                if (E.IsReady())
-                                    E.Cast();
-                            }
-                            break;
-                    }
-                }
+                strW[i] = "If need to AA more than >= " + i;
             }
+
+            config.AddItem(new MenuItem("UseW.Jungle", "Use W").SetValue(new StringList(strW, 4)));
+
+            return true;
         }
     }
 }
