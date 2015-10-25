@@ -114,9 +114,18 @@ namespace Marksman.Champions
                 if (useQ)
                     Q.CastOnUnit(Player);
 
-                if (useE && E.IsReady())
+                if (useE && E.IsReady() && canUseE(t))
                     E.CastOnUnit(t);
             }
+        }
+
+        private static bool canUseE(Obj_AI_Hero t)
+        {
+            if (Player.CountEnemiesInRange(W.Range + (E.Range/2)) == 1)
+                return true;
+
+            return (Program.Config.Item("DontUseE" + t.ChampionName) != null &&
+                    Program.Config.Item("DontUseE" + t.ChampionName).GetValue<bool>() == false);
         }
 
 
@@ -161,7 +170,7 @@ namespace Marksman.Champions
                 if (Player.HasBuff("Recall"))
                     return;
                 var t = TristanaData.GetTarget(E.Range);
-                if (t.IsValidTarget() && E.IsReady())
+                if (t.IsValidTarget() && E.IsReady() && canUseE(t))
                 {
                     E.CastOnUnit(t);
                 }
@@ -186,9 +195,9 @@ namespace Marksman.Champions
                     t = TristanaData.GetTarget(W.Range);
                 }
 
-                if (useE && E.IsReady())
+                if (useE && E.IsReady() && canUseE(t))
                 {
-                    if (E.IsReady() && t.IsValidTarget(E.Range))
+                    if (E.IsReady() && t.IsValidTarget(E.Range) && canUseE(t))
                         E.CastOnUnit(t);
                 }
 
@@ -356,8 +365,8 @@ namespace Marksman.Champions
             }
 
             // Draw marked enemy status
-            var drawEMarksStatus = Program.Config.SubMenu("Drawings").Item("DrawEMarkStatus").GetValue<bool>();
-            var drawEMarkEnemy = Program.Config.SubMenu("Drawings").Item("DrawEMarkEnemy").GetValue<Circle>();
+            var drawEMarksStatus = GetValue<bool>("DrawEMarkStatus");
+            var drawEMarkEnemy = GetValue<Circle>("DrawEMarkEnemy");
             if (drawEMarksStatus || drawEMarkEnemy.Active)
             {
                 var vText1 = font;
@@ -371,8 +380,11 @@ namespace Marksman.Champions
                         var xTime = LastTickTime - Environment.TickCount;
 
                         var timer = string.Format("0:{0:D2}", xTime/1000);
-                        Utils.Utils.DrawText(vText1, TristanaData.GetEMarkedCount + " of 4 Stacks",(int) getEMarkedEnemy.HPBarPosition.X + 145, (int) getEMarkedEnemy.HPBarPosition.Y + 5,Color.Red);
-                        Utils.Utils.DrawText(fontsmall, "End: " + timer, (int)getEMarkedEnemy.HPBarPosition.X + 145, (int)getEMarkedEnemy.HPBarPosition.Y + 35, Color.White);
+                        Utils.Utils.DrawText(vText1, TristanaData.GetEMarkedCount + " of 4 Stacks",
+                            (int) getEMarkedEnemy.HPBarPosition.X + 145, (int) getEMarkedEnemy.HPBarPosition.Y + 5,
+                            Color.Red);
+                        Utils.Utils.DrawText(fontsmall, "End: " + timer, (int) getEMarkedEnemy.HPBarPosition.X + 145,
+                            (int) getEMarkedEnemy.HPBarPosition.Y + 35, Color.White);
                     }
 
                     if (drawEMarkEnemy.Active)
@@ -390,7 +402,7 @@ namespace Marksman.Champions
                     Render.Circle.DrawCircle(Player.Position, spell.Range, menuItem.Color, 1);
             }
 
-            var drawE = Program.Config.SubMenu("Drawings").Item("DrawE").GetValue<Circle>();
+            var drawE = GetValue<Circle>("DrawE");
             if (drawE.Active)
             {
                 Render.Circle.DrawCircle(Player.Position, E.Range, drawE.Color, 1);
@@ -404,13 +416,26 @@ namespace Marksman.Champions
             config.AddItem(new MenuItem("UseEC" + Id, "Use E").SetValue(true));
             config.AddItem(new MenuItem("UseWKs" + Id, "Use W Kill Steal").SetValue(true));
             config.AddItem(new MenuItem("UseWCS" + Id, "Complete E stacks with W").SetValue(true));
-            
+
+            config.AddSubMenu(new Menu("Don't Use E to", "DontUseE"));
+            {
+                foreach (var enemy in
+                    ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.Team != Player.Team))
+                {
+                    config.SubMenu("DontUseE")
+                        .AddItem(new MenuItem("DontUseE" + enemy.ChampionName, enemy.ChampionName).SetValue(false));
+                }
+            }
+
             return true;
         }
 
         public override bool HarassMenu(Menu config)
         {
-            config.AddItem(new MenuItem("UseETH" + Id, "Use E (Toggle)").SetValue(new KeyBind("H".ToCharArray()[0], KeyBindType.Toggle))).Permashow(true, "Tristana | Toggle E");;
+            config.AddItem(
+                new MenuItem("UseETH" + Id, "Use E (Toggle)").SetValue(new KeyBind("H".ToCharArray()[0],
+                    KeyBindType.Toggle))).Permashow(true, "Tristana | Toggle E");
+            ;
             return true;
         }
 
@@ -429,7 +454,7 @@ namespace Marksman.Champions
             }
 
             var dmgAfterComboItem = new MenuItem("DamageAfterCombo", "Damage After Combo").SetValue(true);
-            Config.AddItem(dmgAfterComboItem);
+            config.AddItem(dmgAfterComboItem);
 
             return true;
         }
@@ -443,7 +468,9 @@ namespace Marksman.Champions
             config.AddSubMenu(menuMiscQ);
 
             var menuMiscW = new Menu("W Spell", "MiscW");
-            menuMiscW.AddItem(new MenuItem("ProtectWMana", "[Soon/WIP] Protect my mana for [W] if my Level < ").SetValue(new Slider(8, 2, 18)));
+            menuMiscW.AddItem(
+                new MenuItem("ProtectWMana", "[Soon/WIP] Protect my mana for [W] if my Level < ").SetValue(new Slider(
+                    8, 2, 18)));
             menuMiscW.AddItem(new MenuItem("UseWM" + Id, "Use W KillSteal").SetValue(false));
             config.AddSubMenu(menuMiscW);
 
@@ -453,7 +480,9 @@ namespace Marksman.Champions
 
             var menuMiscR = new Menu("R Spell", "MiscR");
             {
-                menuMiscR.AddItem(new MenuItem("ProtectRMana", "[Soon/WIP] Protect my mana for [R] if my Level < ").SetValue(new Slider(11, 6, 18)));
+                menuMiscR.AddItem(
+                    new MenuItem("ProtectRMana", "[Soon/WIP] Protect my mana for [R] if my Level < ").SetValue(
+                        new Slider(11, 6, 18)));
                 menuMiscR.AddItem(new MenuItem("UseRM" + Id, "Use R KillSteal").SetValue(true));
                 menuMiscR.AddItem(new MenuItem("UseRMG" + Id, "Use R Gapclosers").SetValue(true));
                 menuMiscR.AddItem(new MenuItem("UseRMI" + Id, "Use R Interrupt").SetValue(true));
@@ -465,7 +494,8 @@ namespace Marksman.Champions
 
         public override bool LaneClearMenu(Menu config)
         {
-            config.AddItem(new MenuItem("Lane.Enabled", "Enable! (On/Off: Mouse Scroll").SetValue(true)).Permashow(true, "Tristana | Enable Farm");
+            config.AddItem(new MenuItem("Lane.Enabled", "Enable! (On/Off: Mouse Scroll").SetValue(true))
+                .Permashow(true, "Tristana | Enable Farm");
 
             string[] strQ = new string[7];
             strQ[0] = "Off";
@@ -485,7 +515,7 @@ namespace Marksman.Champions
             {
                 strW[i] = "Minion Count >= " + i;
             }
-            
+
             config.AddItem(new MenuItem("UseE.Lane", Utils.Utils.Tab + "Use E:").SetValue(new StringList(strW, 0)));
             return true;
         }
@@ -501,9 +531,10 @@ namespace Marksman.Champions
                 strLaneMinCount[i] = "If need to AA more than >= " + i;
             }
 
-            config.AddItem(new MenuItem("UseQJ" , "Use Q").SetValue(new StringList(strLaneMinCount, 4)));
-            config.AddItem(new MenuItem("UseEJ" , "Use E").SetValue(new StringList(new[] { "Off", "On", "Just for big Monsters"}, 1)));
-            
+            config.AddItem(new MenuItem("UseQJ", "Use Q").SetValue(new StringList(strLaneMinCount, 4)));
+            config.AddItem(
+                new MenuItem("UseEJ", "Use E").SetValue(new StringList(new[] {"Off", "On", "Just for big Monsters"}, 1)));
+
             return true;
         }
 

@@ -19,7 +19,7 @@ namespace Marksman
                 if (KillableEnemy == null)
                     return new Vector2(0f, 0f);
 
-                if (!Program.CClass.Config.SubMenu("Drawings").Item("Draw.DrawTarget").GetValue<bool>())
+                if (!Program.CClass.Config.Item("Draw.DrawTarget").GetValue<bool>())
                     return new Vector2(0f, 0f);
 
                 return new Vector2(KillableEnemy.HPBarPosition.X + KillableEnemy.BoundingRadius/2f,
@@ -34,7 +34,7 @@ namespace Marksman
                 if (KillableMinion == null)
                     return new Vector2(0f, 0f);
 
-                if (!Program.CClass.Config.SubMenu("Drawings").Item("Draw.DrawMinion").GetValue<bool>())
+                if (!Program.CClass.Config.Item("Draw.DrawMinion").GetValue<bool>())
                     return new Vector2(0f, 0f);
 
                 return new Vector2(

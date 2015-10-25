@@ -255,7 +255,7 @@ namespace Marksman.Champions
                 new MenuItem("DrawW" + Id, "W range").SetValue(new Circle(true, Color.FromArgb(100, 255, 0, 255))));
 
             var dmgAfterComboItem = new MenuItem("DamageAfterCombo", "Damage After Combo").SetValue(true);
-            Config.AddItem(dmgAfterComboItem);
+            config.AddItem(dmgAfterComboItem);
 
             return true;
         }

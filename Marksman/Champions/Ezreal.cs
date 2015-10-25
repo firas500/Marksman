@@ -12,6 +12,7 @@ using Font = SharpDX.Direct3D9.Font;
 
 namespace Marksman.Champions
 {
+    using Marksman.Utils;
     internal class Ezreal : Champion
     {
         public static Spell Q;
@@ -35,7 +36,13 @@ namespace Marksman.Champions
             Utility.HpBarDamageIndicator.DamageToUnit = GetComboDamage;
             Utility.HpBarDamageIndicator.Enabled = true;
 
-            Utils.Utils.PrintMessage("Ezreal loaded.");
+            Obj_AI_Base.OnBuffAdd += (sender, args) =>
+            {
+                //if (sender.IsMe)
+                    //Game.PrintChat(args.Buff.Name);
+            };
+
+            Utils.PrintMessage("Ezreal loaded.");
         }
 
         public override void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
@@ -100,9 +107,14 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
+            // 3070 tear of the goddess
+            foreach (var i in ObjectManager.Player.InventoryItems)
+            {
+                //Game.PrintChat(i.IData.Id.ToString());
+            }
             if (this.JungleClearActive)
             {
-                var jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range, Marksman.Utils.Utils.MobTypes.All);
+                var jungleMobs = Utils.GetMobs(Q.Range, Utils.MobTypes.All);
 
                 if (jungleMobs != null)
                 {
@@ -115,9 +127,7 @@ namespace Marksman.Champions
                             }
                         case 2:
                             {
-                                jungleMobs = Marksman.Utils.Utils.GetMobs(
-                                    Q.Range,
-                                    Marksman.Utils.Utils.MobTypes.BigBoys);
+                                jungleMobs = Utils.GetMobs(Q.Range,Utils.MobTypes.BigBoys);
                                 if (jungleMobs != null)
                                 {
                                     Q.Cast(jungleMobs);
@@ -146,60 +156,62 @@ namespace Marksman.Champions
                 }
             }
             
-            Obj_AI_Hero t;
 
-            if (Q.IsReady() && Program.Config.Item("UseQTH").GetValue<KeyBind>().Active && ToggleActive)
+            
+            
+            Obj_AI_Hero t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
+            var toggleQ = Program.Config.Item("UseQTH").GetValue<KeyBind>().Active;
+            var toggleW = Program.Config.Item("UseWTH").GetValue<KeyBind>().Active;
+            if ((toggleQ || toggleW) && t.IsValidTarget(Q.Range) && ToggleActive)
             {
-                if (ObjectManager.Player.HasBuff("Recall"))
-                    return;
+                if (Q.IsReady() && toggleQ)
+                {
+                    if (ObjectManager.Player.HasBuff("Recall"))
+                        return;
 
-                t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
-
-                var useQt = (Program.Config.Item("DontQToggleHarass" + t.ChampionName) != null &&
-                             Program.Config.Item("DontQToggleHarass" + t.ChampionName).GetValue<bool>() == false);
-                if (useQt)
+                    var useQt = (Program.Config.Item("DontQToggleHarass" + t.ChampionName) != null &&
+                                 Program.Config.Item("DontQToggleHarass" + t.ChampionName).GetValue<bool>() == false);
+                    if (useQt)
+                    {
+                    }
                     CastQ();
-            }
+                }
 
-            if (W.IsReady() && Program.Config.Item("UseWTH").GetValue<KeyBind>().Active && ToggleActive)
-            {
-                if (ObjectManager.Player.HasBuff("Recall"))
-                    return;
-                t = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
-                var useWt = (Program.Config.Item("DontWToggleHarass" + t.ChampionName) != null &&
-                             Program.Config.Item("DontWToggleHarass" + t.ChampionName).GetValue<bool>() == false);
-                if (useWt)
-                    W.Cast(t);
+                if (W.IsReady() && t.IsValidTarget(W.Range) && toggleW)
+                {
+                    if (ObjectManager.Player.HasBuff("Recall"))
+                        return;
+                    var useWt = (Program.Config.Item("DontWToggleHarass" + t.ChampionName) != null &&
+                                 Program.Config.Item("DontWToggleHarass" + t.ChampionName).GetValue<bool>() == false);
+                    if (useWt)
+                        W.Cast(t);
+                }
             }
 
             if (ComboActive || HarassActive)
             {
+                var maxRRange = Program.Config.SubMenu("Combo").Item("UseRCMaxRange").GetValue<Slider>().Value;
+                t = TargetSelector.GetTarget(maxRRange, TargetSelector.DamageType.Physical);
+
                 var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
                 var useW = GetValue<bool>("UseW" + (ComboActive ? "C" : "H"));
                 var useR = Program.Config.SubMenu("Combo").Item("UseRC").GetValue<bool>();
 
                 if (Orbwalking.CanMove(100))
                 {
-                    if (Q.IsReady() && useQ)
+                    if (useQ && Q.IsReady() && t.IsValidTarget(Q.Range))
                     {
-                        t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
-                        if (t != null)
                             CastQ();
                     }
 
-                    if (W.IsReady() && useW)
+                    if (useW && W.IsReady() && t.IsValidTarget(W.Range))
                     {
-                        t = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
-                        if (t != null)
-                            W.Cast(t);
+                        W.Cast(t);
                     }
 
                     if (R.IsReady() && useR)
                     {
                         var minRRange = Program.Config.SubMenu("Combo").Item("UseRCMinRange").GetValue<Slider>().Value;
-                        var maxRRange = Program.Config.SubMenu("Combo").Item("UseRCMaxRange").GetValue<Slider>().Value;
-
-                        t = TargetSelector.GetTarget(maxRRange, TargetSelector.DamageType.Physical);
 
                         if (Q.IsReady() && t.IsValidTarget(Q.Range) && Q.GetPrediction(t).CollisionObjects.Count == 0 &&
                             t.Health < ObjectManager.Player.GetSpellDamage(t, SpellSlot.Q))
@@ -315,15 +327,11 @@ namespace Marksman.Champions
 
         public override bool DrawingMenu(Menu config)
         {
-            config.AddItem(
-                new MenuItem("DrawQ" + Id, "Q range").SetValue(
-                    new Circle(true, Color.FromArgb(100, 255, 0, 255))));
-            config.AddItem(
-                new MenuItem("DrawW" + Id, "W range").SetValue(
-                    new Circle(false, Color.FromArgb(100, 255, 255, 255))));
+            config.AddItem(new MenuItem("DrawQ" + Id, "Q range").SetValue(new Circle(true, Color.FromArgb(100, 255, 0, 255))));
+            config.AddItem(new MenuItem("DrawW" + Id, "W range").SetValue(new Circle(false, Color.FromArgb(100, 255, 255, 255))));
             var dmgAfterComboItem = new MenuItem("DamageAfterCombo", "Damage After Combo").SetValue(true);
 
-            Config.AddItem(dmgAfterComboItem);
+            config.AddItem(dmgAfterComboItem);
             return true;
         }
 

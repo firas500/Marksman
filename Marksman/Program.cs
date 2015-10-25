@@ -2,12 +2,16 @@
 
 using System;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 using Marksman.Champions;
 using Marksman.Utils;
+using SharpDX;
+using SharpDX.Direct3D9;
 using Activator = Marksman.Utils.Activator;
+using Color = System.Drawing.Color;
 
 #endregion
 
@@ -21,13 +25,13 @@ namespace Marksman
         public static Menu OrbWalking;
         public static Menu QuickSilverMenu;
         public static Menu MenuActivator;
-        
+
 //        public static Menu MenuInterruptableSpell;
         public static Champion CClass;
         public static Activator AActivator;
         public static Utils.AutoLevel AutoLevel;
         public static Utils.EarlyEvade EarlyEvade;
-        
+
         public static double ActivatorTime;
         private static Obj_AI_Hero xSelectedTarget;
 
@@ -47,7 +51,7 @@ namespace Marksman
 
         private static void Game_OnGameLoad(EventArgs args)
         {
-            Config = new Menu("Marksman", "Marksman", true);
+            Config = new Menu("Marksman", "Marksman", true).SetFontStyle(FontStyle.Regular, SharpDX.Color.GreenYellow);
             CClass = new Champion();
             AActivator = new Activator();
 
@@ -126,15 +130,16 @@ namespace Marksman
                     CClass = new Varus();
                     break;
             }
-
+            Config.DisplayName = "Marksman | " + CultureInfo.CurrentCulture.TextInfo.ToTitleCase(championName);
 
             CClass.Id = ObjectManager.Player.CharData.BaseSkinName;
             CClass.Config = Config;
-            
+
             OrbWalking = Config.AddSubMenu(new Menu("Orbwalking", "Orbwalking"));
             CClass.Orbwalker = new Orbwalking.Orbwalker(OrbWalking);
 
-            OrbWalking.AddItem(new MenuItem("Orb.AutoWindUp", "Marksman - Auto Windup").SetValue(false)).ValueChanged += (sender, argsEvent) => { if (argsEvent.GetNewValue<bool>()) CheckAutoWindUp(); };
+            OrbWalking.AddItem(new MenuItem("Orb.AutoWindUp", "Marksman - Auto Windup").SetValue(false)).ValueChanged +=
+                (sender, argsEvent) => { if (argsEvent.GetNewValue<bool>()) CheckAutoWindUp(); };
 
             MenuActivator = new Menu("Activator", "Activator").SetFontStyle(FontStyle.Regular, SharpDX.Color.Aqua);
             {
@@ -165,7 +170,7 @@ namespace Marksman
                 }
                 items.AddItem(
                     new MenuItem("UseItemsMode", "Use items on").SetValue(
-                        new StringList(new[] { "No", "Mixed mode", "Combo mode", "Both" }, 2)));
+                        new StringList(new[] {"No", "Mixed mode", "Combo mode", "Both"}, 2)));
 
                 new PotionManager(MenuActivator);
 
@@ -175,13 +180,15 @@ namespace Marksman
                     var summonersHeal = summoners.AddSubMenu(new Menu("Heal", "Heal"));
                     {
                         summonersHeal.AddItem(new MenuItem("SUMHEALENABLE", "Enable").SetValue(true));
-                        summonersHeal.AddItem(new MenuItem("SUMHEALSLIDER", "Min. Heal Per.").SetValue(new Slider(20, 99, 1)));
+                        summonersHeal.AddItem(
+                            new MenuItem("SUMHEALSLIDER", "Min. Heal Per.").SetValue(new Slider(20, 99, 1)));
                     }
 
                     var summonersBarrier = summoners.AddSubMenu(new Menu("Barrier", "Barrier"));
                     {
                         summonersBarrier.AddItem(new MenuItem("SUMBARRIERENABLE", "Enable").SetValue(true));
-                        summonersBarrier.AddItem(new MenuItem("SUMBARRIERSLIDER", "Min. Heal Per.").SetValue(new Slider(20, 99, 1)));
+                        summonersBarrier.AddItem(
+                            new MenuItem("SUMBARRIERSLIDER", "Min. Heal Per.").SetValue(new Slider(20, 99, 1)));
                     }
 
                     var summonersIgnite = summoners.AddSubMenu(new Menu("Ignite", "Ignite"));
@@ -229,57 +236,64 @@ namespace Marksman
                     jungleClear.AddItem(new MenuItem("Jungle.Mana", "Min. Mana %:").SetValue(new Slider(50, 100, 0)));
                     Config.AddSubMenu(jungleClear);
                 }
-                
+
                 var misc = new Menu("Misc", "Misc").SetFontStyle(FontStyle.Regular, SharpDX.Color.DarkOrange);
                 if (CClass.MiscMenu(misc))
                 {
                     Config.AddSubMenu(misc);
                 }
-/*
-                var extras = new Menu("Extras", "Extras");
-                if (CClass.ExtrasMenu(extras))
-                {
-                    Config.AddSubMenu(extras);
-                }
- */
+                /*
+                                var extras = new Menu("Extras", "Extras");
+                                if (CClass.ExtrasMenu(extras))
+                                {
+                                    Config.AddSubMenu(extras);
+                                }
+                 */
 
-                var drawing = new Menu("Drawings", "Drawings");
+                var marksmanDrawings = new Menu("Drawings", "MDrawings");
+                Config.AddSubMenu(marksmanDrawings);
+
+                var drawing = new Menu(CultureInfo.CurrentCulture.TextInfo.ToTitleCase(championName), "Drawings").SetFontStyle(FontStyle.Regular, SharpDX.Color.Aquamarine);
                 if (CClass.DrawingMenu(drawing))
                 {
-                    drawing.AddItem(new MenuItem("Marksman.Drawings", "Marksman Default Draw Options"));
-                    //drawing.AddItem(new MenuItem("Draw.Ping", MenuSpace + "Show Game Ping").SetValue(true));
-                    drawing.AddItem(new MenuItem("Draw.KillableEnemy", MenuSpace + "Killable Enemy Text").SetValue(true));
-                    /*
-                        drawing.AddItem(new MenuItem("Draw.ToD", MenuSpace + "Turn Off Drawings On Team Fight").SetValue(false));
-                        drawing.AddItem(new MenuItem("Draw.ToDControlRange", MenuSpace + MenuSpace + "Control Range:").SetValue(new Slider(1200, 1600, 600)));
-                        drawing.AddItem(new MenuItem("Draw.ToDControlRangeColor", MenuSpace + MenuSpace + "Draw Control Range:").SetValue(new Circle(false, Color.GreenYellow)));
-                        drawing.AddItem(new MenuItem("Draw.ToDMinEnemy", MenuSpace + MenuSpace + "Min. Enemy Count:").SetValue(new Slider(3, 5, 0)));
-                    */
-                    drawing.AddItem(new MenuItem("drawMinionLastHit", MenuSpace + "Minion Last Hit").SetValue(new Circle(true, Color.GreenYellow)));
-                    drawing.AddItem(new MenuItem("drawMinionNearKill", MenuSpace + "Minion Near Kill").SetValue(new Circle(true, Color.Gray)));
-                    drawing.AddItem(
-                        new MenuItem("drawJunglePosition", MenuSpace + "Jungle Farm Position").SetValue(true));
-                    drawing.AddItem(new MenuItem("Draw.DrawMinion", MenuSpace + "Draw Minions Sprite").SetValue(false));
-                    drawing.AddItem(new MenuItem("Draw.DrawTarget", MenuSpace + "Draw Target Sprite").SetValue(true));
-                    //drawing.AddItem(new MenuItem("Draw.DrawSTarget", MenuSpace + "Draw Selected Target", true).SetValue(new Circle(false,Color.GreenYellow)));
-                    Config.AddSubMenu(drawing);
+                    marksmanDrawings.AddSubMenu(drawing);
+                }
+
+                var GlobalDrawings = new Menu("Global", "GDrawings");
+                {
+                    string[] strQ = new string[6];
+                    strQ[0] = "Off";
+                    var i = 1;
+                    foreach (var e in HeroManager.Enemies)
+                    {
+                        strQ[i] = e.ChampionName;
+                        i += 1;
+                    }
+                    GlobalDrawings.AddItem(new MenuItem("Marksman.Compare", "Compare me with").SetValue(new StringList(strQ, 0)));
+                    GlobalDrawings.AddItem(new MenuItem("Draw.KillableEnemy", "Killable Enemy Text").SetValue(true));
+                    GlobalDrawings.AddItem(new MenuItem("drawMinionLastHit", "Minion Last Hit").SetValue(new Circle(true, Color.GreenYellow)));
+                    GlobalDrawings.AddItem(new MenuItem("drawMinionNearKill", "Minion Near Kill").SetValue(new Circle(true, Color.Gray)));
+                    GlobalDrawings.AddItem(new MenuItem("drawJunglePosition", "Jungle Farm Position").SetValue(true));
+                    GlobalDrawings.AddItem(new MenuItem("Draw.DrawMinion", "Draw Minions Sprite").SetValue(false));
+                    GlobalDrawings.AddItem(new MenuItem("Draw.DrawTarget", "Draw Target Sprite").SetValue(true));
+                    marksmanDrawings.AddSubMenu(GlobalDrawings);
                 }
             }
 
-         
+
 
             CClass.MainMenu(Config);
-            
-            if (championName == "sivir")
-            {
-                Evade.Evade.Initiliaze();
-                Evade.Config.Menu.DisplayName = "E";
-                Config.AddSubMenu(Evade.Config.Menu);
-            } 
-            
+
+            //if (championName == "sivir")
+            //{
+            //    Evade.Evade.Initiliaze();
+            //    Evade.Config.Menu.DisplayName = "E";
+            //    Config.AddSubMenu(Evade.Config.Menu);
+            //}
+
             //Evade.Evade.Initiliaze();
             //Config.AddSubMenu(Evade.Config.Menu);
-            
+
             Config.AddToMainMenu();
             Sprite.Load();
             CheckAutoWindUp();
@@ -338,36 +352,56 @@ namespace Marksman
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            //if (CClass.Config.SubMenu("Drawings").Item("Draw.Ping").GetValue<bool>())
-            //    Drawing.DrawText(Drawing.Width*0.94f, Drawing.Height*0.05f, Color.GreenYellow, "Ping: " + Game.Ping);
+            var myChampionKilled = ObjectManager.Player.ChampionsKilled;
+            var myAssists = ObjectManager.Player.Assists;
+            var myDeaths = ObjectManager.Player.Deaths;
+            var myMinionsKilled = ObjectManager.Player.MinionsKilled;
+
+            if (Config.Item("Marksman.Compare").GetValue<StringList>().SelectedIndex != 0)
+            {
+                Obj_AI_Hero compChampion = null;
+                foreach (Obj_AI_Hero e in HeroManager.Enemies.Where(e => e.ChampionName == Config.Item("Marksman.Compare").GetValue<StringList>().SelectedValue))
+                {
+                    compChampion = e;
+                }
+
+                var compChampionKilled = compChampion.ChampionsKilled;
+                var compAssists = compChampion.Assists;
+                var compDeaths = compChampion.Deaths;
+                var compMinionsKilled = compChampion.MinionsKilled;
+                var xText = "You: " + myChampionKilled + " / " + myAssists + " / " + myDeaths + " | " + myMinionsKilled +
+                            "      vs      " + 
+                            compChampion.ChampionName + " : " + compChampionKilled + " / " + compAssists + " / " + compDeaths + " | " + compMinionsKilled;
+
+                DrawBox(new Vector2(Drawing.Width*0.400f, Drawing.Height*0.132f), 350, 26, Color.FromArgb(137, 255, 200, 37), 1, Color.Black);
+
+                Utils.Utils.DrawText(Utils.Utils.Text, xText, Drawing.Width * 0.422f, Drawing.Height * 0.140f, SharpDX.Color.Wheat);
+            }
+
             if (Config.Item("Draw.KillableEnemy").GetValue<bool>())
             {
                 var t = KillableEnemyAA;
-                if (t.Item1 != null && t.Item1.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 400) && t.Item2 > 0)
+                if (t.Item1 != null && t.Item1.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 400) &&
+                    t.Item2 > 0)
                 {
-                    Utils.Utils.DrawText(
-                        Utils.Utils.Text,
-                        string.Format("{0}: {1} x AA Damage = Kill", t.Item1.ChampionName, t.Item2),
-                        (int)t.Item1.HPBarPosition.X + 145,
-                        (int)t.Item1.HPBarPosition.Y + 5,
-                        SharpDX.Color.White);
+                    Utils.Utils.DrawText(Utils.Utils.Text,string.Format("{0}: {1} x AA Damage = Kill", t.Item1.ChampionName, t.Item2),(int) t.Item1.HPBarPosition.X + 145,(int) t.Item1.HPBarPosition.Y + 5,SharpDX.Color.White);
                 }
             }
-                
-/*            var toD = CClass.Config.SubMenu("Drawings").Item("Draw.ToD").GetValue<bool>();
+
+/*            var toD = CClass.Config.Item("Draw.ToD").GetValue<bool>();
             if (toD)
             {
                 var enemyCount =
-                    CClass.Config.SubMenu("Drawings").Item("Draw.ToDMinEnemy").GetValue<Slider>().Value;
+                    CClass.Config.Item("Draw.ToDMinEnemy").GetValue<Slider>().Value;
                 var controlRange =
-                    CClass.Config.SubMenu("Drawings").Item("Draw.ToDControlRange").GetValue<Slider>().Value;
+                    CClass.Config.Item("Draw.ToDControlRange").GetValue<Slider>().Value;
 
                 var xEnemies = HeroManager.Enemies.Count(enemies => enemies.IsValidTarget(controlRange));
                 if (xEnemies >= enemyCount)
                     return;
 
                 var toDRangeColor =
-                    CClass.Config.SubMenu("Drawings").Item("Draw.ToDControlRangeColor").GetValue<Circle>();
+                    CClass.Config.Item("Draw.ToDControlRangeColor").GetValue<Circle>();
                 if (toDRangeColor.Active)
                     Render.Circle.DrawCircle(ObjectManager.Player.Position, controlRange, toDRangeColor.Color);
 
@@ -386,14 +420,14 @@ namespace Marksman
                 Render.Circle.DrawCircle(t.Position, 150, Color.Yellow);
             }
             */
-            var drawJunglePosition = CClass.Config.SubMenu("Drawings").Item("drawJunglePosition").GetValue<bool>();
+            var drawJunglePosition = CClass.Config.Item("drawJunglePosition").GetValue<bool>();
             {
                 if (drawJunglePosition)
                     Utils.Utils.Jungle.DrawJunglePosition();
             }
 
-            var drawMinionLastHit = CClass.Config.SubMenu("Drawings").Item("drawMinionLastHit").GetValue<Circle>();
-            var drawMinionNearKill = CClass.Config.SubMenu("Drawings").Item("drawMinionNearKill").GetValue<Circle>();
+            var drawMinionLastHit = CClass.Config.Item("drawMinionLastHit").GetValue<Circle>();
+            var drawMinionNearKill = CClass.Config.Item("drawMinionNearKill").GetValue<Circle>();
             if (drawMinionLastHit.Active || drawMinionNearKill.Active)
             {
                 var xMinions =
@@ -440,8 +474,10 @@ namespace Marksman
             CClass.LaneClearActive = CClass.Config.Item("LaneClear").GetValue<KeyBind>().Active &&
                                      ObjectManager.Player.ManaPercent >= vLaneClearManaPer;
 
-            CClass.JungleClearActive = CClass.Config.Item("LaneClear").GetValue<KeyBind>().Active && ObjectManager.Player.ManaPercent >= Config.Item("Jungle.Mana").GetValue<Slider>().Value;
-            
+            CClass.JungleClearActive = CClass.Config.Item("LaneClear").GetValue<KeyBind>().Active &&
+                                       ObjectManager.Player.ManaPercent >=
+                                       Config.Item("Jungle.Mana").GetValue<Slider>().Value;
+
             CClass.Game_OnGameUpdate(args);
 
             UseSummoners();
@@ -603,19 +639,19 @@ namespace Marksman
 
                                     if (ActivatorTime + bx.Delay <= Game.Time)
                                     {
-                                        if (canUse3139) 
+                                        if (canUse3139)
                                             Items.UseItem(3139);
-                                        else if (canUse3140) 
+                                        else if (canUse3140)
                                             Items.UseItem(3140);
                                         ActivatorTime = Game.Time;
                                     }
                                 }
                                 else
                                 {
-                                        if (canUse3139) 
-                                            Items.UseItem(3139);
-                                        else if (canUse3140) 
-                                            Items.UseItem(3140);
+                                    if (canUse3139)
+                                        Items.UseItem(3139);
+                                    else if (canUse3140)
+                                        Items.UseItem(3140);
                                 }
                             }
                         }
@@ -624,38 +660,39 @@ namespace Marksman
                     if (QuickSilverMenu.Item("AnySlow").GetValue<bool>() &&
                         ObjectManager.Player.HasBuffOfType(BuffType.Slow))
                     {
-                        if (canUse3139) 
+                        if (canUse3139)
                             Items.UseItem(3139);
-                        else if (canUse3140) 
+                        else if (canUse3140)
                             Items.UseItem(3140);
                     }
                     if (QuickSilverMenu.Item("AnySnare").GetValue<bool>() &&
                         ObjectManager.Player.HasBuffOfType(BuffType.Snare))
                     {
-                        if (canUse3139) 
+                        if (canUse3139)
                             Items.UseItem(3139);
-                        else if (canUse3140) 
+                        else if (canUse3140)
                             Items.UseItem(3140);
                     }
                     if (QuickSilverMenu.Item("AnyStun").GetValue<bool>() &&
                         ObjectManager.Player.HasBuffOfType(BuffType.Stun))
                     {
-                        if (canUse3139) 
+                        if (canUse3139)
                             Items.UseItem(3139);
-                        else if (canUse3140) 
+                        else if (canUse3140)
                             Items.UseItem(3140);
                     }
                     if (QuickSilverMenu.Item("AnyTaunt").GetValue<bool>() &&
                         ObjectManager.Player.HasBuffOfType(BuffType.Taunt))
                     {
-                        if (canUse3139) 
+                        if (canUse3139)
                             Items.UseItem(3139);
-                        else if (canUse3140) 
+                        else if (canUse3140)
                             Items.UseItem(3140);
                     }
                 }
             }
         }
+
         private static string Smitetype
         {
             get
@@ -699,21 +736,33 @@ namespace Marksman
                 ObjectManager.Player.Spellbook.CastSpell(SmiteSlot, t);
             }
         }
-        
+        public static void DrawBox(Vector2 position, int width, int height, Color color, int borderwidth, Color borderColor)
+        {
+            Drawing.DrawLine(position.X, position.Y, position.X + width, position.Y, height, color);
+
+            if (borderwidth > 0)
+            {
+                Drawing.DrawLine(position.X, position.Y, position.X + width, position.Y, borderwidth, borderColor);
+                Drawing.DrawLine(position.X, position.Y + height, position.X + width, position.Y + height, borderwidth, borderColor);
+                Drawing.DrawLine(position.X, position.Y + 2, position.X, position.Y + height, borderwidth, borderColor);
+                Drawing.DrawLine(position.X + width, position.Y + 2, position.X + width, position.Y + height, borderwidth, borderColor);
+            }
+        }
         private static Tuple<Obj_AI_Hero, int> KillableEnemyAA
         {
             get
             {
                 var x = 0;
-                var t = TargetSelector.GetTarget(Orbwalking.GetRealAutoAttackRange(null) + 400, TargetSelector.DamageType.Physical);
+                var t = TargetSelector.GetTarget(Orbwalking.GetRealAutoAttackRange(null) + 400,
+                    TargetSelector.DamageType.Physical);
                 {
                     if (t.IsValidTarget())
                     {
                         if (t.Health
                             < ObjectManager.Player.TotalAttackDamage
-                            * (1 / ObjectManager.Player.AttackCastDelay > 1400 ? 8 : 4))
+                            *(1/ObjectManager.Player.AttackCastDelay > 1400 ? 8 : 4))
                         {
-                            x = (int)Math.Ceiling(t.Health / ObjectManager.Player.TotalAttackDamage);
+                            x = (int) Math.Ceiling(t.Health/ObjectManager.Player.TotalAttackDamage);
                         }
                         return new Tuple<Obj_AI_Hero, int>(t, x);
                     }
@@ -721,6 +770,6 @@ namespace Marksman
                 }
                 return new Tuple<Obj_AI_Hero, int>(t, x);
             }
-        }        
+        }
     }
 }
