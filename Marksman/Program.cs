@@ -369,10 +369,9 @@ namespace Marksman
                 var compAssists = compChampion.Assists;
                 var compDeaths = compChampion.Deaths;
                 var compMinionsKilled = compChampion.MinionsKilled;
-                var xText = "You: " + myChampionKilled + " / " + myAssists + " / " + myDeaths + " | " + myMinionsKilled +
+                var xText = "You: " + myChampionKilled + " / " + myDeaths + " / " + myAssists + " | " + myMinionsKilled +
                             "      vs      " + 
-                            compChampion.ChampionName + " : " + compChampionKilled + " / " + compAssists + " / " + compDeaths + " | " + compMinionsKilled;
-
+                            compChampion.ChampionName + " : " + compAssists + " / " + compChampionKilled + " / " + compDeaths + " | " + compMinionsKilled;
                 DrawBox(new Vector2(Drawing.Width*0.400f, Drawing.Height*0.132f), 350, 26, Color.FromArgb(137, 255, 200, 37), 1, Color.Black);
 
                 Utils.Utils.DrawText(Utils.Utils.Text, xText, Drawing.Width * 0.422f, Drawing.Height * 0.140f, SharpDX.Color.Wheat);
