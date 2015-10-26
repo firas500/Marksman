@@ -302,6 +302,8 @@ namespace Marksman
             Game.OnUpdate += Game_OnGameUpdate;
             Orbwalking.AfterAttack += Orbwalking_AfterAttack;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
+            
+            AsmLoadingTime = Game.Time;
             //Game.OnWndProc += Game_OnWndProc;
         }
 
