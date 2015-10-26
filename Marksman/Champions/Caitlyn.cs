@@ -9,6 +9,8 @@ using LeagueSharp.Common;
 
 namespace Marksman.Champions
 {
+    using Utils = LeagueSharp.Common.Utils;
+
     internal class Caitlyn : Champion
     {
         public static Spell R;
@@ -27,8 +29,6 @@ namespace Marksman.Champions
 
         public Caitlyn()
         {
-            Utils.Utils.PrintMessage("Caitlyn loaded.");
-
             this.Q = new Spell(SpellSlot.Q, 1240);
             this.W = new Spell(SpellSlot.W, 820);
             this.E = new Spell(SpellSlot.E, 800);
@@ -40,6 +40,8 @@ namespace Marksman.Champions
             AntiGapcloser.OnEnemyGapcloser += this.AntiGapcloser_OnEnemyGapcloser;
             Drawing.OnEndScene += DrawingOnOnEndScene;
             Obj_AI_Base.OnProcessSpellCast += this.Obj_AI_Hero_OnProcessSpellCast;
+        
+            Marksman.Utils.Utils.PrintMessage("Caitlyn loaded.");
         }
 
         public void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
@@ -220,19 +222,19 @@ namespace Marksman.Champions
         {
             config.AddItem(new MenuItem("Champion.Drawings", ObjectManager.Player.ChampionName + " Draw Options"));
             config.AddItem(
-                new MenuItem("DrawQ" + this.Id, Program.Tab + "Q range").SetValue(
+                new MenuItem("DrawQ" + this.Id, Marksman.Utils.Utils.Tab + "Q range").SetValue(
                     new Circle(true, Color.FromArgb(100, 255, 0, 255))));
             config.AddItem(
-                new MenuItem("DrawE" + this.Id, Program.Tab + "E range").SetValue(
+                new MenuItem("DrawE" + this.Id, Marksman.Utils.Utils.Tab + "E range").SetValue(
                     new Circle(false, Color.FromArgb(100, 255, 255, 255))));
             config.AddItem(
-                new MenuItem("DrawR" + this.Id, Program.Tab + "R range").SetValue(
+                new MenuItem("DrawR" + this.Id, Marksman.Utils.Utils.Tab + "R range").SetValue(
                     new Circle(false, Color.FromArgb(100, 255, 255, 255))));
             config.AddItem(
-                new MenuItem("DrawUlt" + this.Id, Program.Tab + "Ult Text").SetValue(
+                new MenuItem("DrawUlt" + this.Id, Marksman.Utils.Utils.Tab + "Ult Text").SetValue(
                     new Circle(true, Color.FromArgb(255, 255, 255, 255))));
             config.AddItem(
-                new MenuItem("Draw.UltiMiniMap", Program.Tab + "Draw Ulti Minimap").SetValue(
+                new MenuItem("Draw.UltiMiniMap", Marksman.Utils.Utils.Tab + "Draw Ulti Minimap").SetValue(
                     new Circle(true, Color.FromArgb(255, 255, 255, 255))));
             return true;
         }
@@ -248,7 +250,6 @@ namespace Marksman.Champions
             return true;
         }
 
-
         public override bool LaneClearMenu(Menu config)
         {
             return true;
@@ -258,6 +259,5 @@ namespace Marksman.Champions
         {
             return false;
         }
-
     }
 }
