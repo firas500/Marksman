@@ -17,6 +17,8 @@ using Color = System.Drawing.Color;
 
 namespace Marksman
 {
+    using System.Collections.Generic;
+    
     internal class Program
     {
         public static Menu Config;
@@ -277,8 +279,7 @@ namespace Marksman
                     marksmanDrawings.AddSubMenu(GlobalDrawings);
                 }
             }
-
-
+            LoadDefaultCompareChampion();
 
             CClass.MainMenu(Config);
 
@@ -348,6 +349,39 @@ namespace Marksman
             OrbWalking.Item("ExtraWindup").SetValue(windUp < 200 ? new Slider(windUp, 200, 0) : new Slider(200, 200, 0));
         }
 
+        private static void LoadDefaultCompareChampion()
+        {
+            var enemyChampions = new[]
+                                     {
+                                         "Ashe", "Caitlyn", "Corki", "Draven", "Ezreal", "Graves", "Jinx", "Kalista",
+                                         "Kindred", "KogMaw", "Lucian", "MissFortune", "Quinn", "Sivir", "Tristana",
+                                         "Twitch", "Urgot", "Varus", "Vayne"
+                                     };
+
+            List<Obj_AI_Hero> mobs = HeroManager.Enemies;
+
+            Obj_AI_Hero compChampion =
+                (from fMobs in mobs from fBigBoys in enemyChampions where fBigBoys == fMobs.ChampionName select fMobs)
+                    .FirstOrDefault();
+
+            if (compChampion != null)
+            {
+                var selectedIndex = 0;
+                string[] strQ = new string[6];
+                strQ[0] = "Off";
+                var i = 1;
+                foreach (var e in HeroManager.Enemies)
+                {
+                    strQ[i] = e.ChampionName;
+                    if (e.ChampionName == compChampion.ChampionName)
+                    {
+                        selectedIndex = i;
+                    }
+                    i += 1;
+                }
+                Config.Item("Marksman.Compare").SetValue(new StringList(strQ, selectedIndex));
+            }
+        }
         private static void Drawing_OnDraw(EventArgs args)
         {
             var myChampionKilled = ObjectManager.Player.ChampionsKilled;
