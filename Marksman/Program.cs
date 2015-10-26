@@ -785,8 +785,8 @@ namespace Marksman
             {
                 Drawing.DrawLine(position.X, position.Y, position.X + width, position.Y, borderwidth, borderColor);
                 Drawing.DrawLine(position.X, position.Y + height, position.X + width, position.Y + height, borderwidth, borderColor);
-                Drawing.DrawLine(position.X, position.Y + 2, position.X, position.Y + height, borderwidth, borderColor);
-                Drawing.DrawLine(position.X + width, position.Y + 2, position.X + width, position.Y + height, borderwidth, borderColor);
+                Drawing.DrawLine(position.X, position.Y + 1, position.X, position.Y + height, borderwidth, borderColor);
+                Drawing.DrawLine(position.X + width, position.Y + 1, position.X + width, position.Y + height, borderwidth, borderColor);
             }
         }
         private static Tuple<Obj_AI_Hero, int> KillableEnemyAA
