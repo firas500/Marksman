@@ -752,7 +752,7 @@ namespace Marksman
             get
             {
                 var x = 0;
-                var t = TargetSelector.GetTarget(Orbwalking.GetRealAutoAttackRange(null) + 400,
+                var t = TargetSelector.GetTarget(Orbwalking.GetRealAutoAttackRange(null) + 1400,
                     TargetSelector.DamageType.Physical);
                 {
                     if (t.IsValidTarget())
