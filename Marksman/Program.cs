@@ -415,7 +415,7 @@ namespace Marksman
                 {
                     var timer = string.Format("0:{0:D2}", (int)10 - (int)(Game.Time - AsmLoadingTime));
                     Utils.Utils.DrawText(Utils.Utils.Text,"You can turn on/off this text. Use Marksman -> Global Drawings -> Compare with me",Drawing.Width * 0.350f,Drawing.Height * 0.165f,SharpDX.Color.Wheat);
-                    Utils.Utils.DrawText(Utils.Utils.Text, "This message will self destruct in 10 secs " + timer + "  - Mission L# Kappa - ", Drawing.Width * 0.400f, Drawing.Height * 0.185f, SharpDX.Color.Aqua);
+                    Utils.Utils.DrawText(Utils.Utils.Text, "This message will self destruct in " + timer + "  - Mission L# Kappa - ", Drawing.Width * 0.400f, Drawing.Height * 0.185f, SharpDX.Color.Aqua);
                 }                
             }
 
