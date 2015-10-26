@@ -34,6 +34,7 @@ namespace Marksman
 
         public static double ActivatorTime;
         private static Obj_AI_Hero xSelectedTarget;
+        private static float AsmLoadingTime = 0;
 
         public static SpellSlot SmiteSlot = SpellSlot.Unknown;
 
@@ -407,6 +408,13 @@ namespace Marksman
                 
                 DrawBox(new Vector2(Drawing.Width*0.400f, Drawing.Height*0.132f), 350, 26, Color.FromArgb(100, 255, 200, 37), 1, Color.Black);
                 Utils.Utils.DrawText(Utils.Utils.Text, xText, Drawing.Width * 0.422f, Drawing.Height * 0.140f, SharpDX.Color.Wheat);
+                
+                if (Game.Time - AsmLoadingTime < 10)
+                {
+                    var timer = string.Format("0:{0:D2}", (int)10 - (int)(Game.Time - AsmLoadingTime));
+                    Utils.Utils.DrawText(Utils.Utils.Text,"You can turn on/off this text. Use Marksman -> Global Drawings -> Compare with me",Drawing.Width * 0.350f,Drawing.Height * 0.165f,SharpDX.Color.Wheat);
+                    Utils.Utils.DrawText(Utils.Utils.Text, "This message will self destruct in 10 secs " + timer + "  - Mission L# Kappa - ", Drawing.Width * 0.400f, Drawing.Height * 0.185f, SharpDX.Color.Aqua);
+                }                
             }
 
             if (Config.Item("Draw.KillableEnemy").GetValue<bool>())
