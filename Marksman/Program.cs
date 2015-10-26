@@ -379,7 +379,7 @@ namespace Marksman
             if (Config.Item("Draw.KillableEnemy").GetValue<bool>())
             {
                 var t = KillableEnemyAA;
-                if (t.Item1 != null && t.Item1.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 400) &&
+                if (t.Item1 != null && t.Item1.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 1400) &&
                     t.Item2 > 0)
                 {
                     Utils.Utils.DrawText(Utils.Utils.Text,string.Format("{0}: {1} x AA Damage = Kill", t.Item1.ChampionName, t.Item2),(int) t.Item1.HPBarPosition.X + 145,(int) t.Item1.HPBarPosition.Y + 5,SharpDX.Color.White);
