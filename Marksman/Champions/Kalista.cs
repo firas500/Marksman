@@ -73,13 +73,15 @@ namespace Marksman.Champions
             font = new Font(
                 Drawing.Direct3DDevice,
                 new FontDescription
-                    {
-                        FaceName = "Segoe UI", Height = 45, OutputPrecision = FontPrecision.Default,
-                        Quality = FontQuality.Default
-                    });
-                    
+                {
+                    FaceName = "Segoe UI",
+                    Height = 45,
+                    OutputPrecision = FontPrecision.Default,
+                    Quality = FontQuality.Default
+                });
+
             Utils.Utils.PrintMessage("Kalista loaded.");
-            Utils.Utils.PrintMessage("Kalista: Added Soulbound Saver. Please check the Misc Menu");
+            Utils.Utils.PrintMessage("Kalista: Added Souldbound Saver. Please check the Misc Menu");
         }
 
         public int KalistaMarkerCount
@@ -149,9 +151,11 @@ namespace Marksman.Champions
                     {
                         xEnemyMarker.Add(
                             new EnemyMarker
-                                {
-                                    ChampionName = xEnemy.ChampionName, ExpireTime = Game.Time + 4, BuffCount = buff.Count
-                                });
+                            {
+                                ChampionName = xEnemy.ChampionName,
+                                ExpireTime = Game.Time + 4,
+                                BuffCount = buff.Count
+                            });
                     }
                 }
 
@@ -186,7 +190,6 @@ namespace Marksman.Champions
                 {
                     if (ObjectManager.Player.Distance(pos.Key) <= 500f
                         || ObjectManager.Player.Distance(pos.Value) <= 500f)
-
                     {
                         Drawing.DrawCircle(pos.Key, 75f, drawJumpPos.Color);
                         Drawing.DrawCircle(pos.Value, 75f, drawJumpPos.Color);
@@ -311,7 +314,6 @@ namespace Marksman.Champions
             foreach (var myBoddy in
                 ObjectManager.Get<Obj_AI_Minion>()
                     .Where(obj => obj.Name == "RobotBuddy" && obj.IsAlly && ObjectManager.Player.Distance(obj) < 1500))
-
             {
                 Render.Circle.DrawCircle(myBoddy.Position, 75f, Color.Red);
             }
@@ -359,17 +361,17 @@ namespace Marksman.Champions
             {
                 if (SoulBound != null && Program.Config.Item("SoulBoundSaver").GetValue<bool>())
                 {
-                    // Auto attacks
+                    
                     if ((!(sender is Obj_AI_Hero) || args.SData.IsAutoAttack()) && args.Target != null
                         && args.Target.NetworkId == SoulBound.NetworkId)
                     {
-                        // Calculate arrival time and damage
-                        incomingDamage.Add(
-                            SoulBound.ServerPosition.Distance(sender.ServerPosition) / args.SData.MissileSpeed
+                        
+                        incomingDamage.Add(SoulBound.ServerPosition.Distance(sender.ServerPosition) / args.SData.MissileSpeed
                             + Game.Time,
                             (float)sender.GetAutoAttackDamage(SoulBound));
                     }
-                    // Sender is a hero
+
+                    
                     else if (sender is Obj_AI_Hero)
                     {
                         var attacker = (Obj_AI_Hero)sender;
@@ -380,7 +382,7 @@ namespace Marksman.Champions
                             if (slot == attacker.GetSpellSlot("SummonerDot") && args.Target != null
                                 && args.Target.NetworkId == SoulBound.NetworkId)
                             {
-                                // Ingite damage (dangerous)
+                                
                                 InstantDamage.Add(
                                     Game.Time + 2,
                                     (float)attacker.GetSummonerSpellDamage(SoulBound, Damage.SummonerSpell.Ignite));
@@ -390,7 +392,7 @@ namespace Marksman.Champions
                                          || args.End.Distance(SoulBound.ServerPosition, true)
                                          < Math.Pow(args.SData.LineWidth, 2)))
                             {
-                                // Instant damage to target
+                                
                                 InstantDamage.Add(Game.Time + 2, (float)attacker.GetSpellDamage(SoulBound, slot));
                             }
                         }
@@ -460,9 +462,9 @@ namespace Marksman.Champions
             Utility.HpBarDamageIndicator.DamageToUnit = GetEDamage;
             Utility.HpBarDamageIndicator.Enabled = damageAfterE.GetValue<bool>();
             damageAfterE.ValueChanged += delegate(object sender, OnValueChangeEventArgs eventArgs)
-                {
-                    Utility.HpBarDamageIndicator.Enabled = eventArgs.GetNewValue<bool>();
-                };
+            {
+                Utility.HpBarDamageIndicator.Enabled = eventArgs.GetNewValue<bool>();
+            };
 
             return true;
         }
