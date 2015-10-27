@@ -83,7 +83,10 @@ namespace Marksman.Champions
         {
             if (GetValue<bool>("Misc.UseQ.Inhibitor") && args.Target is Obj_BarracksDampener && Q.IsReady())
             {
-                Q.Cast();
+                if (((Obj_BarracksDampener) args.Target).Health >= Player.TotalAttackDamage*3)
+                {
+                    Q.Cast();
+                }
             }
 
             if (GetValue<bool>("Misc.UseQ.Nexus") && args.Target is Obj_HQ && Q.IsReady())
@@ -96,12 +99,18 @@ namespace Marksman.Champions
             {
                 if (GetValue<bool>("UseEM") && E.IsReady())
                 {
-                    E.CastOnUnit(unit);
+                    if (((Obj_AI_Turret) args.Target).Health >= Player.TotalAttackDamage*3)
+                    {
+                        E.CastOnUnit(unit);
+                    }
                 }
 
                 if (GetValue<bool>("Misc.UseQ.Turret") && Q.IsReady())
                 {
-                    Q.Cast();
+                    if (((Obj_AI_Turret) args.Target).Health >= Player.TotalAttackDamage*3)
+                    {
+                        Q.Cast();
+                    }
                 }
             }
 
