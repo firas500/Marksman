@@ -13,11 +13,15 @@ using Font = SharpDX.Direct3D9.Font;
 namespace Marksman.Champions
 {
     using Marksman.Utils;
+
     internal class Ezreal : Champion
     {
         public static Spell Q;
+
         public static Spell E;
+
         public static Spell W;
+
         public static Spell R;
 
         public Ezreal()
@@ -25,7 +29,7 @@ namespace Marksman.Champions
             Q = new Spell(SpellSlot.Q, 1190);
             Q.SetSkillshot(0.25f, 60f, 2000f, true, SkillshotType.SkillshotLine);
 
-            W = new Spell(SpellSlot.W, 800);
+            W = new Spell(SpellSlot.W, 950);
             W.SetSkillshot(0.25f, 80f, 1600f, false, SkillshotType.SkillshotLine);
 
             E = new Spell(SpellSlot.E);
@@ -37,17 +41,16 @@ namespace Marksman.Champions
             Utility.HpBarDamageIndicator.Enabled = true;
 
             Obj_AI_Base.OnBuffAdd += (sender, args) =>
-            {
-                //if (sender.IsMe)
+                {
+                    //if (sender.IsMe)
                     //Game.PrintChat(args.Buff.Name);
-            };
+                };
 
             Utils.PrintMessage("Ezreal loaded.");
         }
 
         public override void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
-            /*
             var t = target as Obj_AI_Hero;
             if (t != null && (ComboActive || HarassActive) && unit.IsMe)
             {
@@ -63,31 +66,27 @@ namespace Marksman.Champions
                     W.Cast(t);
                 }
             }
-            */
         }
 
         private static void CastQ()
         {
             var t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
 
-            if (t.IsValidTarget() && Q.IsReady() &&
-                ObjectManager.Player.Distance(t.ServerPosition) <= Q.Range)
+            if (t.IsValidTarget() && Q.IsReady() && ObjectManager.Player.Distance(t.ServerPosition) <= Q.Range)
             {
                 var Qpredict = Q.GetPrediction(t);
                 var hithere = Qpredict.CastPosition.Extend(ObjectManager.Player.Position, -140);
-                if (Qpredict.Hitchance >= HitChance.High)
-                    Q.Cast(hithere);
+                if (Qpredict.Hitchance >= HitChance.High) Q.Cast(hithere);
             }
         }
 
         public override void Drawing_OnDraw(EventArgs args)
         {
-            Spell[] spellList = {Q, W};
+            Spell[] spellList = { Q, W };
             foreach (var spell in spellList)
             {
                 var menuItem = GetValue<Circle>("Draw" + spell.Slot);
-                if (menuItem.Active)
-                    Render.Circle.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
+                if (menuItem.Active) Render.Circle.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
             }
 
             var drawRMin = Program.Config.SubMenu("Combo").Item("DrawRMin").GetValue<Circle>();
@@ -127,7 +126,7 @@ namespace Marksman.Champions
                             }
                         case 2:
                             {
-                                jungleMobs = Utils.GetMobs(Q.Range,Utils.MobTypes.BigBoys);
+                                jungleMobs = Utils.GetMobs(Q.Range, Utils.MobTypes.BigBoys);
                                 if (jungleMobs != null)
                                 {
                                     Q.Cast(jungleMobs);
@@ -135,6 +134,18 @@ namespace Marksman.Champions
                                 break;
                             }
                     }
+                }
+            }
+
+            if (GetValue<bool>("PingCH"))
+            {
+                foreach (var enemy in
+                    HeroManager.Enemies.Where(
+                        enemy =>
+                        R.IsReady() && enemy.IsValidTarget() && R.GetDamage(enemy) > enemy.Health
+                        && enemy.Distance(ObjectManager.Player) > Q.Range))
+                {
+                    Utils.MPing.Ping(enemy.Position.To2D());
                 }
             }
 
@@ -147,18 +158,15 @@ namespace Marksman.Champions
                     foreach (var minions in
                         vMinions.Where(
                             minions => minions.Health < ObjectManager.Player.GetSpellDamage(minions, SpellSlot.Q)))
-                        {
-                            var qP = Q.GetPrediction(minions);
-                            var hit = qP.CastPosition.Extend(ObjectManager.Player.Position, -140);
-                            if (qP.Hitchance >= HitChance.High)
-                                Q.Cast(hit);
-                        }
+                    {
+                        var qP = Q.GetPrediction(minions);
+                        var hit = qP.CastPosition.Extend(ObjectManager.Player.Position, -140);
+                        if (qP.Hitchance >= HitChance.High) Q.Cast(hit);
+                    }
                 }
             }
-            
 
-            
-            
+
             Obj_AI_Hero t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
             var toggleQ = Program.Config.Item("UseQTH").GetValue<KeyBind>().Active;
             var toggleW = Program.Config.Item("UseWTH").GetValue<KeyBind>().Active;
@@ -166,11 +174,10 @@ namespace Marksman.Champions
             {
                 if (Q.IsReady() && toggleQ)
                 {
-                    if (ObjectManager.Player.HasBuff("Recall"))
-                        return;
+                    if (ObjectManager.Player.HasBuff("Recall")) return;
 
-                    var useQt = (Program.Config.Item("DontQToggleHarass" + t.ChampionName) != null &&
-                                 Program.Config.Item("DontQToggleHarass" + t.ChampionName).GetValue<bool>() == false);
+                    var useQt = (Program.Config.Item("DontQToggleHarass" + t.ChampionName) != null
+                                 && Program.Config.Item("DontQToggleHarass" + t.ChampionName).GetValue<bool>() == false);
                     if (useQt)
                     {
                     }
@@ -179,29 +186,26 @@ namespace Marksman.Champions
 
                 if (W.IsReady() && t.IsValidTarget(W.Range) && toggleW)
                 {
-                    if (ObjectManager.Player.HasBuff("Recall"))
-                        return;
-                    var useWt = (Program.Config.Item("DontWToggleHarass" + t.ChampionName) != null &&
-                                 Program.Config.Item("DontWToggleHarass" + t.ChampionName).GetValue<bool>() == false);
-                    if (useWt)
-                        W.Cast(t);
+                    if (ObjectManager.Player.HasBuff("Recall")) return;
+                    var useWt = (Program.Config.Item("DontWToggleHarass" + t.ChampionName) != null
+                                 && Program.Config.Item("DontWToggleHarass" + t.ChampionName).GetValue<bool>() == false);
+                    if (useWt) W.Cast(t);
                 }
             }
 
             if (ComboActive || HarassActive)
             {
-                var maxRRange = Program.Config.SubMenu("Combo").Item("UseRCMaxRange").GetValue<Slider>().Value;
-                t = TargetSelector.GetTarget(maxRRange, TargetSelector.DamageType.Physical);
+                t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
 
-                var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
-                var useW = GetValue<bool>("UseW" + (ComboActive ? "C" : "H"));
+                var useQ = this.GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
+                var useW = this.GetValue<bool>("UseW" + (ComboActive ? "C" : "H"));
                 var useR = Program.Config.SubMenu("Combo").Item("UseRC").GetValue<bool>();
 
                 if (Orbwalking.CanMove(100))
                 {
                     if (useQ && Q.IsReady() && t.IsValidTarget(Q.Range))
                     {
-                            CastQ();
+                        CastQ();
                     }
 
                     if (useW && W.IsReady() && t.IsValidTarget(W.Range))
@@ -211,14 +215,15 @@ namespace Marksman.Champions
 
                     if (R.IsReady() && useR)
                     {
+                        var maxRRange = Program.Config.SubMenu("Combo").Item("UseRCMaxRange").GetValue<Slider>().Value;
                         var minRRange = Program.Config.SubMenu("Combo").Item("UseRCMinRange").GetValue<Slider>().Value;
 
-                        if (Q.IsReady() && t.IsValidTarget(Q.Range) && Q.GetPrediction(t).CollisionObjects.Count == 0 &&
-                            t.Health < ObjectManager.Player.GetSpellDamage(t, SpellSlot.Q))
-                            return;
+                        if (Q.IsReady() && t.IsValidTarget(Q.Range) && Q.GetPrediction(t).CollisionObjects.Count == 0
+                            && t.Health < ObjectManager.Player.GetSpellDamage(t, SpellSlot.Q)) return;
 
-                        if (t.IsValidTarget() && ObjectManager.Player.Distance(t) >= minRRange &&
-                            t.Health <= ObjectManager.Player.GetSpellDamage(t, SpellSlot.R))
+                        if (t.IsValidTarget() && ObjectManager.Player.Distance(t) >= minRRange
+                            && ObjectManager.Player.Distance(t) <= maxRRange
+                            && t.Health <= ObjectManager.Player.GetSpellDamage(t, SpellSlot.R))
                         {
                             R.Cast(t);
                         }
@@ -229,8 +234,7 @@ namespace Marksman.Champions
             if (R.IsReady() && GetValue<KeyBind>("CastR").Active)
             {
                 t = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Physical);
-                if (t.IsValidTarget())
-                    R.Cast(t);
+                if (t.IsValidTarget()) R.Cast(t);
             }
         }
 
@@ -238,28 +242,21 @@ namespace Marksman.Champions
         {
             var fComboDamage = 0f;
 
-            if (Q.IsReady())
-                fComboDamage += (float) ObjectManager.Player.GetSpellDamage(t, SpellSlot.Q);
+            if (Q.IsReady()) fComboDamage += (float)ObjectManager.Player.GetSpellDamage(t, SpellSlot.Q);
 
-            if (W.IsReady())
-                fComboDamage += (float) ObjectManager.Player.GetSpellDamage(t, SpellSlot.W);
+            if (W.IsReady()) fComboDamage += (float)ObjectManager.Player.GetSpellDamage(t, SpellSlot.W);
 
-            if (E.IsReady())
-                fComboDamage += (float) ObjectManager.Player.GetSpellDamage(t, SpellSlot.E);
+            if (E.IsReady()) fComboDamage += (float)ObjectManager.Player.GetSpellDamage(t, SpellSlot.E);
 
-            if (R.IsReady())
-                fComboDamage += (float) ObjectManager.Player.GetSpellDamage(t, SpellSlot.R);
+            if (R.IsReady()) fComboDamage += (float)ObjectManager.Player.GetSpellDamage(t, SpellSlot.R);
 
-            if (ObjectManager.Player.GetSpellSlot("summonerdot") != SpellSlot.Unknown &&
-                ObjectManager.Player.Spellbook.CanUseSpell(ObjectManager.Player.GetSpellSlot("summonerdot")) ==
-                SpellState.Ready && ObjectManager.Player.Distance(t) < 550)
-                fComboDamage += (float) ObjectManager.Player.GetSummonerSpellDamage(t, Damage.SummonerSpell.Ignite);
+            if (ObjectManager.Player.GetSpellSlot("summonerdot") != SpellSlot.Unknown
+                && ObjectManager.Player.Spellbook.CanUseSpell(ObjectManager.Player.GetSpellSlot("summonerdot"))
+                == SpellState.Ready && ObjectManager.Player.Distance(t) < 550) fComboDamage += (float)ObjectManager.Player.GetSummonerSpellDamage(t, Damage.SummonerSpell.Ignite);
 
-            if (Items.CanUseItem(3144) && ObjectManager.Player.Distance(t) < 550)
-                fComboDamage += (float) ObjectManager.Player.GetItemDamage(t, Damage.DamageItems.Bilgewater);
+            if (Items.CanUseItem(3144) && ObjectManager.Player.Distance(t) < 550) fComboDamage += (float)ObjectManager.Player.GetItemDamage(t, Damage.DamageItems.Bilgewater);
 
-            if (Items.CanUseItem(3153) && ObjectManager.Player.Distance(t) < 550)
-                fComboDamage += (float) ObjectManager.Player.GetItemDamage(t, Damage.DamageItems.Botrk);
+            if (Items.CanUseItem(3153) && ObjectManager.Player.Distance(t) < 550) fComboDamage += (float)ObjectManager.Player.GetItemDamage(t, Damage.DamageItems.Botrk);
 
             return fComboDamage;
         }
@@ -273,13 +270,10 @@ namespace Marksman.Champions
             {
                 xRMenu.AddItem(new MenuItem("UseRC", "Use").SetValue(true));
                 xRMenu.AddItem(new MenuItem("UseRCMinRange", "Min. Range").SetValue(new Slider(200, 200, 1000)));
-                xRMenu.AddItem(new MenuItem("UseRCMaxRange", "Max. Range").SetValue(new Slider(500, 500, 2000)));
+                xRMenu.AddItem(new MenuItem("UseRCMaxRange", "Max. Range").SetValue(new Slider(1500, 500, 2000)));
+                xRMenu.AddItem(new MenuItem("DrawRMin", "Draw Min. R Range").SetValue(new Circle(true, Color.DarkRed)));
                 xRMenu.AddItem(
-                    new MenuItem("DrawRMin", "Draw Min. R Range").SetValue(
-                        new Circle(true, Color.DarkRed)));
-                xRMenu.AddItem(
-                    new MenuItem("DrawRMax", "Draw Max. R Range").SetValue(
-                        new Circle(true, Color.DarkMagenta)));
+                    new MenuItem("DrawRMax", "Draw Max. R Range").SetValue(new Circle(true, Color.DarkMagenta)));
 
                 config.AddSubMenu(xRMenu);
             }
@@ -309,10 +303,10 @@ namespace Marksman.Champions
 
             config.AddItem(
                 new MenuItem("UseQTH", "Q (Toggle)").SetValue(new KeyBind("H".ToCharArray()[0], KeyBindType.Toggle)))
-                    .Permashow(true, "Marksman | Toggle Q");
+                .Permashow(true, "Marksman | Toggle Q");
             config.AddItem(
                 new MenuItem("UseWTH", "W (Toggle)").SetValue(new KeyBind("J".ToCharArray()[0], KeyBindType.Toggle)))
-                    .Permashow(true, "Marksman | Toggle W");
+                .Permashow(true, "Marksman | Toggle W");
             //config.AddItem(new MenuItem("DrawHarassToggleStatus", "Draw Toggle Status").SetValue(true));
             return true;
         }
@@ -322,13 +316,16 @@ namespace Marksman.Champions
             config.AddItem(
                 new MenuItem("CastR" + Id, "Cast R (2000 Range)").SetValue(
                     new KeyBind("T".ToCharArray()[0], KeyBindType.Press)));
+            config.AddItem(new MenuItem("PingCH" + Id, "Ping Killable Enemy with R").SetValue(true));
             return true;
         }
 
         public override bool DrawingMenu(Menu config)
         {
-            config.AddItem(new MenuItem("DrawQ" + Id, "Q range").SetValue(new Circle(true, Color.FromArgb(100, 255, 0, 255))));
-            config.AddItem(new MenuItem("DrawW" + Id, "W range").SetValue(new Circle(false, Color.FromArgb(100, 255, 255, 255))));
+            config.AddItem(
+                new MenuItem("DrawQ" + Id, "Q range").SetValue(new Circle(true, Color.FromArgb(100, 255, 0, 255))));
+            config.AddItem(
+                new MenuItem("DrawW" + Id, "W range").SetValue(new Circle(false, Color.FromArgb(100, 255, 255, 255))));
             var dmgAfterComboItem = new MenuItem("DamageAfterCombo", "Damage After Combo").SetValue(true);
 
             config.AddItem(dmgAfterComboItem);
@@ -343,11 +340,13 @@ namespace Marksman.Champions
 
         public override bool JungleClearMenu(Menu config)
         {
-            config.AddItem(new MenuItem("UseQJ" + this.Id, "Use Q").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 1))).ValueChanged +=
-                (sender, args) =>
-                {
-                    Program.CClass.Config.Item("Jungle.Mana").Show(args.GetNewValue<StringList>().SelectedIndex != 0);
-                };
+            config.AddItem(
+                new MenuItem("UseQJ" + this.Id, "Use Q").SetValue(
+                    new StringList(new[] { "Off", "On", "Just big Monsters" }, 1))).ValueChanged += (sender, args) =>
+                        {
+                            Program.CClass.Config.Item("Jungle.Mana")
+                                .Show(args.GetNewValue<StringList>().SelectedIndex != 0);
+                        };
             return true;
         }
     }
