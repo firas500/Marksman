@@ -302,7 +302,7 @@ namespace Marksman
             Game.OnUpdate += Game_OnGameUpdate;
             Orbwalking.AfterAttack += Orbwalking_AfterAttack;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
-            
+            Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
             AsmLoadingTime = Game.Time;
             //Game.OnWndProc += Game_OnWndProc;
         }
@@ -656,6 +656,12 @@ namespace Marksman
         {
             CClass.Orbwalking_BeforeAttack(args);
         }
+
+        private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        {
+            CClass.Obj_AI_Base_OnProcessSpellCast(sender, args);
+        }
+
 
         private static void CheckChampionBuff()
         {

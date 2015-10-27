@@ -74,5 +74,10 @@ namespace Marksman.Champions
         public virtual void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
         {
         }
+
+        public virtual void Obj_AI_Base_OnProcessSpellCast(
+            Obj_AI_Base sender,
+            GameObjectProcessSpellCastEventArgs args)
+        { }
     }
 }
