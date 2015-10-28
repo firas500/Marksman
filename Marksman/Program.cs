@@ -262,7 +262,7 @@ namespace Marksman
 
                 var GlobalDrawings = new Menu("Global", "GDrawings");
                 {
-                    string[] strQ = new string[6];
+                    string[] strQ = new string[HeroManager.Enemies.Count + 1];
                     strQ[0] = "Off";
                     var i = 1;
                     foreach (var e in HeroManager.Enemies)
@@ -376,7 +376,7 @@ namespace Marksman
             if (compChampion != null)
             {
                 var selectedIndex = 0;
-                string[] strQ = new string[6];
+                string[] strQ = new string[HeroManager.Enemies.Count + 1];
                 strQ[0] = "Off";
                 var i = 1;
                 foreach (var e in HeroManager.Enemies)
