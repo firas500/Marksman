@@ -54,30 +54,13 @@ namespace Marksman.Champions
         }
         public override void Drawing_OnDraw(EventArgs args)
         {
-            Spell[] spellList = { Q, E, R };
+            Spell[] spellList = { Q, W, E, R };
             foreach (var spell in spellList)
             {
                 var menuItem = this.GetValue<Circle>("Draw" + spell.Slot);
                 if (menuItem.Active)
                 {
                     Render.Circle.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
-                }
-            }
-
-            if (Program.Config.Item("UseRC").GetValue<bool>())
-            {
-                var drawRMin = Program.Config.Item("DrawRMin").GetValue<Circle>();
-                if (drawRMin.Active)
-                {
-                    var minRRange = Program.Config.Item("UseRCMinRange").GetValue<Slider>().Value;
-                    Render.Circle.DrawCircle(ObjectManager.Player.Position, minRRange, drawRMin.Color, 2);
-                }
-
-                var drawRMax = Program.Config.Item("DrawRMax").GetValue<Circle>();
-                if (drawRMax.Active)
-                {
-                    var maxRRange = Program.Config.Item("UseRCMaxRange").GetValue<Slider>().Value;
-                    Render.Circle.DrawCircle(ObjectManager.Player.Position, maxRRange, drawRMax.Color, 2);
                 }
             }
         }
@@ -211,25 +194,13 @@ namespace Marksman.Champions
         public override bool DrawingMenu(Menu config)
         {
             config.AddItem(new MenuItem("DrawQ" + this.Id, "Q range").SetValue(new Circle(true, Color.FromArgb(100, 255, 0, 255))));
+            config.AddItem(new MenuItem("DrawW" + this.Id, "W range").SetValue(new Circle(false, Color.FromArgb(100, 255, 255, 255))));
             config.AddItem(new MenuItem("DrawE" + this.Id, "E range").SetValue(new Circle(false, Color.FromArgb(100, 255, 255, 255))));
+            config.AddItem(new MenuItem("DrawR" + this.Id, "R range").SetValue(new Circle(false, Color.FromArgb(100, 255, 255, 255))));
             var dmgAfterComboItem = new MenuItem("DamageAfterCombo", "Damage After Combo").SetValue(true);
 
             config.AddItem(dmgAfterComboItem);
 
-            config.AddItem(
-                   new MenuItem("HarassActiveTPermashow", "Show harass permashow").SetValue(true)).ValueChanged += (s, ar) =>
-                   {
-                       if (ar.GetNewValue<bool>())
-                       {
-                           Program.CClass.Config.Item("UseETH").Permashow(true, "Harass Toggle");
-                       }
-                       else
-                       {
-                           Program.CClass.Config.Item("UseETH").Permashow(false);
-                       }
-                   };
-
-            Program.CClass.Config.Item("UseETH").Permashow(config.Item("HarassActiveTPermashow").GetValue<bool>(), "Harass Toggle");
             return true;
         }
 
@@ -277,6 +248,7 @@ namespace Marksman.Champions
         public override bool JungleClearMenu(Menu config)
         {
             config.AddItem(new MenuItem("UseQJ" + this.Id, "Use Q").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 1)));
+            config.AddItem(new MenuItem("UseWJ" + this.Id, "Use W").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 1)));
             config.AddItem(new MenuItem("UseEJ" + this.Id, "Use E").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 1)));
 
             return true;
@@ -284,41 +256,62 @@ namespace Marksman.Champions
 
         public void ExecJungleClear()
         {
-            var jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range, Marksman.Utils.Utils.MobTypes.All);
+            var jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range + Orbwalking.GetRealAutoAttackRange(null) + 65, Marksman.Utils.Utils.MobTypes.All);
 
             if (jungleMobs != null)
             {
-                switch (Program.Config.Item("UseQJ").GetValue<StringList>().SelectedIndex)
+                switch (GetValue<StringList>("UseQJ").SelectedIndex)
                 {
                     case 1:
                         {
-                            Q.Cast(jungleMobs);
+                            if (jungleMobs.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65))
+                            Q.Cast(jungleMobs.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65) ? jungleMobs.Position : Game.CursorPos);
                             break;
                         }
                     case 2:
                         {
-                            jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range, Marksman.Utils.Utils.MobTypes.BigBoys);
+                            jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range+ Orbwalking.GetRealAutoAttackRange(null) + 65, Marksman.Utils.Utils.MobTypes.BigBoys);
                             if (jungleMobs != null)
                             {
-                                Q.Cast(jungleMobs);
+                                Q.Cast(jungleMobs.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65) ? jungleMobs.Position : Game.CursorPos);
                             }
                             break;
                         }
                 }
 
-                switch (Program.Config.Item("UseEJ").GetValue<StringList>().SelectedIndex)
+                switch (GetValue<StringList>("UseWJ").SelectedIndex)
                 {
                     case 1:
                         {
-                            E.Cast(jungleMobs);
+                            if (jungleMobs.IsValidTarget(W.Range))
+                                W.Cast(jungleMobs.Position);
                             break;
                         }
                     case 2:
                         {
-                            jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range, Marksman.Utils.Utils.MobTypes.BigBoys);
+                            jungleMobs = Marksman.Utils.Utils.GetMobs(E.Range, Marksman.Utils.Utils.MobTypes.BigBoys);
                             if (jungleMobs != null)
                             {
-                                E.Cast(jungleMobs);
+                                W.Cast(jungleMobs.Position);
+                            }
+                            break;
+                        }
+                }
+
+                switch (GetValue<StringList>("UseEJ").SelectedIndex)
+                {
+                    case 1:
+                        {
+                            if (jungleMobs.IsValidTarget(E.Range))
+                            E.CastOnUnit(jungleMobs);
+                            break;
+                        }
+                    case 2:
+                        {
+                            jungleMobs = Marksman.Utils.Utils.GetMobs(E.Range, Marksman.Utils.Utils.MobTypes.BigBoys);
+                            if (jungleMobs != null)
+                            {
+                                E.CastOnUnit(jungleMobs);
                             }
                             break;
                         }
