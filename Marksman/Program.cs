@@ -30,7 +30,7 @@ namespace Marksman
         public static Champion CClass;
         public static Activator AActivator;
         public static Utils.AutoLevel AutoLevel;
-        public static Utils.EarlyEvade EarlyEvade;
+        //public static Utils.EarlyEvade EarlyEvade;
 
         public static double ActivatorTime;
         private static Obj_AI_Hero xSelectedTarget;
@@ -146,8 +146,8 @@ namespace Marksman
             {
                 AutoLevel = new Utils.AutoLevel();
 
-                EarlyEvade = new Utils.EarlyEvade();
-                MenuActivator.AddSubMenu(EarlyEvade.MenuLocal);
+                //EarlyEvade = new Utils.EarlyEvade();
+                //MenuActivator.AddSubMenu(EarlyEvade.MenuLocal);
 
                 /* Menu Items */
                 var items = MenuActivator.AddSubMenu(new Menu("Items", "Items"));
@@ -302,6 +302,12 @@ namespace Marksman
             Game.OnUpdate += Game_OnGameUpdate;
             Orbwalking.AfterAttack += Orbwalking_AfterAttack;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
+            GameObject.OnCreate += OnCreateObject;
+            GameObject.OnDelete += OnDeleteObject;
+
+            Obj_AI_Base.OnBuffAdd += Obj_AI_Base_OnBuffAdd;
+            Obj_AI_Base.OnBuffRemove += Obj_AI_Base_OnBuffRemove;
+
             Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
             AsmLoadingTime = Game.Time;
             //Game.OnWndProc += Game_OnWndProc;
@@ -662,6 +668,24 @@ namespace Marksman
             CClass.Obj_AI_Base_OnProcessSpellCast(sender, args);
         }
 
+        private static void OnCreateObject(GameObject sender, EventArgs args)
+        {
+            CClass.OnCreateObject(sender, args);
+        }
+
+        private static void OnDeleteObject(GameObject sender, EventArgs args)
+        {
+            CClass.OnDeleteObject(sender, args);
+        }
+
+        private static void Obj_AI_Base_OnBuffAdd(Obj_AI_Base sender, Obj_AI_BaseBuffAddEventArgs args)
+        {
+            CClass.Obj_AI_Base_OnBuffAdd(sender, args);
+        }
+        private static void Obj_AI_Base_OnBuffRemove(Obj_AI_Base sender, Obj_AI_BaseBuffRemoveEventArgs args)
+        {
+            CClass.Obj_AI_Base_OnBuffRemove(sender, args);
+        }
 
         private static void CheckChampionBuff()
         {
