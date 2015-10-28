@@ -265,7 +265,7 @@ namespace Marksman.Champions
                     case 1:
                         {
                             if (jungleMobs.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65))
-                            Q.Cast(jungleMobs.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65) ? jungleMobs.Position : Game.CursorPos);
+                            Q.Cast(jungleMobs.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65) ? Game.CursorPos : jungleMobs.Position);
                             break;
                         }
                     case 2:
@@ -273,7 +273,7 @@ namespace Marksman.Champions
                             jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range+ Orbwalking.GetRealAutoAttackRange(null) + 65, Marksman.Utils.Utils.MobTypes.BigBoys);
                             if (jungleMobs != null)
                             {
-                                Q.Cast(jungleMobs.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65) ? jungleMobs.Position : Game.CursorPos);
+                                Q.Cast(jungleMobs.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65) ? Game.CursorPos: jungleMobs.Position);
                             }
                             break;
                         }
