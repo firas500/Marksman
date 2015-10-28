@@ -81,7 +81,7 @@ namespace Marksman.Champions
                 });
 
             Utils.Utils.PrintMessage("Kalista loaded.");
-            Utils.Utils.PrintMessage("Kalista: Added Souldbound Saver. Please check the Misc Menu");
+            Utils.Utils.PrintMessage("Kalista: Added Soulbound Saver. Please check the Misc Menu");
         }
 
         public int KalistaMarkerCount
