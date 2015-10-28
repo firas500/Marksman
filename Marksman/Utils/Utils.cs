@@ -18,10 +18,19 @@ namespace Marksman.Utils
     {
         public const string Tab = "    ";
 
-        public static Font Text, SmallText;
+        public static Font Text, TextBig, SmallText;
 
         static Utils()
         {
+            TextBig = new Font(
+              Drawing.Direct3DDevice,
+              new FontDescription
+              {
+                  FaceName = "Segoe UI",
+                  Height = 25,
+                  OutputPrecision = FontPrecision.Default,
+                  Quality = FontQuality.ClearTypeNatural
+              });            
             Text = new Font(
                 Drawing.Direct3DDevice,
                 new FontDescription
