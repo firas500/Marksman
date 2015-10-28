@@ -39,7 +39,7 @@ namespace Marksman.Champions
         public Kindred()
         {
             Q = new Spell(SpellSlot.Q, 340);
-            W = new Spell(SpellSlot.W, 593);
+            W = new Spell(SpellSlot.W, 750);
             E = new Spell(SpellSlot.E, 740);
             R = new Spell(SpellSlot.R, 1100);
             R.SetSkillshot(1f, 160f, 2000f, false, SkillshotType.SkillshotCircle);
