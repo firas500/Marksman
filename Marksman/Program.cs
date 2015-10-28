@@ -417,11 +417,14 @@ namespace Marksman
                 DrawBox(new Vector2(Drawing.Width*0.400f, Drawing.Height*0.132f), 350, 26, Color.FromArgb(100, 255, 200, 37), 1, Color.Black);
                 Utils.Utils.DrawText(Utils.Utils.Text, xText, Drawing.Width * 0.422f, Drawing.Height * 0.140f, SharpDX.Color.Wheat);
                 
-                if (Game.Time - AsmLoadingTime < 10)
+                if (Game.Time - AsmLoadingTime < 15)
                 {
-                    var timer = string.Format("0:{0:D2}", (int)10 - (int)(Game.Time - AsmLoadingTime));
-                    Utils.Utils.DrawText(Utils.Utils.Text,"You can turn on/off this text. Use Marksman -> Global Drawings -> Compare with me",Drawing.Width * 0.350f,Drawing.Height * 0.165f,SharpDX.Color.Wheat);
-                    Utils.Utils.DrawText(Utils.Utils.Text, "This message will self destruct in " + timer + "  - Mission L# Kappa - ", Drawing.Width * 0.400f, Drawing.Height * 0.185f, SharpDX.Color.Aqua);
+                    var timer = string.Format("0:{0:D2}", (int)15 - (int)(Game.Time - AsmLoadingTime));
+                    var notText = "You can turn on/off this option. Go to 'Marksman -> Global Drawings -> Compare With Me'";
+                    Utils.Utils.DrawText(Utils.Utils.TextBig, notText, Drawing.Width * 0.291f, Drawing.Height * 0.166f, SharpDX.Color.Black);
+                    Utils.Utils.DrawText(Utils.Utils.TextBig, notText, Drawing.Width * 0.290f, Drawing.Height * 0.165f, SharpDX.Color.White);
+                    
+                    Utils.Utils.DrawText(Utils.Utils.TextBig, "This message will self destruct in " + timer, Drawing.Width * 0.400f, Drawing.Height * 0.195f, SharpDX.Color.Aqua);
                 }                
             }
 
