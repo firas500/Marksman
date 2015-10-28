@@ -88,7 +88,7 @@ namespace Marksman.Champions
             {
                 ExecuteLaneClear();
             }
-            return;
+
             var ultCasting = Game.Time - UltiCastedTime < 0.2 || ObjectManager.Player.IsChannelingImportantSpell();
             Orbwalking.Attack = !ultCasting;
             Orbwalking.Move = !ultCasting;
