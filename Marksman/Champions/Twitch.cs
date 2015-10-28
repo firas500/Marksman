@@ -34,8 +34,8 @@ namespace Marksman.Champions
             W.SetSkillshot(0.25f, 120f, 1400f, false, SkillshotType.SkillshotCircle);
             E = new Spell(SpellSlot.E, 1200);
 
-            Utility.HpBarDamageIndicator.DamageToUnit = GetComboDamage;
-            Utility.HpBarDamageIndicator.Enabled = true;
+            //Utility.HpBarDamageIndicator.DamageToUnit = GetComboDamage;
+            //Utility.HpBarDamageIndicator.Enabled = true;
             /*
             font = new Font(
                 Drawing.Direct3DDevice,
