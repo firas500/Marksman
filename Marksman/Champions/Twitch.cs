@@ -34,12 +34,9 @@ namespace Marksman.Champions
             W.SetSkillshot(0.25f, 120f, 1400f, false, SkillshotType.SkillshotCircle);
             E = new Spell(SpellSlot.E, 1200);
 
-            GameObject.OnCreate += OnCreateObject;
-            GameObject.OnDelete += OnDeleteObject;
-            
             Utility.HpBarDamageIndicator.DamageToUnit = GetComboDamage;
             Utility.HpBarDamageIndicator.Enabled = true;
-
+            /*
             font = new Font(
                 Drawing.Direct3DDevice,
                 new FontDescription
@@ -49,6 +46,7 @@ namespace Marksman.Champions
                     OutputPrecision = FontPrecision.Default,
                     Quality = FontQuality.Default
                 });
+            */
             Utils.Utils.PrintMessage("Twitch loaded.");
         }
 
@@ -82,6 +80,7 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
+            /*
                 xEnemyMarker.Clear();
                 foreach (
                     var xEnemy in
@@ -117,7 +116,7 @@ namespace Marksman.Champions
                     }
                 }
 
-
+            */
             Spell[] spellList = {W};
             foreach (var spell in spellList)
             {
