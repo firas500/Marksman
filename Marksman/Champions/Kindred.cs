@@ -35,18 +35,40 @@ namespace Marksman.Champions
         public static Spell E;
         public static Spell W;
         public static Spell R;
-
+        public static Obj_AI_Hero KindredECharge;
         public Kindred()
         {
-            Q = new Spell(SpellSlot.Q, 340);
-            W = new Spell(SpellSlot.W, 750);
+            Q = new Spell(SpellSlot.Q, 375);
+            W = new Spell(SpellSlot.W, 900);
             E = new Spell(SpellSlot.E, 740);
             R = new Spell(SpellSlot.R, 1100);
             R.SetSkillshot(1f, 160f, 2000f, false, SkillshotType.SkillshotCircle);
-
+            
             Obj_AI_Base.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;
-
+            
             Marksman.Utils.Utils.PrintMessage("Kindred loaded.");
+        }
+
+        public override void Obj_AI_Base_OnBuffAdd(Obj_AI_Base sender, Obj_AI_BaseBuffAddEventArgs args)
+        {
+            if (args.Buff.Name.ToLower() == "kindredecharge" && !sender.IsMe)
+            {
+                KindredECharge = sender as Obj_AI_Hero;
+            }
+        }
+        public override void Obj_AI_Base_OnBuffRemove(Obj_AI_Base sender, Obj_AI_BaseBuffRemoveEventArgs args)
+        {
+            if (args.Buff.Name.ToLower() == "kindredecharge" && !sender.IsMe)
+            {
+                KindredECharge = null;
+            }
+        }
+
+        public override void OnCreateObject(GameObject sender, EventArgs args)
+        {
+        }
+        public override void OnDeleteObject(GameObject sender, EventArgs args)
+        {
         }
 
         public override void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
@@ -66,33 +88,49 @@ namespace Marksman.Champions
         }
         public void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-            if (Program.Config.Item("UserRC").GetValue<bool>() && ObjectManager.Player.Health < ObjectManager.Player.MaxHealth * .2)
-            {
-                if (!sender.IsMe && sender.IsEnemy && R.IsReady() && args.Target.IsMe) // for minions attack
-                {
-                    R.Cast(ObjectManager.Player.Position);
-                }
-                else if (!sender.IsMe && sender.IsEnemy && (sender is Obj_AI_Hero || sender is Obj_AI_Turret) && args.Target.IsMe && R.IsReady())
-                {
-                    R.Cast(ObjectManager.Player.Position);
-                }
-            }
-
             return;
-
-            if (sender.IsEnemy && sender.IsValid && Config.Item("SmartShield").GetValue<bool>() && W.IsReady())
+            if (R.IsReady())
             {
-                if (args.SData.Name.ToLower().Contains("basicattack") && sender.Distance(ObjectManager.Player) < 500)
+                var x = 0d;
+                if (ObjectManager.Player.HealthPercent < 20 && ObjectManager.Player.CountEnemiesInRange(500) > 0)
                 {
-                    W.Cast();
+                    x = HeroManager.Enemies.Where(e => e.IsValidTarget(1000)).Aggregate(0, (current, enemy) => (int) (current + enemy.Health));
+                }
+                if (ObjectManager.Player.Health < x)
+                {
+                    R.Cast(ObjectManager.Player.Position);
+                }
+                return;
+                if (Program.Config.Item("UserRC").GetValue<bool>() && ObjectManager.Player.Health < ObjectManager.Player.MaxHealth*.2)
+                {
+                    if (!sender.IsMe && sender.IsEnemy && R.IsReady() && args.Target.IsMe) // for minions attack
+                    {
+                        R.Cast(ObjectManager.Player.Position);
+                    }
+                    else if (!sender.IsMe && sender.IsEnemy && (sender is Obj_AI_Hero || sender is Obj_AI_Turret) &&
+                             args.Target.IsMe && R.IsReady())
+                    {
+                        R.Cast(ObjectManager.Player.Position);
+                    }
                 }
             }
         }
 
-
         public override void Game_OnGameUpdate(EventArgs args)
         {
-
+            if (R.IsReady())
+            {
+                var x = 0d;
+                if (ObjectManager.Player.HealthPercent < 20 && ObjectManager.Player.CountEnemiesInRange(500) > 0)
+                {
+                    x = HeroManager.Enemies.Where(e => e.IsValidTarget(1000))
+                        .Aggregate(0, (current, enemy) => (int) (current + enemy.Health));
+                }
+                if (ObjectManager.Player.Health < x)
+                {
+                    R.Cast(ObjectManager.Player.Position);
+                }
+            }
             if (this.JungleClearActive)
             {
                 this.ExecJungleClear();
@@ -100,10 +138,20 @@ namespace Marksman.Champions
 
             if (this.LaneClearActive && Q.IsReady())
             {
-                this.ExecLaneClear();
+                //this.ExecLaneClear();
+            }
+            Obj_AI_Hero t = null;
+            if (KindredECharge != null)
+            {
+                t = KindredECharge;
+                TargetSelector.SetTarget(KindredECharge);
+            }
+            else
+            {
+                t = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
             }
 
-            var t = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
+            
             if (!t.IsValidTarget())
             {
                 return;
@@ -126,8 +174,15 @@ namespace Marksman.Champions
                 var useE = this.GetValue<bool>("UseEC");
                 var useR = this.GetValue<bool>("UseRC");
 
+
+
                 if (Orbwalking.CanMove(40))
                 {
+                    if (Q.IsReady() && t.IsValidTarget(Q.Range + Orbwalking.GetRealAutoAttackRange(null) + 65))
+                    {
+                        Q.Cast(Game.CursorPos);
+                    }
+
                     if (E.IsReady() && t.IsValidTarget(E.Range))
                     {
                         E.CastOnUnit(t);
@@ -138,10 +193,6 @@ namespace Marksman.Champions
                         W.Cast();
                     }
 
-                    if (Q.IsReady() && t.IsValidTarget(Q.Range + Orbwalking.GetRealAutoAttackRange(null) + 65))
-                    {
-                        Q.Cast(Game.CursorPos);
-                    }
                 }
             }
 
@@ -177,21 +228,7 @@ namespace Marksman.Champions
             return true;
         }
 
-        //public override bool JungleClearMenu(Menu config)
-        //{
-        //    config.AddItem(new MenuItem("UseQJ" + this.Id, "Use Q").SetValue(true)).ValueChanged += delegate(object sender, OnValueChangeEventArgs args)
-        //    {
-        //        config.Item("UseQLM").Show(args.GetNewValue<bool>());
-        //        Program.CClass.Config.Item("JungleMinMana").Show(args.GetNewValue<bool>());
-        //    };
-
-        //    config.AddItem(new MenuItem("UseQJM", "Min. Minion:").SetValue(new Slider(2, 1, 3)));
-        //    config.AddItem(new MenuItem("UseWJ", "Use W").SetValue(false));
-        //    config.AddItem(new MenuItem("UseEJ", "Use E").SetValue(new StringList(new[] { "Off", "On", "Just big mobs" }, 1)));
-        //    return true;
-        //}
-
-        public override bool DrawingMenu(Menu config)
+     public override bool DrawingMenu(Menu config)
         {
             config.AddItem(new MenuItem("DrawQ" + this.Id, "Q range").SetValue(new Circle(true, Color.FromArgb(100, 255, 0, 255))));
             config.AddItem(new MenuItem("DrawW" + this.Id, "W range").SetValue(new Circle(false, Color.FromArgb(100, 255, 255, 255))));
