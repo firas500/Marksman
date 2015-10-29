@@ -399,7 +399,7 @@ namespace Marksman
             var myMinionsKilled = ObjectManager.Player.MinionsKilled;
 
             if (Config.Item("Marksman.Compare").GetValue<StringList>().SelectedIndex != 0 
-                && ObjectManager.Player.CountEnemiesInRange(1200) == 0)
+                && ObjectManager.Player.CountEnemiesInRange(700) == 0)
             {
                 Obj_AI_Hero compChampion = null;
                 foreach (Obj_AI_Hero e in HeroManager.Enemies.Where(e => e.ChampionName == Config.Item("Marksman.Compare").GetValue<StringList>().SelectedValue))
