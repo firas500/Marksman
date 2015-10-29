@@ -90,7 +90,17 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
-            Spell[] spellList = {Q, W, E, R};
+            var drawQ = GetValue<StringList>("DrawQ").SelectedIndex;
+            switch (drawQ)
+            {
+                case 1:
+                    Render.Circle.DrawCircle(ObjectManager.Player.Position, Q.Range, Color.Aqua);
+                    break;
+                case 2:
+                    Render.Circle.DrawCircle(ObjectManager.Player.Position, Q.Range + Orbwalking.GetRealAutoAttackRange(null) + 65, Color.Aqua);
+                    break;
+            }
+            Spell[] spellList = {W, E, R};
             foreach (var spell in spellList)
             {
                 var menuItem = this.GetValue<Circle>("Draw" + spell.Slot);
@@ -273,7 +283,7 @@ namespace Marksman.Champions
         public override bool DrawingMenu(Menu config)
         {
             config.AddItem(
-                new MenuItem("DrawQ" + this.Id, "Q range").SetValue(new Circle(true, Color.FromArgb(100, 255, 0, 255))));
+                new MenuItem("DrawQ" + this.Id, "Q range").SetValue(new StringList(new[] {"Off", "Q Range", "Q + AA Range"}, 2)));
             config.AddItem(
                 new MenuItem("DrawW" + this.Id, "W range").SetValue(new Circle(false, Color.FromArgb(100, 255, 255, 255))));
             config.AddItem(
