@@ -56,6 +56,7 @@ namespace Marksman.Champions
             DangerousList.Add(new DangerousSpells("syndra", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("warwick", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("zed", SpellSlot.R));
+            DangerousList.Add(new DangerousSpells("chogath", SpellSlot.R));
 
             Marksman.Utils.Utils.PrintMessage("Kindred loaded.");
         }
