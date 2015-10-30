@@ -274,7 +274,7 @@ namespace Marksman
                     GlobalDrawings.AddItem(new MenuItem("Draw.KillableEnemy", "Killable Enemy Text").SetValue(true));
                     GlobalDrawings.AddItem(new MenuItem("drawMinionLastHit", "Minion Last Hit").SetValue(new Circle(true, Color.GreenYellow)));
                     GlobalDrawings.AddItem(new MenuItem("drawMinionNearKill", "Minion Near Kill").SetValue(new Circle(true, Color.Gray)));
-                    GlobalDrawings.AddItem(new MenuItem("drawJunglePosition", "Jungle Farm Position").SetValue(true));
+                    globalDrawings.AddItem(new MenuItem("Draw.JunglePosition", "Jungle Farm Position").SetValue(new StringList(new[] { "Off", "If I'm Close to Mobs", "If Jungle Clear Active" }, 2)));
                     GlobalDrawings.AddItem(new MenuItem("Draw.DrawMinion", "Draw Minions Sprite").SetValue(false));
                     GlobalDrawings.AddItem(new MenuItem("Draw.DrawTarget", "Draw Target Sprite").SetValue(true));
                     marksmanDrawings.AddSubMenu(GlobalDrawings);
@@ -471,14 +471,10 @@ namespace Marksman
                 Render.Circle.DrawCircle(t.Position, 150, Color.Yellow);
             }
             */
-            var drawJunglePosition = CClass.Config.Item("drawJunglePosition").GetValue<bool>();
-            {
-                if (drawJunglePosition)
-                    Utils.Utils.Jungle.DrawJunglePosition();
-            }
-
-            var drawMinionLastHit = CClass.Config.Item("drawMinionLastHit").GetValue<Circle>();
-            var drawMinionNearKill = CClass.Config.Item("drawMinionNearKill").GetValue<Circle>();
+            Utils.Utils.Jungle.DrawJunglePosition(Config.Item("Draw.JunglePosition").GetValue<StringList>().SelectedIndex);
+            
+            var drawMinionLastHit = Config.Item("drawMinionLastHit").GetValue<Circle>();
+            var drawMinionNearKill = Config.Item("drawMinionNearKill").GetValue<Circle>();
             if (drawMinionLastHit.Active || drawMinionNearKill.Active)
             {
                 var xMinions =
