@@ -103,7 +103,7 @@ namespace Marksman.Champions
         public override void Drawing_OnDraw(EventArgs args)
         {
 
-            if (GetValue<bool>("DrawCH"))
+            if (R.IsReady() && GetValue<bool>("DrawCH"))
             {
                 var enemies = HeroManager.Enemies.Where(e => e.IsEnemy);
                 //e.IsVisible && e.Health < R.GetDamage(e) && !e.IsDead && !e.IsZombie);
