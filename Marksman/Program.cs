@@ -274,7 +274,7 @@ namespace Marksman
                     GlobalDrawings.AddItem(new MenuItem("Draw.KillableEnemy", "Killable Enemy Text").SetValue(true));
                     GlobalDrawings.AddItem(new MenuItem("drawMinionLastHit", "Minion Last Hit").SetValue(new Circle(true, Color.GreenYellow)));
                     GlobalDrawings.AddItem(new MenuItem("drawMinionNearKill", "Minion Near Kill").SetValue(new Circle(true, Color.Gray)));
-                    globalDrawings.AddItem(new MenuItem("Draw.JunglePosition", "Jungle Farm Position").SetValue(new StringList(new[] { "Off", "If I'm Close to Mobs", "If Jungle Clear Active" }, 2)));
+                    GlobalDrawings.AddItem(new MenuItem("Draw.JunglePosition", "Jungle Farm Position").SetValue(new StringList(new[] { "Off", "If I'm Close to Mobs", "If Jungle Clear Active" }, 2)));
                     GlobalDrawings.AddItem(new MenuItem("Draw.DrawMinion", "Draw Minions Sprite").SetValue(false));
                     GlobalDrawings.AddItem(new MenuItem("Draw.DrawTarget", "Draw Target Sprite").SetValue(true));
                     marksmanDrawings.AddSubMenu(GlobalDrawings);
