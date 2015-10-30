@@ -120,14 +120,14 @@ namespace Marksman.Champions
                     Drawing.DrawLine(
                         Drawing.Width * 0.892f + 0,
                         Drawing.Height * 0.419f + (float)(i + 1) * 20,
-                        Drawing.Width * 0.895f + 150,
+                        Drawing.Width * 0.895f + 100,
                         Drawing.Height * 0.419f + (float)(i + 1) * 20,
                         16,
                         Color.Black);
                     Drawing.DrawLine(
                         Drawing.Width * 0.892f + 1,
                         Drawing.Height * 0.420f + (float)(i + 1) * 20,
-                        Drawing.Width * 0.895f + 149,
+                        Drawing.Width * 0.895f + 99,
                         Drawing.Height * 0.420f + (float)(i + 1) * 20,
                         14,
                         Color.BurlyWood);
