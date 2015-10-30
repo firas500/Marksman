@@ -178,72 +178,73 @@ namespace Marksman.Utils
             vFont.DrawText(null, vText, vPosX, vPosY, vColor);
         }
 
-        internal static class Jungle
+           internal static class Jungle
         {
-            public static void DrawJunglePosition()
+            public enum DrawOption
             {
+                Off = 0,
+                CloseToMobs = 1,
+                CloseToMobsAndJungleClearActive = 2
+            }
+
+            private static readonly Dictionary<Vector3, System.Drawing.Color> JunglePositions =
+                new Dictionary<Vector3, System.Drawing.Color>();
+            public static void DrawJunglePosition(int drawOption)
+            {
+                if (drawOption == (int)DrawOption.Off)
+                {
+                    return;
+                }
+
                 if (Game.MapId == (GameMapId)11)
                 {
-                    const float CircleRange = 100f;
+                    const float CircleRange = 115f;
 
-                    Render.Circle.DrawCircle(
-                        new Vector3(7461.018f, 3253.575f, 52.57141f),
-                        CircleRange,
-                        System.Drawing.Color.Blue); // blue team :red
-                    DrawText(Text, "Stay Here for Jungle Clear", 7461, 3253, Color.AliceBlue);
+                    JunglePositions.Add(new Vector3(7461.018f, 3253.575f, 52.57141f), System.Drawing.Color.Blue);
+                        // blue team :red;
+                    JunglePositions.Add(new Vector3(3511.601f, 8745.617f, 52.57141f), System.Drawing.Color.Blue);
+                        // blue team :blue
+                    JunglePositions.Add(new Vector3(7462.053f, 2489.813f, 52.57141f), System.Drawing.Color.Blue);
+                        // blue team :golems
+                    JunglePositions.Add(new Vector3(3144.897f, 7106.449f, 51.89026f), System.Drawing.Color.Blue);
+                        // blue team :wolfs
+                    JunglePositions.Add(new Vector3(7770.341f, 5061.238f, 49.26587f), System.Drawing.Color.Blue);
+                        // blue team :wariaths
 
-                    Render.Circle.DrawCircle(
-                        new Vector3(3511.601f, 8745.617f, 52.57141f),
-                        CircleRange,
-                        System.Drawing.Color.Blue);
-                    // blue team :blue
-                    Render.Circle.DrawCircle(
-                        new Vector3(7462.053f, 2489.813f, 52.57141f),
-                        CircleRange,
-                        System.Drawing.Color.Blue);
-                    // blue team :golems
-                    Render.Circle.DrawCircle(
-                        new Vector3(3144.897f, 7106.449f, 51.89026f),
-                        CircleRange,
-                        System.Drawing.Color.Blue);
-                    // blue team :wolfs
-                    Render.Circle.DrawCircle(
-                        new Vector3(7770.341f, 5061.238f, 49.26587f),
-                        CircleRange,
-                        System.Drawing.Color.Blue);
-                    // blue team :wariaths
+                    JunglePositions.Add(new Vector3(10930.93f, 5405.83f, -68.72192f), System.Drawing.Color.Yellow);
+                        // Dragon
 
-                    Render.Circle.DrawCircle(
-                        new Vector3(10930.93f, 5405.83f, -68.72192f),
-                        CircleRange,
-                        System.Drawing.Color.Yellow);
-                    // Dragon
+                    JunglePositions.Add(new Vector3(7326.056f, 11643.01f, 50.21985f), System.Drawing.Color.Red);
+                        // red team :red
+                    JunglePositions.Add(new Vector3(11417.6f, 6216.028f, 51.00244f), System.Drawing.Color.Red);
+                        // red team :blue
+                    JunglePositions.Add(new Vector3(7368.408f, 12488.37f, 56.47668f), System.Drawing.Color.Red);
+                        // red team :golems
+                    JunglePositions.Add(new Vector3(10342.77f, 8896.083f, 51.72742f), System.Drawing.Color.Red);
+                        // red team :wolfs
+                    JunglePositions.Add(new Vector3(7001.741f, 9915.717f, 54.02466f), System.Drawing.Color.Red);
+                        // red team :wariaths                    
 
-                    Render.Circle.DrawCircle(
-                        new Vector3(7326.056f, 11643.01f, 50.21985f),
-                        CircleRange,
-                        System.Drawing.Color.Red);
-                    // red team :red
-                    Render.Circle.DrawCircle(
-                        new Vector3(11417.6f, 6216.028f, 51.00244f),
-                        CircleRange,
-                        System.Drawing.Color.Red);
-                    // red team :blue
-                    Render.Circle.DrawCircle(
-                        new Vector3(7368.408f, 12488.37f, 56.47668f),
-                        CircleRange,
-                        System.Drawing.Color.Red);
-                    // red team :golems
-                    Render.Circle.DrawCircle(
-                        new Vector3(10342.77f, 8896.083f, 51.72742f),
-                        CircleRange,
-                        System.Drawing.Color.Red);
-                    // red team :wolfs
-                    Render.Circle.DrawCircle(
-                        new Vector3(7001.741f, 9915.717f, 54.02466f),
-                        CircleRange,
-                        System.Drawing.Color.Red);
-                    // red team :wariaths                    
+                    foreach (var junglePosition in JunglePositions)
+                    {
+                        switch (drawOption)
+                        {
+                            case (int)DrawOption.CloseToMobs:
+                                if (ObjectManager.Player.Distance(junglePosition.Key)
+                                    <= Orbwalking.GetRealAutoAttackRange(null) + 65)
+                                {
+                                    Render.Circle.DrawCircle(junglePosition.Key, CircleRange, junglePosition.Value);
+                                }
+                                break;
+                            case (int)DrawOption.CloseToMobsAndJungleClearActive:
+                                if (ObjectManager.Player.Distance(junglePosition.Key)
+                                    <= Orbwalking.GetRealAutoAttackRange(null) + 65 && Program.CClass.JungleClearActive)
+                                {
+                                    Render.Circle.DrawCircle(junglePosition.Key, CircleRange, junglePosition.Value);
+                                }
+                                break;
+                        }
+                    }
                 }
             }
         }
