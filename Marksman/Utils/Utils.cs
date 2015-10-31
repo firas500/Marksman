@@ -23,22 +23,24 @@ namespace Marksman.Utils
         static Utils()
         {
             TextBig = new Font(
-              Drawing.Direct3DDevice,
-              new FontDescription
-              {
-                  FaceName = "Segoe UI",
-                  Height = 25,
-                  OutputPrecision = FontPrecision.Default,
-                  Quality = FontQuality.ClearTypeNatural
-              });            
+                Drawing.Direct3DDevice,
+                new FontDescription
+                {
+                    FaceName = "Segoe UI",
+                    Height = 25,
+                    OutputPrecision = FontPrecision.Default,
+                    Quality = FontQuality.ClearTypeNatural
+                });
             Text = new Font(
                 Drawing.Direct3DDevice,
                 new FontDescription
-                    {
-                        FaceName = "Segoe UI", Height = 15, OutputPrecision = FontPrecision.Default,
-                        Quality = FontQuality.ClearTypeNatural
-                    });
-            
+                {
+                    FaceName = "Segoe UI",
+                    Height = 15,
+                    OutputPrecision = FontPrecision.Default,
+                    Quality = FontQuality.ClearTypeNatural
+                });
+
             SmallText = new Font(
                 Drawing.Direct3DDevice,
                 new FontDescription
@@ -58,7 +60,7 @@ namespace Marksman.Utils
 
             public static void Ping(Vector2 position)
             {
-                if (LeagueSharp.Common.Utils.TickCount - LastPingT < 30 * 1000)
+                if (LeagueSharp.Common.Utils.TickCount - LastPingT < 30*1000)
                 {
                     return;
                 }
@@ -116,10 +118,10 @@ namespace Marksman.Utils
         }
 
         private static readonly string[] BetterWithEvade =
-            {
-                "Corki", "Ezreal", "Graves", "Lucian", "Sivir", "Tristana",
-                "Caitlyn", "Vayne"
-            };
+        {
+            "Corki", "Ezreal", "Graves", "Lucian", "Sivir", "Tristana",
+            "Caitlyn", "Vayne"
+        };
 
         public static Obj_AI_Base GetMobs(float spellRange, MobTypes mobTypes = MobTypes.All, int minMobCount = 1)
         {
@@ -134,14 +136,14 @@ namespace Marksman.Utils
             if (mobTypes == MobTypes.BigBoys)
             {
                 Obj_AI_Base oMob = (from fMobs in mobs
-                                    from fBigBoys in
-                                        new[]
-                                            {
-                                                "SRU_Blue", "SRU_Gromp", "SRU_Murkwolf", "SRU_Razorbeak", "SRU_Red",
-                                                "SRU_Krug", "SRU_Dragon", "SRU_Baron", "Sru_Crab"
-                                            }
-                                    where fBigBoys == fMobs.SkinName
-                                    select fMobs).FirstOrDefault();
+                    from fBigBoys in
+                        new[]
+                        {
+                            "SRU_Blue", "SRU_Gromp", "SRU_Murkwolf", "SRU_Razorbeak", "SRU_Red",
+                            "SRU_Krug", "SRU_Dragon", "SRU_Baron", "Sru_Crab"
+                        }
+                    where fBigBoys == fMobs.SkinName
+                    select fMobs).FirstOrDefault();
 
                 if (oMob != null)
                 {
@@ -167,7 +169,8 @@ namespace Marksman.Utils
                 + "</font>");
             //Notifications.AddNotification("Marksman: " + message, 4000);
         }
-                public static void DrawText(Font vFont, string vText, float vPosX, float vPosY, ColorBGRA vColor)
+
+        public static void DrawText(Font vFont, string vText, float vPosX, float vPosY, ColorBGRA vColor)
         {
             vFont.DrawText(null, vText, (int) vPosX, (int) vPosY, vColor);
         }
@@ -178,7 +181,7 @@ namespace Marksman.Utils
             vFont.DrawText(null, vText, vPosX, vPosY, vColor);
         }
 
-        internal static class Jungle
+        internal static class JunglePosition
         {
             public enum DrawOption
             {
@@ -193,13 +196,13 @@ namespace Marksman.Utils
 
             public static void DrawJunglePosition(int drawOption)
             {
-                if (drawOption == (int)DrawOption.Off)
+                if (drawOption == (int) DrawOption.Off)
                 {
                     return;
                 }
 
                 junglePositions = new Dictionary<Vector3, System.Drawing.Color>();
-                if (Game.MapId == (GameMapId)11)
+                if (Game.MapId == (GameMapId) 11)
                 {
                     const float CircleRange = 115f;
 
@@ -232,14 +235,14 @@ namespace Marksman.Utils
                     {
                         switch (drawOption)
                         {
-                            case (int)DrawOption.CloseToMobs:
+                            case (int) DrawOption.CloseToMobs:
                                 if (ObjectManager.Player.Distance(hp.Key)
                                     <= Orbwalking.GetRealAutoAttackRange(null) + 65)
                                 {
                                     Render.Circle.DrawCircle(hp.Key, CircleRange, hp.Value);
                                 }
                                 break;
-                            case (int)DrawOption.CloseToMobsAndJungleClearActive:
+                            case (int) DrawOption.CloseToMobsAndJungleClearActive:
                                 if (ObjectManager.Player.Distance(hp.Key)
                                     <= Orbwalking.GetRealAutoAttackRange(null) + 65 && Program.CClass.JungleClearActive)
                                 {
@@ -255,33 +258,33 @@ namespace Marksman.Utils
         public static int GetEnemyPriority(string championName)
         {
             string[] lowPriority =
-                {
-                    "Alistar", "Amumu", "Bard", "Blitzcrank", "Braum", "Cho'Gath", "Dr. Mundo", "Garen",
-                    "Gnar", "Hecarim", "Janna", "Jarvan IV", "Leona", "Lulu", "Malphite", "Nami",
-                    "Nasus", "Nautilus", "Nunu", "Olaf", "Rammus", "Renekton", "Sejuani", "Shen",
-                    "Shyvana", "Singed", "Sion", "Skarner", "Sona", "Soraka", "Tahm", "Taric", "Thresh",
-                    "Volibear", "Warwick", "MonkeyKing", "Yorick", "Zac", "Zyra"
-                };
+            {
+                "Alistar", "Amumu", "Bard", "Blitzcrank", "Braum", "Cho'Gath", "Dr. Mundo", "Garen",
+                "Gnar", "Hecarim", "Janna", "Jarvan IV", "Leona", "Lulu", "Malphite", "Nami",
+                "Nasus", "Nautilus", "Nunu", "Olaf", "Rammus", "Renekton", "Sejuani", "Shen",
+                "Shyvana", "Singed", "Sion", "Skarner", "Sona", "Soraka", "Tahm", "Taric", "Thresh",
+                "Volibear", "Warwick", "MonkeyKing", "Yorick", "Zac", "Zyra"
+            };
 
             string[] mediumPriority =
-                {
-                    "Aatrox", "Akali", "Darius", "Diana", "Ekko", "Elise", "Evelynn", "Fiddlesticks",
-                    "Fiora", "Fizz", "Galio", "Gangplank", "Gragas", "Heimerdinger", "Irelia", "Jax",
-                    "Jayce", "Kassadin", "Kayle", "Kha'Zix", "Lee Sin", "Lissandra", "Maokai",
-                    "Mordekaiser", "Morgana", "Nocturne", "Nidalee", "Pantheon", "Poppy", "RekSai",
-                    "Rengar", "Riven", "Rumble", "Ryze", "Shaco", "Swain", "Trundle", "Tryndamere",
-                    "Udyr", "Urgot", "Vladimir", "Vi", "XinZhao", "Yasuo", "Zilean"
-                };
+            {
+                "Aatrox", "Akali", "Darius", "Diana", "Ekko", "Elise", "Evelynn", "Fiddlesticks",
+                "Fiora", "Fizz", "Galio", "Gangplank", "Gragas", "Heimerdinger", "Irelia", "Jax",
+                "Jayce", "Kassadin", "Kayle", "Kha'Zix", "Lee Sin", "Lissandra", "Maokai",
+                "Mordekaiser", "Morgana", "Nocturne", "Nidalee", "Pantheon", "Poppy", "RekSai",
+                "Rengar", "Riven", "Rumble", "Ryze", "Shaco", "Swain", "Trundle", "Tryndamere",
+                "Udyr", "Urgot", "Vladimir", "Vi", "XinZhao", "Yasuo", "Zilean"
+            };
 
             string[] highPriority =
-                {
-                    "Ahri", "Anivia", "Annie", "Ashe", "Azir", "Brand", "Caitlyn", "Cassiopeia",
-                    "Corki", "Draven", "Ezreal", "Graves", "Jinx", "Kalista", "Karma", "Karthus",
-                    "Katarina", "Kennen", "Kindred", "KogMaw", "Leblanc", "Lucian", "Lux", "Malzahar",
-                    "MasterYi", "MissFortune", "Orianna", "Quinn", "Sivir", "Syndra", "Talon", "Teemo",
-                    "Tristana", "TwistedFate", "Twitch", "Varus", "Vayne", "Veigar", "VelKoz",
-                    "Viktor", "Xerath", "Zed", "Ziggs"
-                };
+            {
+                "Ahri", "Anivia", "Annie", "Ashe", "Azir", "Brand", "Caitlyn", "Cassiopeia",
+                "Corki", "Draven", "Ezreal", "Graves", "Jinx", "Kalista", "Karma", "Karthus",
+                "Katarina", "Kennen", "Kindred", "KogMaw", "Leblanc", "Lucian", "Lux", "Malzahar",
+                "MasterYi", "MissFortune", "Orianna", "Quinn", "Sivir", "Syndra", "Talon", "Teemo",
+                "Tristana", "TwistedFate", "Twitch", "Varus", "Vayne", "Veigar", "VelKoz",
+                "Viktor", "Xerath", "Zed", "Ziggs"
+            };
 
             if (lowPriority.Contains(championName))
             {
@@ -297,7 +300,7 @@ namespace Marksman.Utils
             }
             return 1;
         }
-        
+
         public static Vector3 CenterOfVectors(Vector3[] vectors)
         {
             var sum = Vector3.Zero;
@@ -305,10 +308,77 @@ namespace Marksman.Utils
                 return sum;
 
             sum = vectors.Aggregate(sum, (current, vec) => current + vec);
-            return sum / vectors.Length;
+            return sum/vectors.Length;
         }
     }
-    
+
+    public static class KillableTarget
+    {
+        public static bool IsAttackableTarget(this Obj_AI_Hero target)
+        {
+            return !target.HasUndyingBuff() && !target.HasSpellShield() && !target.IsInvulnerable;
+        }
+
+        public static bool IsKillableTarget(this Obj_AI_Hero target, SpellSlot spell)
+        {
+            var totalHealth = target.TotalShieldHealth();
+            if (target.HasUndyingBuff() || target.HasSpellShield() || target.IsInvulnerable)
+            {
+                return false;
+            }
+
+            if (target.ChampionName == "Blitzcrank" && !target.HasBuff("BlitzcrankManaBarrierCD")
+                && !target.HasBuff("ManaBarrier"))
+            {
+                totalHealth += target.Mana/2;
+            }
+            return (ObjectManager.Player.GetSpellDamage(target, spell) >= totalHealth);
+        }
+
+        public static float TotalShieldHealth(this Obj_AI_Base target)
+        {
+            return target.Health + target.AllShield + target.PhysicalShield + target.MagicalShield;
+        }
+
+        public static bool HasSpellShield(this Obj_AI_Hero target)
+        {
+            return target.HasBuffOfType(BuffType.SpellShield) || target.HasBuffOfType(BuffType.SpellImmunity);
+        }
+
+        public static bool HasUndyingBuff(this Obj_AI_Hero target)
+        {
+            if (
+                target.Buffs.Any(
+                    b =>
+                        b.IsValid
+                        && (b.Name == "ChronoShift" /* Zilean R */
+                            || b.Name == "FioraW" /* Fiora Riposte */
+                            || b.Name == "BardRStasis" /* Bard ult */
+                            || b.Name == "JudicatorIntervention" /* Kayle R */
+                            || b.Name == "UndyingRage" /* Tryndamere R */)))
+            {
+                return true;
+            }
+
+            if (target.ChampionName == "Poppy")
+            {
+                if (
+                    HeroManager.Allies.Any(
+                        o =>
+                            !o.IsMe
+                            && o.Buffs.Any(
+                                b =>
+                                    b.Caster.NetworkId == target.NetworkId && b.IsValid &&
+                                    b.DisplayName == "PoppyDITarget")))
+                {
+                    return true;
+                }
+            }
+
+            return target.IsInvulnerable;
+        }
+    }
+
     public static class CGlobal
     {
         public static float CommonComboDamage(this Obj_AI_Hero t)
@@ -352,6 +422,5 @@ namespace Marksman.Utils
                     turret =>
                         Vector2.Distance(unit.Position.To2D(), turret.Position.To2D()) < 900f && turret.IsAlly);
         }
-
-    }    
+    }
 }
