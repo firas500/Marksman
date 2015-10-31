@@ -496,6 +496,11 @@ namespace Marksman.Champions
             {
                 E.Cast();
             }
+
+            if (E.IsReady() && minion != null && E.CanCast(minion) && minion.IsUnderAllyTurret())
+            {
+                E.Cast();
+            }
         }
     }
 }
