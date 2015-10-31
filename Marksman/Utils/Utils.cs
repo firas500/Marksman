@@ -308,4 +308,50 @@ namespace Marksman.Utils
             return sum / vectors.Length;
         }
     }
+    
+    public static class CGlobal
+    {
+        public static float CommonComboDamage(this Obj_AI_Hero t)
+        {
+            var fComboDamage = 0d;
+
+            if (ObjectManager.Player.GetSpellSlot("summonerdot") != SpellSlot.Unknown
+                && ObjectManager.Player.Spellbook.CanUseSpell(ObjectManager.Player.GetSpellSlot("summonerdot"))
+                == SpellState.Ready && ObjectManager.Player.Distance(t) < 550)
+            {
+                fComboDamage += (float) ObjectManager.Player.GetSummonerSpellDamage(t, Damage.SummonerSpell.Ignite);
+            }
+
+            if (Items.CanUseItem(3144) && ObjectManager.Player.Distance(t) < 550)
+            {
+                fComboDamage += (float) ObjectManager.Player.GetItemDamage(t, Damage.DamageItems.Bilgewater);
+            }
+
+            if (Items.CanUseItem(3153) && ObjectManager.Player.Distance(t) < 550)
+            {
+                fComboDamage += (float) ObjectManager.Player.GetItemDamage(t, Damage.DamageItems.Botrk);
+            }
+            return (float) fComboDamage;
+        }
+
+        public static bool IsUnderAllyTurret(this Obj_AI_Base unit)
+        {
+            return ObjectManager.Get<Obj_AI_Turret>().Where<Obj_AI_Turret>(turret =>
+            {
+                if (turret == null || !turret.IsValid || turret.Health <= 0f)
+                {
+                    return false;
+                }
+                if (!turret.IsEnemy)
+                {
+                    return true;
+                }
+                return false;
+            })
+                .Any<Obj_AI_Turret>(
+                    turret =>
+                        Vector2.Distance(unit.Position.To2D(), turret.Position.To2D()) < 900f && turret.IsAlly);
+        }
+
+    }    
 }
