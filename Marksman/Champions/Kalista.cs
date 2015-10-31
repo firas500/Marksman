@@ -244,8 +244,6 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
-            SoulBoundSaver();
-
             var t1 =
                 HeroManager.Enemies.FirstOrDefault(
                     x =>
@@ -334,6 +332,9 @@ namespace Marksman.Champions
                     Q.Cast(t);
                 }
             }
+
+            SoulBoundSaver();
+            OnUpdate();
 
             if (ComboActive || HarassActive)
             {
@@ -484,6 +485,20 @@ namespace Marksman.Champions
 
         public static void fillPositions()
         {
+        }
+        
+        public static void OnUpdate()
+        {
+            var mCount =
+                MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range)
+                    .Count(x => E.CanCast(x) && x.Health <= E.GetDamage(x));
+            var enemy = HeroManager.Enemies.Find(o => o.Buffs.Any(b => b.Name.ToLower() == "kalistaexpungemarker"));
+
+            if (enemy != null && enemy.IsValidTarget(E.Range) && mCount > 0 && E.IsReady() &&
+                ObjectManager.Player.ManaPercent > E.ManaCost*2)
+            {
+                E.Cast();
+            }
         }
     }
 }
