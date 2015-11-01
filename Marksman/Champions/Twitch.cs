@@ -166,11 +166,6 @@ namespace Marksman.Champions
                 var useE = GetValue<bool>("UseE" + (ComboActive ? "C" : "H"));
                 var t = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
 
-                if (t.HasKindredUltiBuff())
-                {
-                    return;
-                }
-
                 if (useW)
                 {
                     if (W.IsReady() && t.IsValidTarget(W.Range))
