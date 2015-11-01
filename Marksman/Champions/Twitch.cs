@@ -24,7 +24,6 @@ namespace Marksman.Champions
             public double ExpireTime { get; set; }
             public int BuffCount { get; set; }
         }
-        public static Font font;
         public static Spell W;
         public static Spell E;
         private static readonly List<EnemyMarker> xEnemyMarker = new List<EnemyMarker>();
@@ -37,17 +36,6 @@ namespace Marksman.Champions
 
             //Utility.HpBarDamageIndicator.DamageToUnit = GetComboDamage;
             //Utility.HpBarDamageIndicator.Enabled = true;
-            /*
-            font = new Font(
-                Drawing.Direct3DDevice,
-                new FontDescription
-                {
-                    FaceName = "Segoe UI",
-                    Height = 45,
-                    OutputPrecision = FontPrecision.Default,
-                    Quality = FontQuality.Default
-                });
-            */
             Utils.Utils.PrintMessage("Twitch loaded.");
         }
 
@@ -78,47 +66,19 @@ namespace Marksman.Champions
             if (useW && W.IsReady())
                 W.Cast(t, false, true);
         }
-        public static int GetBuffCount(Obj_AI_Base unit, string buffName)
-        {
-            return unit.GetBuffCount(buffName) < 2 ? unit.GetBuffCount(buffName) + 1 : unit.GetBuffCount(buffName);
-        }
+
         public override void Drawing_OnDraw(EventArgs args)
         {
-                xEnemyMarker.Clear();
-                foreach (
-                    var xEnemy in
-                        HeroManager.Enemies.Where(
-                            tx => tx.IsEnemy && !tx.IsDead && ObjectManager.Player.Distance(tx) < E.Range))
-                {
-                    foreach (var buff in xEnemy.Buffs.Where(buff => buff.Name.Contains("twitchdeadlyvenom")))
-                    {
-                        xEnemyMarker.Add(new EnemyMarker
-                        {
-                            ChampionName = xEnemy.ChampionName,
-                            ExpireTime = Game.Time + 6,
-                            BuffCount = GetBuffCount(xEnemy, "twitchdeadlyvenom")
-                        });
-                    }
-                }
+            //foreach (var enemy in HeroManager.Enemies.Where(e=> e.IsValidTarget(E.Range)))
+            //{
+            //    var enemyBCount = enemy.GetBuffCount("twitchdeadlyvenom");
 
-                foreach (var markedEnemies in xEnemyMarker)
-                {
-                    foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>())
-                    {
-                        if (enemy.IsEnemy && !enemy.IsDead && ObjectManager.Player.Distance(enemy) <= E.Range &&
-                            enemy.ChampionName == markedEnemies.ChampionName)
-                        {
-                            if (!(markedEnemies.ExpireTime > Game.Time))
-                            {
-                                continue;
-                            }
-                            var xCoolDown = TimeSpan.FromSeconds(markedEnemies.ExpireTime - Game.Time);
-                            var display = string.Format("{0}", markedEnemies.BuffCount);
-                            Utils.Utils.DrawText(font, display, (int)enemy.HPBarPosition.X - 10, (int)enemy.HPBarPosition.Y, SharpDX.Color.Wheat);
-                        }
-                    }
-                }
-
+            //    if (enemyBCount > 0)
+            //    {
+            //        var display = string.Format("{0}", enemyBCount);
+            //        Utils.Utils.DrawText(Utils.Utils.Text, display, (int)enemy.HPBarPosition.X - 10, (int)enemy.HPBarPosition.Y, SharpDX.Color.Wheat);
+            //    }
+            //}
             
             Spell[] spellList = {W};
             foreach (var spell in spellList)
