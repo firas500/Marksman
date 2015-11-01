@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Utils;
 using SharpDX;
 using Color = System.Drawing.Color;
 using SharpDX.Direct3D9;
@@ -77,10 +78,12 @@ namespace Marksman.Champions
             if (useW && W.IsReady())
                 W.Cast(t, false, true);
         }
-
+        public static int GetBuffCount(Obj_AI_Base unit, string buffName)
+        {
+            return unit.GetBuffCount(buffName) < 2 ? unit.GetBuffCount(buffName) + 1 : unit.GetBuffCount(buffName);
+        }
         public override void Drawing_OnDraw(EventArgs args)
         {
-            /*
                 xEnemyMarker.Clear();
                 foreach (
                     var xEnemy in
@@ -93,7 +96,7 @@ namespace Marksman.Champions
                         {
                             ChampionName = xEnemy.ChampionName,
                             ExpireTime = Game.Time + 6,
-                            BuffCount = buff.Count
+                            BuffCount = GetBuffCount(xEnemy, "twitchdeadlyvenom")
                         });
                     }
                 }
@@ -116,7 +119,7 @@ namespace Marksman.Champions
                     }
                 }
 
-            */
+            
             Spell[] spellList = {W};
             foreach (var spell in spellList)
             {
@@ -128,14 +131,6 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
-            //foreach (var e in HeroManager.Enemies)
-            //{
-            //    foreach (var b in e.Buffs.Where(b => b.DisplayName.ToLower() == "twitchdeadlyvenom"))
-            //    {
-            //        Game.PrintChat(e.ChampionName + " : " + b.Count);
-            //    }
-            //}
-
             var killableMinionCount = 0;
             foreach (
                 var m in
@@ -169,15 +164,20 @@ namespace Marksman.Champions
             {
                 var useW = GetValue<bool>("UseW" + (ComboActive ? "C" : "H"));
                 var useE = GetValue<bool>("UseE" + (ComboActive ? "C" : "H"));
+                var t = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
+
+                if (t.HasKindredUltiBuff())
+                {
+                    return;
+                }
 
                 if (useW)
                 {
-                    var wTarget = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
-                    if (W.IsReady() && wTarget.IsValidTarget())
-                        W.Cast(wTarget, false, true);
+                    if (W.IsReady() && t.IsValidTarget(W.Range))
+                        W.Cast(t, false, true);
                 }
 
-                if (useE && E.IsReady())
+                if (useE && E.IsReady() && t.IsValidTarget())
                 {
                     if (useE && canCastE && E.IsReady())
                     {
@@ -185,15 +185,9 @@ namespace Marksman.Champions
                     }
 
                     var eTarget = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
-                    if (eTarget.IsValidTarget(E.Range))
+                    if (eTarget.IsValidTarget(E.Range) && eTarget.GetBuffCount("twitchdeadlyvenom") == 6)
                     {
-                        foreach (
-                            var buff in
-                                eTarget.Buffs.Where(buff => buff.DisplayName.ToLower() == "twitchdeadlyvenom")
-                                    .Where(buff => buff.Count == 6))
-                        {
-                            E.Cast();
-                        }
+                        E.Cast();
                     }
                 }
             }
