@@ -262,15 +262,21 @@ namespace Marksman
 
                 var GlobalDrawings = new Menu("Global", "GDrawings");
                 {
-                    string[] strQ = new string[HeroManager.Enemies.Count + 1];
-                    strQ[0] = "Off";
-                    var i = 1;
-                    foreach (var e in HeroManager.Enemies)
+                    var menuCompare = new Menu("Compare me with", "Menu.Compare");
                     {
-                        strQ[i] = e.ChampionName;
-                        i += 1;
+                        string[] strCompare = new string[HeroManager.Enemies.Count + 1];
+                        strCompare[0] = "Off";
+                        var i = 1;
+                        foreach (var e in HeroManager.Enemies)
+                        {
+                            strCompare[i] = e.ChampionName;
+                            i += 1;
+                        }
+                        menuCompare.AddItem(new MenuItem("Marksman.Compare.Set", "Set").SetValue(new StringList(new []{"Off", "Auto Compare at Startup"}, 1)));
+                        menuCompare.AddItem(new MenuItem("Marksman.Compare", "Compare me with").SetValue(new StringList(strCompare, 0)));
+                        GlobalDrawings.AddSubMenu(menuCompare);
                     }
-                    GlobalDrawings.AddItem(new MenuItem("Marksman.Compare", "Compare me with").SetValue(new StringList(strQ, 0)));
+                    
                     GlobalDrawings.AddItem(new MenuItem("Draw.KillableEnemy", "Killable Enemy Text").SetValue(true));
                     GlobalDrawings.AddItem(new MenuItem("drawMinionLastHit", "Minion Last Hit").SetValue(new Circle(true, Color.GreenYellow)));
                     GlobalDrawings.AddItem(new MenuItem("drawMinionNearKill", "Minion Near Kill").SetValue(new Circle(true, Color.Gray)));
@@ -280,7 +286,11 @@ namespace Marksman
                     marksmanDrawings.AddSubMenu(GlobalDrawings);
                 }
             }
-            LoadDefaultCompareChampion();
+            
+            if (Config.Item("Marksman.Compare.Set").GetValue<StringList>().SelectedIndex == 1)
+            {
+                LoadDefaultCompareChampion();
+            }
 
             CClass.MainMenu(Config);
 
