@@ -408,35 +408,38 @@ namespace Marksman
             var myDeaths = ObjectManager.Player.Deaths;
             var myMinionsKilled = ObjectManager.Player.MinionsKilled;
 
-            if (Config.Item("Marksman.Compare").GetValue<StringList>().SelectedIndex != 0 
-                && ObjectManager.Player.CountEnemiesInRange(700) == 0)
+            if (Config.Item("Marksman.Compare.Set").GetValue<StringList>().SelectedIndex == 1)
             {
-                Obj_AI_Hero compChampion = null;
-                foreach (Obj_AI_Hero e in HeroManager.Enemies.Where(e => e.ChampionName == Config.Item("Marksman.Compare").GetValue<StringList>().SelectedValue))
+                if (Config.Item("Marksman.Compare").GetValue<StringList>().SelectedIndex != 0 
+                    && ObjectManager.Player.CountEnemiesInRange(700) == 0)
                 {
-                    compChampion = e;
-                }
-
-                var compChampionKilled = compChampion.ChampionsKilled;
-                var compAssists = compChampion.Assists;
-                var compDeaths = compChampion.Deaths;
-                var compMinionsKilled = compChampion.MinionsKilled;
-                var xText = "You: " + myChampionKilled + " / " + myDeaths + " / " + myAssists + " | " + myMinionsKilled +
-                            "      vs      " + 
-                            compChampion.ChampionName + " : " +  compChampionKilled + " / " + compDeaths + " | " + compAssists + " | " + compMinionsKilled;                
-                
-                DrawBox(new Vector2(Drawing.Width*0.400f, Drawing.Height*0.132f), 350, 26, Color.FromArgb(100, 255, 200, 37), 1, Color.Black);
-                Utils.Utils.DrawText(Utils.Utils.Text, xText, Drawing.Width * 0.422f, Drawing.Height * 0.140f, SharpDX.Color.Wheat);
-                
-                if (Game.Time - AsmLoadingTime < 15)
-                {
-                    var timer = string.Format("0:{0:D2}", (int)15 - (int)(Game.Time - AsmLoadingTime));
-                    var notText = "You can turn on/off this option. Go to 'Marksman -> Global Drawings -> Compare With Me'";
-                    Utils.Utils.DrawText(Utils.Utils.TextBig, notText, Drawing.Width * 0.291f, Drawing.Height * 0.166f, SharpDX.Color.Black);
-                    Utils.Utils.DrawText(Utils.Utils.TextBig, notText, Drawing.Width * 0.290f, Drawing.Height * 0.165f, SharpDX.Color.White);
+                    Obj_AI_Hero compChampion = null;
+                    foreach (Obj_AI_Hero e in HeroManager.Enemies.Where(e => e.ChampionName == Config.Item("Marksman.Compare").GetValue<StringList>().SelectedValue))
+                    {
+                        compChampion = e;
+                    }
+    
+                    var compChampionKilled = compChampion.ChampionsKilled;
+                    var compAssists = compChampion.Assists;
+                    var compDeaths = compChampion.Deaths;
+                    var compMinionsKilled = compChampion.MinionsKilled;
+                    var xText = "You: " + myChampionKilled + " / " + myDeaths + " / " + myAssists + " | " + myMinionsKilled +
+                                "      vs      " + 
+                                compChampion.ChampionName + " : " +  compChampionKilled + " / " + compDeaths + " | " + compAssists + " | " + compMinionsKilled;                
                     
-                    Utils.Utils.DrawText(Utils.Utils.TextBig, "This message will self destruct in " + timer, Drawing.Width * 0.400f, Drawing.Height * 0.195f, SharpDX.Color.Aqua);
-                }                
+                    DrawBox(new Vector2(Drawing.Width*0.400f, Drawing.Height*0.132f), 350, 26, Color.FromArgb(100, 255, 200, 37), 1, Color.Black);
+                    Utils.Utils.DrawText(Utils.Utils.Text, xText, Drawing.Width * 0.422f, Drawing.Height * 0.140f, SharpDX.Color.Wheat);
+                    
+                    if (Game.Time - AsmLoadingTime < 15)
+                    {
+                        var timer = string.Format("0:{0:D2}", (int)15 - (int)(Game.Time - AsmLoadingTime));
+                        var notText = "You can turn on/off this option. Go to 'Marksman -> Global Drawings -> Compare With Me'";
+                        Utils.Utils.DrawText(Utils.Utils.TextBig, notText, Drawing.Width * 0.291f, Drawing.Height * 0.166f, SharpDX.Color.Black);
+                        Utils.Utils.DrawText(Utils.Utils.TextBig, notText, Drawing.Width * 0.290f, Drawing.Height * 0.165f, SharpDX.Color.White);
+                        
+                        Utils.Utils.DrawText(Utils.Utils.TextBig, "This message will self destruct in " + timer, Drawing.Width * 0.400f, Drawing.Height * 0.195f, SharpDX.Color.Aqua);
+                    }                
+                }
             }
 
             if (Config.Item("Draw.KillableEnemy").GetValue<bool>())
