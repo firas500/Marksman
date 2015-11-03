@@ -6,6 +6,7 @@ using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
+using Color = System.Drawing.Color;
 
 #endregion
 
@@ -43,7 +44,13 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
-            if ((!ComboActive && !HarassActive) || !Orbwalking.CanMove(100))
+            if (this.JungleClearActive)
+            {
+                this.ExecJungleClear();
+            }
+
+            
+            if ((ComboActive || HarassActive))
             {
                 if (GetValue<bool>("FocusW"))
                 {
@@ -59,8 +66,22 @@ namespace Marksman.Champions
                             TargetSelector.GetTarget(attackRange, TargetSelector.DamageType.Physical));
                     }
                 }
-
+                var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
                 var useE = GetValue<bool>("UseE" + (ComboActive ? "C" : "H"));
+
+                var t = TargetSelector.GetTarget(Q.Range + Orbwalking.GetRealAutoAttackRange(null) + 35, TargetSelector.DamageType.Physical);
+                if (t.IsValidTarget() && useQ)
+                {
+                    if (!t.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 35))
+                    {
+                        Q.Cast(t.Position);
+                    }
+                    else
+                    {
+                        Q.Cast(Game.CursorPos);
+                    }
+                    Orbwalker.ForceTarget(t);
+                }
 
                 if (Q.IsReady() && GetValue<bool>("CompleteSilverBuff"))
                 {
@@ -72,16 +93,19 @@ namespace Marksman.Champions
 
                 if (E.IsReady() && useE)
                 {
-                    var t = TargetSelector.GetTarget(E.Range + Q.Range, TargetSelector.DamageType.Physical);
-                    for (var i = 1; i < 8; i++)
+                    t = TargetSelector.GetTarget(E.Range + Q.Range, TargetSelector.DamageType.Physical);
+                    if (t.IsValidTarget())
                     {
-                        var targetBehind = t.Position
-                                           + Vector3.Normalize(t.ServerPosition - ObjectManager.Player.Position) * i
-                                           * 50;
-                        if (targetBehind.IsWall() && t.IsValidTarget(E.Range))
+                        for (var i = 1; i < 8; i++)
                         {
-                            E.CastOnUnit(t);
-                            return;
+                            var targetBehind = t.Position +
+                                               Vector3.Normalize(t.ServerPosition - ObjectManager.Player.Position)*i*50;
+
+                            if (targetBehind.IsWall() && t.IsValidTarget(E.Range))
+                            {
+                                E.CastOnUnit(t);
+                                return;
+                            }
                         }
                     }
                     /*
@@ -109,9 +133,9 @@ namespace Marksman.Champions
                 }
             }
 
-            if (LaneClearActive)
+            if (this.LaneClearActive)
             {
-                var useQ = GetValue<bool>("UseQL");
+                var useQ = this.GetValue<bool>("UseQL");
 
                 if (Q.IsReady() && useQ)
                 {
@@ -124,14 +148,87 @@ namespace Marksman.Champions
             }
         }
 
+        public void ExecJungleClear()
+        {
+            var jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range + Orbwalking.GetRealAutoAttackRange(null) + 65,
+                Marksman.Utils.Utils.MobTypes.All);
+
+            if (jungleMobs != null)
+            {
+                switch (this.GetValue<StringList>("UseQJ").SelectedIndex)
+                {
+                    case 1:
+                        {
+                            if (!jungleMobs.SkinName.ToLower().Contains("baron") || !jungleMobs.SkinName.ToLower().Contains("dragon"))
+                            {
+                                if (jungleMobs.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65))
+                                    Q.Cast(jungleMobs.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65)
+                                        ? Game.CursorPos
+                                        : jungleMobs.Position);
+                            }
+                            break;
+                        }
+                    case 2:
+                        {
+                            if (!jungleMobs.SkinName.ToLower().Contains("baron") || !jungleMobs.SkinName.ToLower().Contains("dragon"))
+                            {
+                                jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range + Orbwalking.GetRealAutoAttackRange(null) + 65,
+                                    Marksman.Utils.Utils.MobTypes.BigBoys);
+                                if (jungleMobs != null)
+                                {
+                                    Q.Cast(jungleMobs.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65)
+                                        ? Game.CursorPos
+                                        : jungleMobs.Position);
+                                }
+                            }
+                            break;
+                        }
+                }
+
+                switch (this.GetValue<StringList>("UseEJ").SelectedIndex)
+                {
+                    case 1:
+                        {
+                            if (jungleMobs.IsValidTarget(E.Range))
+                                E.CastOnUnit(jungleMobs);
+                            break;
+                        }
+                    case 2:
+                        {
+                            jungleMobs = Marksman.Utils.Utils.GetMobs(E.Range, Marksman.Utils.Utils.MobTypes.BigBoys);
+                            if (jungleMobs != null)
+                            {
+                                for (var i = 1; i < 8; i++)
+                                {
+                                    var targetBehind = jungleMobs.Position
+                                                       + Vector3.Normalize(jungleMobs.ServerPosition - ObjectManager.Player.Position) * i
+                                                       * 50;
+
+                                    if (targetBehind.IsWall() && jungleMobs.IsValidTarget(E.Range))
+                                    {
+                                        E.CastOnUnit(jungleMobs);
+                                    }
+                                }
+
+                                if (ObjectManager.Player.Distance(jungleMobs) < ObjectManager.Player.AttackRange/2)
+                                {
+                                    E.CastOnUnit(jungleMobs);
+                                }
+
+                            }
+                            break;
+                        }
+                }
+            }
+        }
+
         public override void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
-            var useQ =
-                GetValue<bool>(
+            var useQ = this.GetValue<bool>(
                     "UseQ" +
-                    (ComboActive
-                        ? Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo ? "C" : ""
-                        : Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed ? "H" : ""));
+                    (this.ComboActive
+                        ? this.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo ? "C" : ""
+                        : this.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed ? "H" : ""));
             if (unit.IsMe && useQ)
                 Q.Cast(Game.CursorPos);
         }
@@ -171,23 +268,83 @@ namespace Marksman.Champions
 
         public override bool DrawingMenu(Menu config)
         {
-            config.AddItem(
-                new MenuItem("DrawE" + Id, "E range").SetValue(
-                    new Circle(true, System.Drawing.Color.FromArgb(100, 255, 0, 255))));
+            config.AddItem(new MenuItem("DrawQ" + this.Id, "Q range").SetValue(new StringList(new[] { "Off", "Q Range", "Q + AA Range" }, 2)));
+            config.AddItem(new MenuItem("DrawE" + this.Id, "E range").SetValue(new StringList(new[] { "Off", "E Range", "E Stun Status", "Both" }, 3)));
 
             return true;
         }
 
         public override void Drawing_OnDraw(EventArgs args)
         {
-            var menuItem = GetValue<Circle>("DrawE");
-            if (menuItem.Active)
+            var drawE = GetValue<StringList>("DrawE").SelectedIndex;
+            if (E.IsReady() && drawE != 0)
             {
-                Render.Circle.DrawCircle(ObjectManager.Player.Position, E.Range, menuItem.Color, 1);
+                if (drawE == 1 || drawE == 3)
+                {
+                    Render.Circle.DrawCircle(ObjectManager.Player.Position, E.Range, Color.BurlyWood, 1);
+                }
+                if (drawE == 2 || drawE == 3)
+                { 
+                    var t = TargetSelector.GetTarget(E.Range + Q.Range, TargetSelector.DamageType.Physical);
+                    if (t.IsValidTarget())
+                    {
+                        var color = System.Drawing.Color.Red;
+                        for (var i = 1; i < 8; i++)
+                        {
+                            var targetBehind = t.Position
+                                               + Vector3.Normalize(t.ServerPosition - ObjectManager.Player.Position)*i
+                                               *50;
+
+
+                            if (!targetBehind.IsWall())
+                            {
+                                color = System.Drawing.Color.Aqua;
+                            }
+                            else
+                            {
+                                color = System.Drawing.Color.Red;
+                            }
+
+                        }
+
+                        var tt = t.Position + Vector3.Normalize(t.ServerPosition - ObjectManager.Player.Position)*8*50;
+
+                        var startpos = t.Position;
+                        var endpos = tt;
+                        var endpos1 = tt +
+                                      (startpos - endpos).To2D().Normalized().Rotated(45*(float) Math.PI/180).To3D()*
+                                      t.BoundingRadius;
+                        var endpos2 = tt +
+                                      (startpos - endpos).To2D().Normalized().Rotated(-45*(float) Math.PI/180).To3D()*
+                                      t.BoundingRadius;
+
+                        var width = 2;
+
+                        var x = new Geometry.Polygon.Line(startpos, endpos);
+                        x.Draw(color, width);
+                        var y = new Geometry.Polygon.Line(endpos, endpos1);
+                        y.Draw(color, width);
+                        var z = new Geometry.Polygon.Line(endpos, endpos2);
+                        z.Draw(color, width);
+                    }
+                }
+            }
+
+            var drawQ = GetValue<StringList>("DrawQ").SelectedIndex;
+            switch (drawQ)
+            {
+                case 1:
+                    Render.Circle.DrawCircle(ObjectManager.Player.Position, Q.Range, System.Drawing.Color.Aqua);
+                    break;
+                case 2:
+                    Render.Circle.DrawCircle(ObjectManager.Player.Position, Q.Range + Orbwalking.GetRealAutoAttackRange(null) + 65, System.Drawing.Color.Aqua);
+                    break;
             }
         }
         public override bool JungleClearMenu(Menu config)
         {
+            config.AddItem(new MenuItem("UseQJ" + this.Id, "Use Q").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 2)));
+            config.AddItem(new MenuItem("UseEJ" + this.Id, "Use E").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 2)));
             return true;
         }
 
