@@ -490,7 +490,7 @@ namespace Marksman.Champions
         public static void OnUpdate()
         {
             var minion = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range).Find(m => m.Health < E.GetDamage(m));
-            var enemy = HeroManager.Enemies.Find(e => e.Buffs.Any(b => e.Name.ToLower() == "kalistaexpungemarker" && e.IsValidTarget(E.Range)));
+            var enemy = HeroManager.Enemies.Find(e => e.Buffs.Any(b => b.Name.ToLower() == "kalistaexpungemarker" && e.IsValidTarget(E.Range)));
 
             if (E.IsReady() && enemy != null && minion != null && ObjectManager.Player.ManaPercent > E.ManaCost*2)
             {
