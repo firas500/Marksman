@@ -49,6 +49,7 @@ namespace Marksman.Champions
             DangerousList.Add(new DangerousSpells("garen", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("leesin", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("nautilius", SpellSlot.R));
+            DangerousList.Add(new DangerousSpells("malzahar", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("skarner", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("syndra", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("warwick", SpellSlot.R));
