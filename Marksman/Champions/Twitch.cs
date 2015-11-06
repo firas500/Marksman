@@ -134,11 +134,6 @@ namespace Marksman.Champions
 
                 if (useE && E.IsReady() && t.IsValidTarget())
                 {
-                    if (useE && canCastE && E.IsReady())
-                    {
-                        E.Cast();
-                    }
-
                     var eTarget = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
                     if (eTarget.IsValidTarget(E.Range) && eTarget.GetBuffCount("twitchdeadlyvenom") == 6)
                     {
@@ -146,7 +141,7 @@ namespace Marksman.Champions
                     }
                 }
             }
-
+            /*
             if (GetValue<bool>("UseEM") && E.IsReady())
             {
                 foreach (
@@ -160,6 +155,7 @@ namespace Marksman.Champions
                     E.Cast();
                 }
             }
+            */
         }
 
         private static float GetComboDamage(Obj_AI_Hero t)
