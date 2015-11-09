@@ -452,13 +452,11 @@ namespace Marksman.Champions
         {
             config.AddItem(new MenuItem("DrawW" + Id, "W range").SetValue(new Circle(true, System.Drawing.Color.Beige)));
 
-            var drawE = new Menu("Draw E", "DrawE");
+            var drawE = new Menu("Draw E", "menuDrawE");
             {
-                drawE.AddItem(new MenuItem("DrawE", "E range").SetValue(new Circle(true, System.Drawing.Color.Beige)));
-                drawE.AddItem(
-                    new MenuItem("DrawEMarkEnemy", "E Marked Enemy").SetValue(new Circle(true,
-                        System.Drawing.Color.GreenYellow)));
-                drawE.AddItem(new MenuItem("DrawEMarkStatus", "E Marked Status").SetValue(true));
+                drawE.AddItem(new MenuItem("DrawE" + Id, "E range").SetValue(new Circle(true, System.Drawing.Color.Beige)));
+                drawE.AddItem(new MenuItem("DrawEMarkEnemy" + Id, "E Marked Enemy").SetValue(new Circle(true,System.Drawing.Color.GreenYellow)));
+                drawE.AddItem(new MenuItem("DrawEMarkStatus" + Id, "E Marked Status").SetValue(true));
                 config.AddSubMenu(drawE);
             }
 
@@ -541,8 +539,7 @@ namespace Marksman.Champions
             }
 
             config.AddItem(new MenuItem("UseQJ", "Use Q").SetValue(new StringList(strLaneMinCount, 4)));
-            config.AddItem(
-                new MenuItem("UseEJ", "Use E").SetValue(new StringList(new[] {"Off", "On", "Just for big Monsters"}, 1)));
+            config.AddItem(new MenuItem("UseEJ", "Use E").SetValue(new StringList(new[] {"Off", "On", "Just for big Monsters"}, 1)));
 
             return true;
         }

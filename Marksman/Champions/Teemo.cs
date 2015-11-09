@@ -17,12 +17,40 @@ namespace Marksman.Champions
 
         public Teemo()
         {
-            Utils.Utils.PrintMessage("Teemo loaded.");
-
             Q = new Spell(SpellSlot.Q, 680);
             R = new Spell(SpellSlot.R, 230);
             Q.SetTargetted(0f, 2000f);
             R.SetSkillshot(0.1f, 75f, float.MaxValue, false, SkillshotType.SkillshotCircle);
+            Obj_AI_Base.OnBuffAdd += (sender, args) =>
+            {
+                if (R.IsReady())
+                {
+                    BuffInstance aBuff =
+                        (from fBuffs in
+                             sender.Buffs.Where(
+                                 s =>
+                                 sender.Team != ObjectManager.Player.Team
+                                 && sender.Distance(ObjectManager.Player.Position) < R.Range)
+                         from b in new[]
+                                           {
+                                               "teleport", /* Teleport */ "pantheon_grandskyfall_jump", /* Pantheon */ 
+                                               "crowstorm", /* FiddleScitck */
+                                               "zhonya", "katarinar", /* Katarita */
+                                               "MissFortuneBulletTime", /* MissFortune */
+                                               "gate", /* Twisted Fate */
+                                               "chronorevive" /* Zilean */
+                                           }
+                         where args.Buff.Name.ToLower().Contains(b)
+                         select fBuffs).FirstOrDefault();
+
+                    if (aBuff != null)
+                    {
+                        R.Cast(sender.Position);
+                    }
+                }
+            };
+
+            Utils.Utils.PrintMessage("Teemo loaded.");
         }
 
         public override void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)

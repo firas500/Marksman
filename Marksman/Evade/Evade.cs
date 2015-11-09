@@ -32,7 +32,6 @@ namespace Marksman.Evade
         public static Vector2 PreviousTickPosition = new Vector2();
         private static readonly Random RandomN = new Random();
         private static int lastSentMovePacketT = 0;
-        private static int lastSentMovePacketT2 = 0;
 
         private static int lastSMovePacketT = 0;
 

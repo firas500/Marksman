@@ -18,32 +18,48 @@ using Color = System.Drawing.Color;
 namespace Marksman
 {
     using System.Collections.Generic;
-    
     internal class Program
     {
         public static Menu Config;
+        
         public static Menu OrbWalking;
+
         public static Menu QuickSilverMenu;
+
         public static Menu MenuActivator;
 
-//        public static Menu MenuInterruptableSpell;
         public static Champion CClass;
+
         public static Activator AActivator;
+
         public static Utils.AutoLevel AutoLevel;
+
+        public static AutoPink AutoPink;
+
+        public static AutoBushRevealer AutoBushRevealer;
+
+        
         //public static Utils.EarlyEvade EarlyEvade;
 
         public static double ActivatorTime;
+
         private static Obj_AI_Hero xSelectedTarget;
+
         private static float AsmLoadingTime = 0;
 
+        
+
+        public static Spell Smite; 
+        
         public static SpellSlot SmiteSlot = SpellSlot.Unknown;
 
-        public static Spell Smite;
+        private static readonly int[] SmitePurple = { 3713, 3726, 3725, 3726, 3723 };
 
-        private static readonly int[] SmitePurple = {3713, 3726, 3725, 3726, 3723};
-        private static readonly int[] SmiteGrey = {3711, 3722, 3721, 3720, 3719};
-        private static readonly int[] SmiteRed = {3715, 3718, 3717, 3716, 3714};
-        private static readonly int[] SmiteBlue = {3706, 3710, 3709, 3708, 3707};
+        private static readonly int[] SmiteGrey = { 3711, 3722, 3721, 3720, 3719 };
+
+        private static readonly int[] SmiteRed = { 3715, 3718, 3717, 3716, 3714 };
+
+        private static readonly int[] SmiteBlue = { 3706, 3710, 3709, 3708, 3707 };
 
         private static void Main(string[] args)
         {
@@ -54,8 +70,6 @@ namespace Marksman
         {
             Config = new Menu("Marksman", "Marksman", true).SetFontStyle(FontStyle.Regular, SharpDX.Color.GreenYellow);
             CClass = new Champion();
-            AActivator = new Activator();
-
 
             var BaseType = CClass.GetType();
 
@@ -141,11 +155,16 @@ namespace Marksman
 
             OrbWalking.AddItem(new MenuItem("Orb.AutoWindUp", "Marksman - Auto Windup").SetValue(false)).ValueChanged +=
                 (sender, argsEvent) => { if (argsEvent.GetNewValue<bool>()) CheckAutoWindUp(); };
+            AActivator = new Activator();
 
             MenuActivator = new Menu("Activator", "Activator").SetFontStyle(FontStyle.Regular, SharpDX.Color.Aqua);
             {
                 AutoLevel = new Utils.AutoLevel();
-
+                AutoPink = new Utils.AutoPink();
+                AutoPink.Initialize();
+                IncomingDangerous.Initialize();
+                ExecutedTime.Initialize();
+                AutoBushRevealer = new AutoBushRevealer();
                 //EarlyEvade = new Utils.EarlyEvade();
                 //MenuActivator.AddSubMenu(EarlyEvade.MenuLocal);
 
@@ -235,8 +254,84 @@ namespace Marksman
                 if (CClass.JungleClearMenu(jungleClear))
                 {
                     jungleClear.AddItem(new MenuItem("Jungle.Mana", "Min. Mana %:").SetValue(new Slider(50, 100, 0)));
+                    //jungleClear.AddItem(new MenuItem("Jungle.MyJungle", "Dont Check Min. Mana If I'm taking ").SetValue(new Slider(50, 100, 0)));
                     Config.AddSubMenu(jungleClear);
                 }
+
+                /*----------------------------------------------------------------------------------------------------------*/
+                Obj_AI_Base ally = (from aAllies in HeroManager.Allies
+                                    from aSupportedChampions in
+                                        new[]
+                                            {
+                                                "janna", "tahm", "leona", "lulu", "lux", "nami", "shen", "sona", "braum", "bard"
+                                            }
+                                    where aSupportedChampions == aAllies.ChampionName.ToLower()
+                                    select aAllies).FirstOrDefault();
+
+                if (ally != null)
+                {
+                    var menuAllies = new Menu("Ally Combo", "Ally.Combo").SetFontStyle(FontStyle.Regular, SharpDX.Color.Crimson);
+                    {
+                        Obj_AI_Hero Leona = HeroManager.Allies.Find(e => e.ChampionName.ToLower() == "leona");
+                        if (Leona != null)
+                        {
+                            var menuLeona = new Menu("Leona", "Leona");
+                            menuLeona.AddItem(new MenuItem("Leona.ComboBuff", "Force Focus Marked Enemy for Bonus Damage").SetValue(true));
+                            menuAllies.AddSubMenu(menuLeona);
+                        }
+
+                        Obj_AI_Hero Lux = HeroManager.Allies.Find(e => e.ChampionName.ToLower() == "lux");
+                        if (Lux != null)
+                        {
+                            var menuLux = new Menu("Lux", "Lux");
+                            menuLux.AddItem(new MenuItem("Lux.ComboBuff", "Force Focus Marked Enemy for Bonus Damage").SetValue(true));
+                            menuAllies.AddSubMenu(menuLux);
+                        }
+
+                        Obj_AI_Hero Shen = HeroManager.Allies.Find(e => e.ChampionName.ToLower() == "shen");
+                        if (Shen != null)
+                        {
+                            var menuShen = new Menu("Shen", "Shen");
+                            menuShen.AddItem(new MenuItem("Shen.ComboBuff", "Force Focus Q Marked Enemy Objects for Heal").SetValue(true));
+                            menuShen.AddItem(new MenuItem("Shen.ComboBuff", "Minimum Heal:").SetValue(new Slider(80)));
+                            menuAllies.AddSubMenu(menuShen);
+                        }
+
+                        Obj_AI_Hero Tahm = HeroManager.Allies.Find(e => e.ChampionName.ToLower() == "Tahm");
+                        if (Tahm != null)
+                        {
+                            var menuTahm = new Menu("Tahm", "Tahm");
+                            menuTahm.AddItem(new MenuItem("Tahm.ComboBuff", "Force Focus Marked Enemy for Stun").SetValue(true));
+                            menuAllies.AddSubMenu(menuTahm);
+                        }
+
+                        Obj_AI_Hero Sona = HeroManager.Allies.Find(e => e.ChampionName.ToLower() == "Sona");
+                        if (Sona != null)
+                        {
+                            var menuSona = new Menu("Sona", "Sona");
+                            menuSona.AddItem(new MenuItem("Sona.ComboBuff", "Force Focus to Marked Enemy").SetValue(true));
+                            menuAllies.AddSubMenu(menuSona);
+                        }
+
+                        Obj_AI_Hero Lulu = HeroManager.Allies.Find(e => e.ChampionName.ToLower() == "Lulu");
+                        if (Lulu != null)
+                        {
+                            var menuLulu = new Menu("Lulu", "Lulu");
+                            menuLulu.AddItem(new MenuItem("Lulu.ComboBuff", "Force Focus to Enemy If I have E buff").SetValue(true));
+                            menuAllies.AddSubMenu(menuLulu);
+                        }
+
+                        Obj_AI_Hero Nami = HeroManager.Allies.Find(e => e.ChampionName.ToLower() == "nami");
+                        if (Nami != null)
+                        {
+                            var menuNami = new Menu("Nami", "Nami");
+                            menuNami.AddItem(new MenuItem("Nami.ComboBuff", "Force Focus to Enemy If I have E Buff").SetValue(true));
+                            menuAllies.AddSubMenu(menuNami);
+                        }
+                    }
+                    Config.AddSubMenu(menuAllies);
+                }
+                /*----------------------------------------------------------------------------------------------------------*/
 
                 var misc = new Menu("Misc", "Misc").SetFontStyle(FontStyle.Regular, SharpDX.Color.DarkOrange);
                 if (CClass.MiscMenu(misc))
@@ -286,12 +381,12 @@ namespace Marksman
                     marksmanDrawings.AddSubMenu(GlobalDrawings);
                 }
             }
-            
+
             if (Config.Item("Marksman.Compare.Set").GetValue<StringList>().SelectedIndex == 1)
             {
                 LoadDefaultCompareChampion();
             }
-
+            
             CClass.MainMenu(Config);
 
             if (championName == "sivir")
@@ -310,19 +405,22 @@ namespace Marksman
 
             Drawing.OnDraw += Drawing_OnDraw;
             Game.OnUpdate += Game_OnGameUpdate;
+            
             Orbwalking.AfterAttack += Orbwalking_AfterAttack;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
+            Orbwalking.OnNonKillableMinion += Orbwalking_OnNonKillableMinion;
             GameObject.OnCreate += OnCreateObject;
             GameObject.OnDelete += OnDeleteObject;
 
             Obj_AI_Base.OnBuffAdd += Obj_AI_Base_OnBuffAdd;
             Obj_AI_Base.OnBuffRemove += Obj_AI_Base_OnBuffRemove;
 
+            Spellbook.OnCastSpell += Spellbook_OnCastSpell;
             Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
+
             AsmLoadingTime = Game.Time;
             //Game.OnWndProc += Game_OnWndProc;
         }
-
 
         private static void Game_OnWndProc(WndEventArgs args)
         {
@@ -410,35 +508,46 @@ namespace Marksman
 
             if (Config.Item("Marksman.Compare.Set").GetValue<StringList>().SelectedIndex == 1)
             {
-                if (Config.Item("Marksman.Compare").GetValue<StringList>().SelectedIndex != 0 
-                    && ObjectManager.Player.CountEnemiesInRange(700) == 0)
+                if (Config.Item("Marksman.Compare").GetValue<StringList>().SelectedIndex != 0)
                 {
                     Obj_AI_Hero compChampion = null;
-                    foreach (Obj_AI_Hero e in HeroManager.Enemies.Where(e => e.ChampionName == Config.Item("Marksman.Compare").GetValue<StringList>().SelectedValue))
+                    foreach (
+                        Obj_AI_Hero e in
+                            HeroManager.Enemies.Where(
+                                e =>
+                                    e.ChampionName ==
+                                    Config.Item("Marksman.Compare").GetValue<StringList>().SelectedValue))
                     {
                         compChampion = e;
                     }
-    
+
                     var compChampionKilled = compChampion.ChampionsKilled;
                     var compAssists = compChampion.Assists;
                     var compDeaths = compChampion.Deaths;
                     var compMinionsKilled = compChampion.MinionsKilled;
-                    var xText = "You: " + myChampionKilled + " / " + myDeaths + " / " + myAssists + " | " + myMinionsKilled +
-                                "      vs      " + 
-                                compChampion.ChampionName + " : " +  compChampionKilled + " / " + compDeaths + " | " + compAssists + " | " + compMinionsKilled;                
-                    
-                    DrawBox(new Vector2(Drawing.Width*0.400f, Drawing.Height*0.132f), 350, 26, Color.FromArgb(100, 255, 200, 37), 1, Color.Black);
-                    Utils.Utils.DrawText(Utils.Utils.Text, xText, Drawing.Width * 0.422f, Drawing.Height * 0.140f, SharpDX.Color.Wheat);
-                    
+                    var xText = "You: " + myChampionKilled + " / " + myDeaths + " / " + myAssists + " | " +
+                                myMinionsKilled +
+                                "      vs      " +
+                                compChampion.ChampionName + " : " + compChampionKilled + " / " + compDeaths + " | " +
+                                compAssists + " | " + compMinionsKilled;
+
+                    DrawBox(new Vector2(Drawing.Width*0.400f, Drawing.Height*0.132f), 350, 26,
+                        Color.FromArgb(100, 255, 200, 37), 1, Color.Black);
+                    Utils.Utils.DrawText(Utils.Utils.Text, xText, Drawing.Width*0.422f, Drawing.Height*0.140f,
+                        SharpDX.Color.Wheat);
+
                     if (Game.Time - AsmLoadingTime < 15)
                     {
-                        var timer = string.Format("0:{0:D2}", (int)15 - (int)(Game.Time - AsmLoadingTime));
-                        var notText = "You can turn on/off this option. Go to 'Marksman -> Global Drawings -> Compare With Me'";
-                        Utils.Utils.DrawText(Utils.Utils.TextBig, notText, Drawing.Width * 0.291f, Drawing.Height * 0.166f, SharpDX.Color.Black);
-                        Utils.Utils.DrawText(Utils.Utils.TextBig, notText, Drawing.Width * 0.290f, Drawing.Height * 0.165f, SharpDX.Color.White);
-                        
-                        Utils.Utils.DrawText(Utils.Utils.TextBig, "This message will self destruct in " + timer, Drawing.Width * 0.400f, Drawing.Height * 0.195f, SharpDX.Color.Aqua);
-                    }                
+                        var timer = string.Format("0:{0:D2}", (int) 15 - (int) (Game.Time - AsmLoadingTime));
+                        var notText =
+                            "You can turn on/off this option. Go to 'Marksman -> Global Drawings -> Compare With Me'";
+                        Utils.Utils.DrawText(Utils.Utils.Text, notText, Drawing.Width*0.291f, Drawing.Height*0.166f,
+                            SharpDX.Color.Black);
+                        Utils.Utils.DrawText(Utils.Utils.Text, notText, Drawing.Width * 0.290f, Drawing.Height * 0.165f,
+                            SharpDX.Color.White);
+                        Utils.Utils.DrawText(Utils.Utils.Text, "This message will self destruct in " + timer,
+                            Drawing.Width*0.400f, Drawing.Height*0.195f, SharpDX.Color.Aqua);
+                    }
                 }
             }
 
@@ -516,8 +625,40 @@ namespace Marksman
             }
         }
 
+        private void MySupport()
+        {
+            
+        }
+
         private static void Game_OnGameUpdate(EventArgs args)
         {
+            Obj_AI_Hero shen = HeroManager.Allies.Find(e => e.ChampionName.ToLower() == "shen");
+            if (shen != null)
+            {
+
+            }
+            var shenVorpalStar = HeroManager.Enemies.Find(e => e.Buffs.Any(b => b.Name.ToLower() == "shenvorpalstar" && e.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65)));
+            if (shenVorpalStar != null)
+            {
+                CClass.Orbwalker.ForceTarget(shenVorpalStar);
+            }
+
+            Obj_AI_Hero Tahm = HeroManager.Allies.Find(e => e.ChampionName.ToLower() == "Tahm");
+            if (Tahm != null)
+            {
+                
+            }
+
+            var enemy = HeroManager.Enemies.Find(e => e.Buffs.Any(b => b.Name.ToLower() == "Tahmmark" && e.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65)));
+            if (enemy != null)
+            {
+                CClass.Orbwalker.ForceTarget(enemy);
+            }
+
+
+
+            /*-------------------------------------------------------------*/
+
             if (Items.HasItem(3139) || Items.HasItem(3140))
                 CheckChampionBuff();
 
@@ -676,9 +817,19 @@ namespace Marksman
             CClass.Orbwalking_BeforeAttack(args);
         }
 
+        private static void Orbwalking_OnNonKillableMinion(AttackableUnit minion)
+        {
+            CClass.Orbwalking_OnNonKillableMinion(minion);
+        }
+
+
         private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
             CClass.Obj_AI_Base_OnProcessSpellCast(sender, args);
+        }
+        private static void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args)
+        {
+            CClass.Spellbook_OnCastSpell(sender, args);
         }
 
         private static void OnCreateObject(GameObject sender, EventArgs args)
@@ -693,8 +844,22 @@ namespace Marksman
 
         private static void Obj_AI_Base_OnBuffAdd(Obj_AI_Base sender, Obj_AI_BaseBuffAddEventArgs args)
         {
+            /*
+            if (sender.IsEnemy)
+            {
+                Game.PrintChat(args.Buff.Name + " : " + args.Buff.DisplayName);
+            }
+            */
+            /*
+            if (sender.IsEnemy && sender.Target.IsMe && args.Buff.EndTime > ExecutedTime)
+            {
+                ExecutedTime = Game.Time;
+            }
+            */
+           
             CClass.Obj_AI_Base_OnBuffAdd(sender, args);
         }
+
         private static void Obj_AI_Base_OnBuffRemove(Obj_AI_Base sender, Obj_AI_BaseBuffRemoveEventArgs args)
         {
             CClass.Obj_AI_Base_OnBuffRemove(sender, args);

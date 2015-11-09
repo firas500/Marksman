@@ -52,7 +52,7 @@ namespace Marksman.Champions
         public override void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
             var t = target as Obj_AI_Hero;
-            if (t != null && (ComboActive || HarassActive) && unit.IsMe)
+            if (t != null && (ComboActive || HarassActive) && unit.IsMe && !t.HasKindredUltiBuff())
             {
                 var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
                 var useW = GetValue<bool>("UseW" + (ComboActive ? "C" : "H"));
@@ -201,7 +201,7 @@ namespace Marksman.Champions
                 var useW = this.GetValue<bool>("UseW" + (ComboActive ? "C" : "H"));
                 var useR = Program.Config.SubMenu("Combo").Item("UseRC").GetValue<bool>();
 
-                if (Orbwalking.CanMove(100))
+                if (Orbwalking.CanMove(100) && !t.HasKindredUltiBuff())
                 {
                     if (useQ && Q.IsReady() && t.IsValidTarget(Q.Range))
                     {

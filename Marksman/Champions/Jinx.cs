@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Utils;
 
 #endregion
 
@@ -26,8 +27,10 @@ namespace Marksman.Champions
             W.SetSkillshot(0.6f, 60f, 3300f, true, SkillshotType.SkillshotLine);
             E.SetSkillshot(0.7f, 120f, 1750f, false, SkillshotType.SkillshotCircle);
             R.SetSkillshot(0.6f, 140f, 1700f, false, SkillshotType.SkillshotLine);
-
+            
             Obj_AI_Base.OnBuffAdd += (sender, args) =>
+            {
+                if (E.IsReady())
                 {
                     BuffInstance aBuff =
                         (from fBuffs in
@@ -35,20 +38,24 @@ namespace Marksman.Champions
                                  s =>
                                  sender.Team != ObjectManager.Player.Team
                                  && sender.Distance(ObjectManager.Player.Position) < E.Range)
-                         from b in
-                             new[]
-                                 {
-                                     "teleport_target", "pantheon_grandskyfall_jump", "crowstorm", "zhonya", "katarinar",
-                                     "MissFortuneBulletTime"
-                                 }
-                         where b.Contains(args.Buff.Name.ToLower())
+                         from b in new[]
+                                           {
+                                               "teleport_", /* Teleport */ "pantheon_grandskyfall_jump", /* Pantheon */ 
+                                               "crowstorm", /* FiddleScitck */
+                                               "zhonya", "katarinar", /* Katarita */
+                                               "MissFortuneBulletTime", /* MissFortune */
+                                               "gate", /* Twisted Fate */
+                                               "chronorevive" /* Zilean */
+                                           }
+                         where args.Buff.Name.ToLower().Contains(b)
                          select fBuffs).FirstOrDefault();
 
-                    if (aBuff != null && E.IsReady())
+                    if (aBuff != null)
                     {
                         E.Cast(sender.Position);
                     }
-                };
+                }
+            };
             Utility.HpBarDamageIndicator.DamageToUnit = GetComboDamage;
             Utility.HpBarDamageIndicator.Enabled = true;
 
@@ -103,56 +110,23 @@ namespace Marksman.Champions
         public override void Drawing_OnDraw(EventArgs args)
         {
 
-            if (R.IsReady() && GetValue<bool>("DrawCH"))
+            if (R.IsReady() && this.GetValue<bool>("DrawCH"))
             {
                 var enemies = HeroManager.Enemies.Where(e => e.IsEnemy);
-                //e.IsVisible && e.Health < R.GetDamage(e) && !e.IsDead && !e.IsZombie);
                 var objAiHeroes = enemies as Obj_AI_Hero[] ?? enemies.ToArray();
 
-                Marksman.Utils.Utils.DrawText(
-                    Marksman.Utils.Utils.SmallText,
-                    "Kill with Ulti!",
-                    Drawing.Width * 0.895f,
-                    Drawing.Height * 0.419f,
-                    SharpDX.Color.Wheat);
+                Marksman.Utils.Utils.DrawText(Marksman.Utils.Utils.SmallText,"Kill with Ulti!",Drawing.Width * 0.895f,Drawing.Height * 0.419f,SharpDX.Color.Wheat);
                 for (var i = 0; i < objAiHeroes.Count(); i++)
                 {
-                    Drawing.DrawLine(
-                        Drawing.Width * 0.892f + 0,
-                        Drawing.Height * 0.419f + (float)(i + 1) * 20,
-                        Drawing.Width * 0.895f + 100,
-                        Drawing.Height * 0.419f + (float)(i + 1) * 20,
-                        16,
-                        Color.Black);
-                    Drawing.DrawLine(
-                        Drawing.Width * 0.892f + 1,
-                        Drawing.Height * 0.420f + (float)(i + 1) * 20,
-                        Drawing.Width * 0.895f + 99,
-                        Drawing.Height * 0.420f + (float)(i + 1) * 20,
-                        14,
-                        Color.BurlyWood);
-
+                    //Drawing.DrawLine(Drawing.Width * 0.812f + 0,Drawing.Height * 0.419f + (float)(i + 1) * 20,Drawing.Width * 0.815f + 100,Drawing.Height * 0.419f + (float)(i + 1) * 20,16,Color.Black);
+                    //Drawing.DrawLine(Drawing.Width * 0.812f + 1,Drawing.Height * 0.420f + (float)(i + 1) * 20,Drawing.Width * 0.815f + 99,Drawing.Height * 0.420f + (float)(i + 1) * 20,14,Color.BurlyWood);
+                    
                     var hPercent = objAiHeroes[i].HealthPercent;
                     if (hPercent > 0)
                     {
-                        Drawing.DrawLine(
-                            Drawing.Width * 0.892f + 1,
-                            Drawing.Height * 0.420f + (float)(i + 1) * 20,
-                            Drawing.Width * 0.895f + hPercent - 1,
-                            Drawing.Height * 0.420f + (float)(i + 1) * 20,
-                            14,
-                            hPercent < 50 && hPercent > 30
-                                ? Color.Yellow
-                                : objAiHeroes[i].Health <= R.GetDamage(objAiHeroes[i])
-                                      ? Color.Red
-                                      : Color.DarkOliveGreen);
+                        Drawing.DrawLine(Drawing.Width * 0.892f + 1,Drawing.Height * 0.420f + (float)(i + 1) * 20,Drawing.Width * 0.895f + hPercent - 1, Drawing.Height * 0.420f + (float)(i + 1) * 20, 14, hPercent < 50 && hPercent > 30 ? Color.Yellow : objAiHeroes[i].Health <= R.GetDamage(objAiHeroes[i]) ? Color.Red : Color.DarkOliveGreen);
                     }
-                    Marksman.Utils.Utils.DrawText(
-                        Marksman.Utils.Utils.SmallText,
-                        objAiHeroes[i].ChampionName,
-                        Drawing.Width * 0.895f,
-                        Drawing.Height * 0.42f + (float)(i + 1) * 20,
-                        SharpDX.Color.Black);
+                    Marksman.Utils.Utils.DrawText(Marksman.Utils.Utils.SmallText, objAiHeroes[i].ChampionName, Drawing.Width * 0.895f, Drawing.Height * 0.42f + (float)(i + 1) * 20, SharpDX.Color.Black);
                 }
             }
             /*----------------------------------------------------*/
@@ -170,23 +144,24 @@ namespace Marksman.Champions
             {
                 if (FishBoneActive)
                 {
-                    Render.Circle.DrawCircle(
-                        ObjectManager.Player.Position,
-                        525f + ObjectManager.Player.BoundingRadius + 65f,
-                        drawQbound.Color);
+                    Render.Circle.DrawCircle(ObjectManager.Player.Position, 525f + ObjectManager.Player.BoundingRadius + 65f, drawQbound.Color);
                 }
                 else
                 {
-                    Render.Circle.DrawCircle(
-                        ObjectManager.Player.Position,
-                        525f + ObjectManager.Player.BoundingRadius + 65f + QAddRange + 20f,
-                        drawQbound.Color);
+                    Render.Circle.DrawCircle(ObjectManager.Player.Position, 525f + ObjectManager.Player.BoundingRadius + 65f + QAddRange + 20f, drawQbound.Color);
                 }
             }
         }
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
+            var x = HeroManager.Enemies.Find(e => !e.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null)) && e.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + QAddRange));
+            if (x != null && !FishBoneActive && Q.IsReady())
+            {
+                Q.Cast();
+                Program.CClass.Orbwalker.ForceTarget(x);
+            }
+
             if (Q.IsReady() && GetValue<bool>("SwapDistance") && Program.CClass.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
             //if (Q.IsReady() && this.GetValue<bool>("SwapDistance"))
             {
@@ -226,10 +201,23 @@ namespace Marksman.Champions
             var autoEs = GetValue<bool>("AutoES");
             var autoEd = GetValue<bool>("AutoED");
 
+            //foreach (var e in HeroManager.Enemies.Where(e => e.IsValidTarget(E.Range)))
+            //{
+            //    if (E.IsReady()
+            //        && (e.HasBuffOfType(BuffType.Stun) || e.HasBuffOfType(BuffType.Snare)
+            //            || e.HasBuffOfType(BuffType.Charm) || e.HasBuffOfType(BuffType.Fear) ||
+            //            e.HasBuffOfType(BuffType.Slow)
+            //            || e.HasBuffOfType(BuffType.Taunt) || e.HasBuff("zhonyasringshield")
+            //            || e.HasBuff("Recall")))
+            //    {
+            //        E.Cast(e);
+            //    }
+            //}
+
             if (autoEs || autoEi || autoEd)
             {
                 foreach (
-                    var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsValidTarget(E.Range - 150)))
+                    var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.IsValidTarget(E.Range - 50)))
                 {
                     if (autoEs && E.IsReady() && enemy.HasBuffOfType(BuffType.Slow))
                     {
@@ -248,9 +236,9 @@ namespace Marksman.Champions
                         }
                     }
 
-                    if (autoEi && E.IsReady()
+                    if (E.IsReady()
                         && (enemy.HasBuffOfType(BuffType.Stun) || enemy.HasBuffOfType(BuffType.Snare)
-                            || enemy.HasBuffOfType(BuffType.Charm) || enemy.HasBuffOfType(BuffType.Fear)
+                            || enemy.HasBuffOfType(BuffType.Charm) || enemy.HasBuffOfType(BuffType.Fear) || enemy.HasBuffOfType(BuffType.Slow)
                             || enemy.HasBuffOfType(BuffType.Taunt) || enemy.HasBuff("zhonyasringshield")
                             || enemy.HasBuff("Recall")))
                     {
@@ -282,6 +270,18 @@ namespace Marksman.Champions
             {
                 Q.Cast();
             }
+
+            if (HarassActive)
+            {
+                if (GetValue<bool>("UseQMH"))
+                {
+                    var t = TargetSelector.GetTarget(Q.Range*2, TargetSelector.DamageType.Magical);
+                    foreach (var m in ObjectManager.Get<Obj_AI_Minion>().Where(m => m.Distance(ObjectManager.Player.Position) < Orbwalking.GetRealAutoAttackRange(null) + QAddRange).OrderBy(m => m.Distance(t)))
+                    {
+                        
+                    }
+                }
+            }
             /*
             if (GetValue<bool>("SwapQ") && FishBoneActive && (LaneClearActive ||
                  (HarassActive && TargetSelector.GetTarget(675f + QAddRange, TargetSelector.DamageType.Physical) == null)))
@@ -303,7 +303,7 @@ namespace Marksman.Champions
                 var t = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
                 var minW = GetValue<Slider>("MinWRange").Value;
 
-                if (t.IsValidTarget() && GetRealDistance(t) >= minW)
+                if (t.IsValidTarget() && !t.HasKindredUltiBuff() && GetRealDistance(t) >= minW)
                 {
                     if (W.Cast(t) == Spell.CastStates.SuccessfullyCasted)
                     {
@@ -362,7 +362,7 @@ namespace Marksman.Champions
                 var maxR = GetValue<Slider>("MaxRRange").Value;
                 var t = TargetSelector.GetTarget(maxR, TargetSelector.DamageType.Physical);
 
-                if (t.IsValidTarget())
+                if (t.IsValidTarget() && !t.HasKindredUltiBuff())
                 {
                     var distance = GetRealDistance(t);
 
@@ -429,7 +429,7 @@ namespace Marksman.Champions
                     var t = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
                     var minW = GetValue<Slider>("MinWRange").Value;
 
-                    if (t.IsValidTarget() && GetRealDistance(t) >= minW)
+                    if (t.IsValidTarget() && !t.HasKindredUltiBuff() && GetRealDistance(t) >= minW)
                     {
                         if (W.Cast(t) == Spell.CastStates.SuccessfullyCasted)
                         {
@@ -442,7 +442,7 @@ namespace Marksman.Champions
                 {
                     foreach (var t in
                         ObjectManager.Get<Obj_AI_Hero>()
-                            .Where(t => t.IsValidTarget(GetRealPowPowRange(t) + QAddRange + 20f)))
+                            .Where(t => t.IsValidTarget(GetRealPowPowRange(t) + QAddRange + 20f) && !t.HasKindredUltiBuff()))
                     {
                         var swapDistance = GetValue<bool>("SwapDistance");
                         var swapAoe = GetValue<bool>("SwapAOE");
@@ -535,6 +535,7 @@ namespace Marksman.Champions
         public override bool HarassMenu(Menu config)
         {
             config.AddItem(new MenuItem("UseQH" + Id, "Use Q").SetValue(true));
+            config.AddItem(new MenuItem("UseQMH" + Id, "Use Q Nearby Minions").SetValue(true));
             config.AddItem(new MenuItem("UseWH" + Id, "Use W").SetValue(false));
             return true;
         }
@@ -576,7 +577,7 @@ namespace Marksman.Champions
 
         public override bool JungleClearMenu(Menu config)
         {
-            return false;
+            return true;
         }
     }
 }

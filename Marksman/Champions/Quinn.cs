@@ -11,6 +11,8 @@ using Color = System.Drawing.Color;
 
 namespace Marksman.Champions
 {
+    using System.Diagnostics.Eventing.Reader;
+
     internal class Quinn : Champion
     {
         public static float ValorMinDamage;
@@ -33,6 +35,16 @@ namespace Marksman.Champions
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
         }
 
+        public override void Obj_AI_Base_OnBuffAdd(Obj_AI_Base sender, Obj_AI_BaseBuffAddEventArgs args)
+        {
+        }
+
+        public override void Obj_AI_Base_OnBuffRemove(Obj_AI_Base sender, Obj_AI_BaseBuffRemoveEventArgs args)
+        {
+            
+        }
+
+
         public void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
             if (E.IsReady() && gapcloser.Sender.IsValidTarget(E.Range))
@@ -42,22 +54,22 @@ namespace Marksman.Champions
         public override void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
             var t = target as Obj_AI_Hero;
-            if (t == null || (!ComboActive && !HarassActive) || unit.IsMe) return;
+            if (t == null || (!this.ComboActive && !HarassActive) || unit.IsMe) return;
 
-            if (Q.IsReady() && GetValue<bool>("UseQ" + (ComboActive ? "C" : "H")))
+            if (Q.IsReady() && this.GetValue<bool>("UseQ" + (ComboActive ? "C" : "H")))
                 Q.Cast(t, false, true);
         }
 
         public override void Drawing_OnDraw(EventArgs args)
         {
-            Spell[] spellList = {Q, E};
+            Spell[] spellList = { this.Q, this.E};
             foreach (var spell in spellList)
             {
-                var menuItem = GetValue<Circle>("Draw" + spell.Slot);
+                var menuItem = this.GetValue<Circle>("Draw" + spell.Slot);
                 if (menuItem.Active && spell.Level > 0)
                     Render.Circle.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
 
-                if (menuItem.Active && spell.Level > 0 && IsValorMode())
+                if (menuItem.Active && spell.Level > 0 && IsValorMode)
                     Render.Circle.DrawCircle(ObjectManager.Player.Position, R.Range, menuItem.Color);
             }
         }
@@ -95,9 +107,12 @@ namespace Marksman.Champions
             return target.Buffs.All(buff => buff.Name == "pantheonpassivebuff");
         }
 
-        private static bool IsValorMode()
+        private static bool IsValorMode
         {
-            return ObjectManager.Player.Spellbook.GetSpell(SpellSlot.R).Name == "QuinnRFinale";
+            get
+            {
+                return ObjectManager.Player.Spellbook.GetSpell(SpellSlot.R).Name == "QuinnRFinale";
+            }
         }
 
         public static void calculateValorDamage()
@@ -114,6 +129,18 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
+            var enemy =
+                HeroManager.Enemies.Find(
+                    e => e.Buffs.Any(b => b.Name.ToLower() == "quinnw_cosmetic" && e.IsValidTarget(E.Range)));
+            if (enemy != null)
+            {
+                if (enemy.Distance(ObjectManager.Player.Position) > Orbwalking.GetRealAutoAttackRange(null) + 65)
+                {
+                    ObjectManager.Player.IssueOrder(GameObjectOrder.MoveTo, enemy);
+                }
+                this.Orbwalker.ForceTarget(enemy);
+            }
+
             if (Q.IsReady() && GetValue<KeyBind>("UseQTH").Active)
             {
                 if (ObjectManager.Player.HasBuff("Recall"))
@@ -127,32 +154,26 @@ namespace Marksman.Champions
             {
                 var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
                 var useE = GetValue<bool>("UseE" + (ComboActive ? "C" : "H"));
-                var useET = GetValue<bool>("UseET" + (ComboActive ? "C" : "H"));
 
                 if (Orbwalking.CanMove(100))
                 {
                     if (E.IsReady() && useE)
                     {
-                        var vTarget = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
-                        if (vTarget != null && !isHePantheon(vTarget))
+                        var t = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
+                        if (useE && t.IsValidTarget() && !t.IsZombie && !isHePantheon(t) && !t.HasBuff("QuinnW_Cosmetic", true))
                         {
-                            if (vTarget.Health <= E.GetDamage(vTarget) + Q.GetDamage(vTarget)*2)
-                                E.CastOnUnit(vTarget);
-                            else if (!useET)
-                                E.CastOnUnit(vTarget);
-                            else if (!vTarget.UnderTurret())
-                                E.CastOnUnit(vTarget);
+                            E.CastOnUnit(t);
                         }
                     }
 
                     if (Q.IsReady() && useQ)
                     {
-                        var vTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
-                        if (vTarget != null)
-                            Q.Cast(vTarget);
+                        var t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
+                        if (t.IsValidTarget() && !t.IsZombie)
+                            Q.Cast(t);
                     }
 
-                    if (IsValorMode() && !E.IsReady())
+                    if (IsValorMode && !E.IsReady())
                     {
                         var vTarget = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Physical);
                         if (vTarget != null)
@@ -166,13 +187,64 @@ namespace Marksman.Champions
             }
         }
 
+        public virtual void ExecuteJungleClear()
+        {
+            if (E.IsReady())
+            {
+                var jQ = Marksman.Utils.Utils.GetMobs(Orbwalking.GetRealAutoAttackRange(null) + 65, Marksman.Utils.Utils.MobTypes.All);
+                if (jQ != null)
+                {
+                    switch (this.GetValue<StringList>("UseQJ").SelectedIndex)
+                    {
+                        case 1:
+                            {
+                                Q.Cast(jQ);
+                                break;
+                            }
+                        case 2:
+                            {
+                                jQ = Utils.Utils.GetMobs(Orbwalking.GetRealAutoAttackRange(null) + 65, Utils.Utils.MobTypes.BigBoys);
+                                if (jQ != null)
+                                {
+                                    Q.Cast(jQ);
+                                }
+                                break;
+                            }
+                    }
+                }
+            }
+
+
+            if (E.IsReady())
+            {
+                var jungleMobs = Marksman.Utils.Utils.GetMobs(E.Range, Marksman.Utils.Utils.MobTypes.All);
+
+                if (jungleMobs != null)
+                {
+                    switch (this.GetValue<StringList>("UseEJ").SelectedIndex)
+                    {
+                        case 1:
+                            {
+                                E.CastOnUnit(jungleMobs);
+                                break;
+                            }
+                        case 2:
+                            {
+                                jungleMobs = Utils.Utils.GetMobs(E.Range, Utils.Utils.MobTypes.BigBoys);
+                                if (jungleMobs != null)
+                                {
+                                    E.CastOnUnit(jungleMobs);
+                                }
+                                break;
+                            }
+                    }
+                }
+            }
+        }
         public override bool ComboMenu(Menu config)
         {
             config.AddItem(new MenuItem("UseQC" + Id, "Use Q").SetValue(true));
             config.AddItem(new MenuItem("UseEC" + Id, "Use E").SetValue(true));
-            config.AddItem(new MenuItem("UseETC" + Id, "Do not Under Turret E").SetValue(true));
-            config.AddItem(new MenuItem("UseETK" + Id, "Use E Under Turret If Enemy Killable")
-                .SetValue(true));
             return true;
         }
 
@@ -180,10 +252,7 @@ namespace Marksman.Champions
         {
             config.AddItem(new MenuItem("UseQH" + Id, "Use Q").SetValue(true));
             config.AddItem(new MenuItem("UseEH" + Id, "Use E").SetValue(true));
-            config.AddItem(new MenuItem("UseETH" + Id, "Do not Under Turret E").SetValue(true));
-            config.AddItem(
-                new MenuItem("UseQTH" + Id, "Use Q (Toggle)").SetValue(new KeyBind("H".ToCharArray()[0],
-                    KeyBindType.Toggle)));
+            config.AddItem(new MenuItem("UseQTH" + Id, "Use Q (Toggle)").SetValue(new KeyBind("H".ToCharArray()[0], KeyBindType.Toggle)));
             return true;
         }
 
@@ -200,11 +269,15 @@ namespace Marksman.Champions
 
         public override bool LaneClearMenu(Menu config)
         {
+            config.AddItem(new MenuItem("Lane.Non", ObjectManager.Player.ChampionName + " Doesn't Support Lane Clear"));
             return true;
         }
         public override bool JungleClearMenu(Menu config)
         {
-            return false;
+            config.AddItem(new MenuItem("UseQJ" + Id, "Use Q").SetValue(new StringList(new[] { "Off", "On", "Just for big Monsters" }, 1)));
+            config.AddItem(new MenuItem("UseEJ" + Id, "Use E").SetValue(new StringList(new[] { "Off", "On", "Just for big Monsters" }, 1)));
+
+            return true;
         }
     }
 }

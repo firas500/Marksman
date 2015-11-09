@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
@@ -12,6 +13,8 @@ using SharpDX.Direct3D9;
 
 namespace Marksman.Utils
 {
+    using System.Security.Cryptography;
+
     using Marksman.Champions;
 
     internal class Utils
@@ -56,7 +59,7 @@ namespace Marksman.Utils
 
             private static int LastPingT = 0;
 
-            public static void Ping(Vector2 position)
+            public static void Ping(Vector2 position, int pingCount = 4)
             {
                 if (LeagueSharp.Common.Utils.TickCount - LastPingT < 30 * 1000)
                 {
@@ -67,10 +70,16 @@ namespace Marksman.Utils
                 PingLocation = position;
                 SimplePing();
 
+                for (int i = 1; i <= pingCount; i++)
+                {
+                    Utility.DelayAction.Add(i * 200, SimplePing);
+                }
+                /*                
                 Utility.DelayAction.Add(150, SimplePing);
                 Utility.DelayAction.Add(300, SimplePing);
                 Utility.DelayAction.Add(400, SimplePing);
                 Utility.DelayAction.Add(800, SimplePing);
+                */
             }
 
             private static void SimplePing()
@@ -176,6 +185,16 @@ namespace Marksman.Utils
         {
             vFont.DrawText(null, vText, vPosX + 2, vPosY + 2, vColor != Color.Black ? Color.Black : Color.White);
             vFont.DrawText(null, vText, vPosX, vPosY, vColor);
+        }
+
+        public static void DrawLine(Vector3 from, Vector3 to, System.Drawing.Color color, String text = "")
+        {
+            var a = new Geometry.Polygon.Line(from, to);
+            a.Draw(color, 3);
+
+            Vector3[] x = new[] { from, to };
+            var aX = Drawing.WorldToScreen( new Vector3(CenterOfVectors(x).X, CenterOfVectors(x).Y, CenterOfVectors(x).Z));
+            Drawing.DrawText(aX.X - 15, aX.Y - 15, System.Drawing.Color.White, text);
         }
 
         internal static class Jungle
@@ -306,6 +325,141 @@ namespace Marksman.Utils
 
             sum = vectors.Aggregate(sum, (current, vec) => current + vec);
             return sum / vectors.Length;
+        }
+    }
+
+    public static class KillableTarget
+    {
+        public static bool IsAttackableTarget(this Obj_AI_Hero target)
+        {
+            return !target.HasUndyingBuff() && !target.HasSpellShield() && !target.IsInvulnerable;
+        }
+
+        public static bool CanUseSpell(this Obj_AI_Hero unit)
+        {
+            return unit != null && (unit.HasBuff("kindredrnodeathbuff") && unit.HealthPercent <= 10);
+            
+        }
+
+        public static bool IsKillableTarget(this Obj_AI_Hero target, SpellSlot spell)
+        {
+            var totalHealth = target.TotalShieldHealth();
+            if (target.HasUndyingBuff() || target.HasSpellShield() || target.IsInvulnerable)
+            {
+                return false;
+            }
+
+            if (target.ChampionName == "Blitzcrank" && !target.HasBuff("BlitzcrankManaBarrierCD")
+                && !target.HasBuff("ManaBarrier"))
+            {
+                totalHealth += target.Mana / 2;
+            }
+            return (ObjectManager.Player.GetSpellDamage(target, spell) >= totalHealth);
+        }
+
+        public static float TotalShieldHealth(this Obj_AI_Base target)
+        {
+            return target.Health + target.AllShield + target.PhysicalShield + target.MagicalShield;
+        }
+
+        public static bool HasSpellShield(this Obj_AI_Hero target)
+        {
+            return target.HasBuffOfType(BuffType.SpellShield) || target.HasBuffOfType(BuffType.SpellImmunity);
+        }
+
+        public static bool HasUndyingBuff(this Obj_AI_Hero target)
+        {
+            if (
+                target.Buffs.Any(
+                    b =>
+                        b.IsValid
+                        && (b.Name == "ChronoShift" /* Zilean R */
+                            || b.Name == "FioraW" /* Fiora Riposte */
+                            || b.Name == "BardRStasis" /* Bard ult */
+                            || b.Name == "JudicatorIntervention" /* Kayle R */
+                            || b.Name == "UndyingRage" /* Tryndamere R */)))
+            {
+                return true;
+            }
+
+            if (target.ChampionName == "Poppy")
+            {
+                if (
+                    HeroManager.Allies.Any(
+                        o =>
+                            !o.IsMe
+                            && o.Buffs.Any(
+                                b =>
+                                    b.Caster.NetworkId == target.NetworkId && b.IsValid &&
+                                    b.DisplayName == "PoppyDITarget")))
+                {
+                    return true;
+                }
+            }
+
+            return target.IsInvulnerable;
+        }
+    }
+
+    public static class CGlobal
+    {
+        public static float CommonComboDamage(this Obj_AI_Hero t)
+        {
+            var fComboDamage = 0d;
+
+            if (ObjectManager.Player.GetSpellSlot("summonerdot") != SpellSlot.Unknown
+                && ObjectManager.Player.Spellbook.CanUseSpell(ObjectManager.Player.GetSpellSlot("summonerdot"))
+                == SpellState.Ready && ObjectManager.Player.Distance(t) < 550)
+            {
+                fComboDamage += (float)ObjectManager.Player.GetSummonerSpellDamage(t, Damage.SummonerSpell.Ignite);
+            }
+
+            if (Items.CanUseItem(3144) && ObjectManager.Player.Distance(t) < 550)
+            {
+                fComboDamage += (float)ObjectManager.Player.GetItemDamage(t, Damage.DamageItems.Bilgewater);
+            }
+
+            if (Items.CanUseItem(3153) && ObjectManager.Player.Distance(t) < 550)
+            {
+                fComboDamage += (float)ObjectManager.Player.GetItemDamage(t, Damage.DamageItems.Botrk);
+            }
+            return (float)fComboDamage;
+        }
+
+        public static bool IsUnderAllyTurret(this Obj_AI_Base unit)
+        {
+            return ObjectManager.Get<Obj_AI_Turret>().Where<Obj_AI_Turret>(turret =>
+            {
+                if (turret == null || !turret.IsValid || turret.Health <= 0f)
+                {
+                    return false;
+                }
+                if (!turret.IsEnemy)
+                {
+                    return true;
+                }
+                return false;
+            })
+                .Any<Obj_AI_Turret>(
+                    turret =>
+                        Vector2.Distance(unit.Position.To2D(), turret.Position.To2D()) < 925f && turret.IsAlly);
+        }
+
+        public static bool HasKindredUltiBuff(this Obj_AI_Hero unit)
+        {
+            return unit != null && (unit.HasBuff("kindredrnodeathbuff") && unit.HealthPercent <= 10);
+        }
+
+        public static bool IsPositionSafe(this Spell spell, Vector2 position)
+        // use underTurret and .Extend for this please
+        {
+            var myPos = ObjectManager.Player.Position.To2D();
+            var newPos = (position - myPos);
+            newPos.Normalize();
+
+            var checkPos = position + newPos * (spell.Range - Vector2.Distance(position, myPos));
+            var enemy = HeroManager.Enemies.Find(e => e.Distance(checkPos) < 350);
+            return enemy == null;
         }
     }
 }

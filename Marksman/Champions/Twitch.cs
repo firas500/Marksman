@@ -28,6 +28,7 @@ namespace Marksman.Champions
         public static Spell E;
         private static readonly List<EnemyMarker> xEnemyMarker = new List<EnemyMarker>();
         private static bool canCastE = false;
+        private static string twitchEBuffName = "twitchdeadlyvenom";
         public Twitch()
         {
             W = new Spell(SpellSlot.W, 950);
@@ -37,22 +38,6 @@ namespace Marksman.Champions
             //Utility.HpBarDamageIndicator.DamageToUnit = GetComboDamage;
             //Utility.HpBarDamageIndicator.Enabled = true;
             Utils.Utils.PrintMessage("Twitch loaded.");
-        }
-
-        private static void OnDeleteObject(GameObject sender, EventArgs args)
-        {
-            if ((sender.Name.ToLower().Contains("twitch_poison_counter_06.troy")))
-            {
-                canCastE = false;
-            }
-        }
-
-        private static void OnCreateObject(GameObject sender, EventArgs args)
-        {
-                if ((sender.Name.ToLower().Contains("twitch_poison_counter_06.troy")))
-                {
-                    canCastE = true;
-                }
         }
 
         public override void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
@@ -69,17 +54,7 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
-            //foreach (var enemy in HeroManager.Enemies.Where(e=> e.IsValidTarget(E.Range)))
-            //{
-            //    var enemyBCount = enemy.GetBuffCount("twitchdeadlyvenom");
-
-            //    if (enemyBCount > 0)
-            //    {
-            //        var display = string.Format("{0}", enemyBCount);
-            //        Utils.Utils.DrawText(Utils.Utils.Text, display, (int)enemy.HPBarPosition.X - 10, (int)enemy.HPBarPosition.Y, SharpDX.Color.Wheat);
-            //    }
-            //}
-            
+            return;
             Spell[] spellList = {W};
             foreach (var spell in spellList)
             {
@@ -91,40 +66,53 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
-            var killableMinionCount = 0;
-            foreach (
-                var m in
-                    MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range)
-                        .Where(x => E.CanCast(x) && x.Health <= E.GetDamage(x)))
+            
+            if (this.LaneClearActive)
             {
-                if (m.SkinName == "SRU_ChaosMinionSiege" || m.SkinName == "SRU_ChaosMinionSuper")
-                    killableMinionCount += 2;
-                else
-                    killableMinionCount++;
-                Render.Circle.DrawCircle(m.Position, (float) (m.BoundingRadius*1.5), Color.White);
+                ExecuteLaneClear();
             }
 
-            if (killableMinionCount >= 3 && E.IsReady() && ObjectManager.Player.ManaPercent > 15)
+            if (this.JungleClearActive)
             {
-                E.Cast();
+                ExecuteJungleClear();
             }
 
-            foreach (
-                var m in
-                    MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range, MinionTypes.All,
-                        MinionTeam.Neutral).Where(m => E.CanCast(m) && m.Health <= E.GetDamage(m)))
-            {
-                if (m.SkinName.ToLower().Contains("baron") || m.SkinName.ToLower().Contains("dragon") && E.CanCast(m))
-                    E.Cast(m);
-                else
-                    Render.Circle.DrawCircle(m.Position, (float) (m.BoundingRadius*1.5), Color.White);
-            }
+            //var killableMinionCount = 0;
+            //foreach (
+            //    var m in
+            //        MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range)
+            //            .Where(x => E.CanCast(x) && x.Health <= E.GetDamage(x)))
+            //{
+            //    if (m.SkinName == "SRU_ChaosMinionSiege" || m.SkinName == "SRU_ChaosMinionSuper")
+            //        killableMinionCount += 2;
+            //    else
+            //        killableMinionCount++;
+            //    Render.Circle.DrawCircle(m.Position, (float) (m.BoundingRadius*1.5), Color.White);
+            //}
 
+            //if (killableMinionCount >= 3 && E.IsReady() && ObjectManager.Player.ManaPercent > 15)
+            //{
+            //    E.Cast();
+            //}
+
+            //foreach (
+            //    var m in
+            //        MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range, MinionTypes.All,
+            //            MinionTeam.Neutral).Where(m => E.CanCast(m) && m.Health <= E.GetDamage(m)))
+            //{
+            //    if (m.SkinName.ToLower().Contains("baron") || m.SkinName.ToLower().Contains("dragon") && E.CanCast(m))
+            //        E.Cast(m);
+            //    else
+            //        Render.Circle.DrawCircle(m.Position, (float) (m.BoundingRadius*1.5), Color.White);
+            //}
+         
             if (Orbwalking.CanMove(100) && (ComboActive || HarassActive))
             {
                 var useW = GetValue<bool>("UseW" + (ComboActive ? "C" : "H"));
                 var useE = GetValue<bool>("UseE" + (ComboActive ? "C" : "H"));
                 var t = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
+                if (t.HasKindredUltiBuff())
+                    return;
 
                 if (useW)
                 {
@@ -141,7 +129,8 @@ namespace Marksman.Champions
                     }
                 }
             }
-            /*
+            return;
+
             if (GetValue<bool>("UseEM") && E.IsReady())
             {
                 foreach (
@@ -155,8 +144,71 @@ namespace Marksman.Champions
                     E.Cast();
                 }
             }
-            */
         }
+
+        private static void ExecuteLaneClear()
+        {
+            var prepareMinions = Program.Config.Item("PrepareMinionsE.Lane").GetValue<StringList>().SelectedIndex;
+            if (prepareMinions != 0)
+            {
+                List<Obj_AI_Minion> list = new List<Obj_AI_Minion>();
+
+                IEnumerable<Obj_AI_Minion> minions =
+                    from m in
+                        ObjectManager.Get<Obj_AI_Minion>()
+                            .Where(
+                                m =>
+                                    m.Health > ObjectManager.Player.TotalAttackDamage() &&
+                                    m.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65))
+                    select m;
+
+                var objAiMinions = minions as Obj_AI_Minion[] ?? minions.ToArray();
+                foreach (var m in objAiMinions)
+                {
+                    if (m.GetBuffCount(twitchEBuffName) > 0)
+                    {
+                        list.Add(m);
+                    }
+                    else
+                    {
+                        list.Remove(m);
+                    }
+                }
+
+                foreach (var l in objAiMinions.Except(list).ToList())
+                {
+                    Program.CClass.Orbwalker.ForceTarget(l);
+                }
+            }
+        }
+        private static void ExecuteJungleClear()
+        {
+            var useW = Program.Config.Item("UseW.Jungle").GetValue<StringList>().SelectedIndex;
+            if (W.IsReady() && useW != 0)
+            {
+                var jungleMobs = Utils.Utils.GetMobs(W.Range, 
+                    useW != 3 ? Utils.Utils.MobTypes.All : Utils.Utils.MobTypes.BigBoys,
+                    useW != 3 ? useW : 1);
+
+                if (jungleMobs != null)
+                {
+                    W.Cast(jungleMobs);
+                }
+            }
+
+            if (E.IsReady() && Program.Config.Item("UseE.Jungle").GetValue<StringList>().SelectedIndex != 0)
+            {
+                var jungleMobs = Utils.Utils.GetMobs(E.Range, Program.Config.Item("UseE.Jungle").GetValue<StringList>().SelectedIndex == 1
+                        ? Utils.Utils.MobTypes.All
+                        : Utils.Utils.MobTypes.BigBoys);
+
+                if (jungleMobs != null && E.CanCast(jungleMobs) && jungleMobs.Health <= E.GetDamage(jungleMobs) + 20)
+                {
+                    E.Cast();
+                }
+            }
+        }
+
 
         private static float GetComboDamage(Obj_AI_Hero t)
         {
@@ -212,11 +264,47 @@ namespace Marksman.Champions
 
         public override bool LaneClearMenu(Menu config)
         {
+            config.AddItem(new MenuItem("PrepareMinionsE.Lane", "Prepare Minions for E").SetValue(new StringList(new []{ "Off", "Everytime", "Just Under Ally Turret" }, 2)));
 
+            string[] strW = new string[6];
+            strW[0] = "Off";
+
+            for (var i = 1; i < 6; i++)
+            {
+                strW[i] = "If Could Infect Minion Count>= " + i;
+            }
+
+            config.AddItem(new MenuItem("UseW.Lane", "Use W:").SetValue(new StringList(strW, 0)));
+
+
+            string[] strE = new string[6];
+            strE[0] = "Off";
+
+            for (var i = 1; i < 6; i++)
+            {
+                strE[i] = "Minion Count >= " + i;
+            }
+
+            config.AddItem(new MenuItem("UseE.Lane", "Use E:").SetValue(new StringList(strE, 0)));
             return true;
         }
         public override bool JungleClearMenu(Menu config)
         {
+
+            string[] strW = new string[4];
+            strW[0] = "Off";
+            strW[3] = "Just big Monsters";
+
+            for (var i = 1; i < 3; i++)
+            {
+                strW[i] = "If Could Infect Mobs Count>= " + i;
+            }
+            
+            config.AddItem(new MenuItem("UseW.Jungle", "Use W:").SetValue(new StringList(strW, 3)));
+
+            //config.AddItem(new MenuItem("UseW.Jungle", "Use W").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 2)));
+            config.AddItem(new MenuItem("UseE.Jungle", "Use E").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 2)));
+
             return true;
         }
     }

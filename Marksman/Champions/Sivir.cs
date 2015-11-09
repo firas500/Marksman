@@ -49,7 +49,6 @@ namespace Marksman.Champions
             DangerousList.Add(new DangerousSpells("garen", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("leesin", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("nautilius", SpellSlot.R));
-            DangerousList.Add(new DangerousSpells("malzahar", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("skarner", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("syndra", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("warwick", SpellSlot.R));
@@ -58,6 +57,35 @@ namespace Marksman.Champions
 
             Game.OnWndProc += Game_OnWndProc;
 
+            Obj_AI_Base.OnBuffAdd += (sender, args) =>
+            {
+                if (E.IsReady())
+                {
+                    BuffInstance aBuff =
+                        (from fBuffs in
+                             sender.Buffs.Where(
+                                 s =>
+                                 sender.Team != ObjectManager.Player.Team
+                                 )
+                         from b in new[]
+                                           {
+                                               "teleport_", /* Teleport */ "pantheon_grandskyfall_jump", /* Pantheon */ 
+                                               "crowstorm", /* FiddleScitck */
+                                               "zhonya", "katarinar", /* Katarita */
+                                               "MissFortuneBulletTime", /* MissFortune */
+                                               "destiny",
+                                               "gate", /* Twisted Fate */
+                                               "chronorevive" /* Zilean */
+                                           }
+                         where args.Buff.Name.ToLower().Contains(b)
+                         select fBuffs).FirstOrDefault();
+
+                    if (aBuff != null)
+                    {
+                        E.Cast(sender.Position);
+                    }
+                }
+            };
             Utils.PrintMessage("Sivir loaded.");
 //            Utils.Utils.PrintMessage("Sivir E Support Loaded! Please check the Marksman Menu for her E Spell");
         }

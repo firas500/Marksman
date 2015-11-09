@@ -9,6 +9,8 @@ using LeagueSharp.Common;
 
 namespace Marksman.Champions
 {
+    using System.Linq;
+
     using Utils = LeagueSharp.Common.Utils;
 
     internal class Caitlyn : Champion
@@ -40,7 +42,36 @@ namespace Marksman.Champions
             AntiGapcloser.OnEnemyGapcloser += this.AntiGapcloser_OnEnemyGapcloser;
             Drawing.OnEndScene += DrawingOnOnEndScene;
             Obj_AI_Base.OnProcessSpellCast += this.Obj_AI_Hero_OnProcessSpellCast;
-        
+
+            Obj_AI_Base.OnBuffAdd += (sender, args) =>
+                {
+                    if (W.IsReady())
+                    {
+                        BuffInstance aBuff =
+                            (from fBuffs in
+                                 sender.Buffs.Where(
+                                     s =>
+                                     sender.Team != ObjectManager.Player.Team
+                                     && sender.Distance(ObjectManager.Player.Position) < W.Range)
+                             from b in new[]
+                                           {
+                                               "teleport", /* Teleport */ "pantheon_grandskyfall_jump", /* Pantheon */ 
+                                               "crowstorm", /* FiddleScitck */
+                                               "zhonya", "katarinar", /* Katarita */
+                                               "MissFortuneBulletTime", /* MissFortune */
+                                               "gate", /* Twisted Fate */
+                                               "chronorevive" /* Zilean */
+                                           }
+                             where args.Buff.Name.ToLower().Contains(b)
+                             select fBuffs).FirstOrDefault();
+
+                        if (aBuff != null)
+                        {
+                            W.Cast(sender.Position);
+                        }
+                    }
+                };
+
             Marksman.Utils.Utils.PrintMessage("Caitlyn loaded.");
         }
 

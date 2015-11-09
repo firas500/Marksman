@@ -93,11 +93,15 @@
     <Compile Include="Evade\SpellDatabase.cs" />
     <Compile Include="Evade\Utils.cs" />
     <Compile Include="Utils\Activator.cs" />
+    <Compile Include="Utils\AutoBushRevealer.cs" />
+    <Compile Include="Utils\AutoPink.cs" />
     <Compile Include="Utils\EarlyEvade.cs" />
     <Compile Include="Champions\Ashe.cs" />
     <Compile Include="Champions\Caitlyn.cs" />
     <Compile Include="Champions\Champion.cs" />
     <Compile Include="Champions\Corki.cs" />
+    <Compile Include="Utils\ExecutedTime.cs" />
+    <Compile Include="Utils\IncomingDangerous.cs" />
     <Compile Include="Utils\Sprite.cs" />
     <Compile Include="Champions\Draven.cs" />
     <Compile Include="Champions\Ezreal.cs" />

@@ -58,11 +58,32 @@ namespace Marksman.Champions
         {
             return false;
         }
-
         public virtual void Drawing_OnDraw(EventArgs args) { }
-        public virtual void Game_OnGameUpdate(EventArgs args) { }
+
+        public virtual void Game_OnGameUpdate(EventArgs args)
+        {
+            if (this.JungleClearActive)
+            {
+                this.ExecuteJungleClear();
+            }
+            
+            if (this.LaneClearActive)
+            {
+                
+                this.ExecuteLaneClear();
+            }
+        }
+
+        public virtual void ExecuteCombo() { }
+        public virtual void ExecuteHarass() { }
+        public virtual void ExecuteLaneClear() { }
+        public virtual void ExecuteJungleClear() { }
+
+
         public virtual void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target) { }
         public virtual void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args) { }
+        public virtual void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args) { }
+        public virtual void Orbwalking_OnNonKillableMinion(AttackableUnit minion) { }
         public virtual void OnCreateObject(GameObject sender, EventArgs args) { }
         public virtual void OnDeleteObject(GameObject sender, EventArgs args) { }
         public virtual void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args) { }

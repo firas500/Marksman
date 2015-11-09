@@ -14,42 +14,80 @@ namespace Marksman.Champions
     internal class Ashe : Champion
     {
         public static Spell Q;
+
         public static Spell W;
+
         public static Spell E;
+
         public static Spell R;
-        
+
         public Ashe()
         {
             Q = new Spell(SpellSlot.Q);
             W = new Spell(SpellSlot.W, 1200);
             E = new Spell(SpellSlot.E);
-            R = new Spell(SpellSlot.R, 20000);
+            R = new Spell(SpellSlot.R, 4000);
 
-            W.SetSkillshot(250f, (float) (24.32f*Math.PI/180), 902f, true, SkillshotType.SkillshotCone);
+            W.SetSkillshot(250f, (float)(45f * Math.PI / 180), 900f, true, SkillshotType.SkillshotCone);
             E.SetSkillshot(377f, 299f, 1400f, false, SkillshotType.SkillshotLine);
             R.SetSkillshot(250f, 130f, 1600f, false, SkillshotType.SkillshotLine);
 
-            
             Obj_AI_Base.OnProcessSpellCast += Game_OnProcessSpell;
             Interrupter2.OnInterruptableTarget += Interrupter2_OnInterruptableTarget;
 
             Utility.HpBarDamageIndicator.DamageToUnit = GetComboDamage;
             Utility.HpBarDamageIndicator.Enabled = true;
+            Game.OnWndProc += Game_OnWndProc;
+
+            Obj_AI_Base.OnBuffAdd += (sender, args) =>
+                {
+                    BuffInstance aBuff =
+                        (from fBuffs in
+                             sender.Buffs.Where(
+                                 s =>
+                                 sender.Team != ObjectManager.Player.Team
+                                 && sender.Distance(ObjectManager.Player.Position) < 2500)
+                         from b in new[] { "katarinar", "MissFortuneBulletTime", "crowstorm" }
+
+                         where b.Contains(args.Buff.Name.ToLower())
+                         select fBuffs).FirstOrDefault();
+
+                    if (aBuff != null && E.IsReady())
+                    {
+                        R.Cast(sender.Position);
+                    }
+                };
 
             Utils.Utils.PrintMessage("Ashe loaded.");
         }
 
+        private static void Game_OnWndProc(WndEventArgs args)
+        {
+            if (args.Msg != 0x20a) return;
+
+            Program.Config.Item("Lane.Enabled").SetValue(!Program.Config.Item("Lane.Enabled").GetValue<bool>());
+        }
+
+
         private static bool AsheQCastReady
         {
-            get { return ObjectManager.Player.HasBuff("AsheQCastReady", true); }
+            get
+            {
+                return ObjectManager.Player.HasBuff("AsheQCastReady", true);
+            }
         }
 
         public bool IsQActive
         {
-            get { return ObjectManager.Player.HasBuff("FrostShot"); }
+            get
+            {
+                return ObjectManager.Player.HasBuff("FrostShot");
+            }
         }
 
-        private void Interrupter2_OnInterruptableTarget(Obj_AI_Hero unit, Interrupter2.InterruptableTargetEventArgs args)
+        private void Interrupter2_OnInterruptableTarget(
+            Obj_AI_Hero unit,
+            Interrupter2.InterruptableTargetEventArgs args)
         {
             if (R.IsReady() && Config.Item("RInterruptable" + Id).GetValue<bool>() && unit.IsValidTarget(1500))
             {
@@ -61,83 +99,60 @@ namespace Marksman.Champions
         {
             var fComboDamage = 0f;
 
-            if (W.IsReady())
-                fComboDamage += (float) ObjectManager.Player.GetSpellDamage(t, SpellSlot.W);
+            if (W.IsReady()) fComboDamage += (float)ObjectManager.Player.GetSpellDamage(t, SpellSlot.W);
 
-            if (R.IsReady())
-                fComboDamage += (float) ObjectManager.Player.GetSpellDamage(t, SpellSlot.R);
+            if (R.IsReady()) fComboDamage += (float)ObjectManager.Player.GetSpellDamage(t, SpellSlot.R);
 
-            if (ObjectManager.Player.GetSpellSlot("summonerdot") != SpellSlot.Unknown &&
-                ObjectManager.Player.Spellbook.CanUseSpell(ObjectManager.Player.GetSpellSlot("summonerdot")) ==
-                SpellState.Ready && ObjectManager.Player.Distance(t) < 550)
-                fComboDamage += (float) ObjectManager.Player.GetSummonerSpellDamage(t, Damage.SummonerSpell.Ignite);
+            if (ObjectManager.Player.GetSpellSlot("summonerdot") != SpellSlot.Unknown
+                && ObjectManager.Player.Spellbook.CanUseSpell(ObjectManager.Player.GetSpellSlot("summonerdot"))
+                == SpellState.Ready && ObjectManager.Player.Distance(t) < 550) fComboDamage += (float)ObjectManager.Player.GetSummonerSpellDamage(t, Damage.SummonerSpell.Ignite);
 
-            if (Items.CanUseItem(3144) && ObjectManager.Player.Distance(t) < 550)
-                fComboDamage += (float) ObjectManager.Player.GetItemDamage(t, Damage.DamageItems.Bilgewater);
+            if (Items.CanUseItem(3144) && ObjectManager.Player.Distance(t) < 550) fComboDamage += (float)ObjectManager.Player.GetItemDamage(t, Damage.DamageItems.Bilgewater);
 
-            if (Items.CanUseItem(3153) && ObjectManager.Player.Distance(t) < 550)
-                fComboDamage += (float) ObjectManager.Player.GetItemDamage(t, Damage.DamageItems.Botrk);
+            if (Items.CanUseItem(3153) && ObjectManager.Player.Distance(t) < 550) fComboDamage += (float)ObjectManager.Player.GetItemDamage(t, Damage.DamageItems.Botrk);
 
             return fComboDamage;
         }
+
         public void Game_OnProcessSpell(Obj_AI_Base unit, GameObjectProcessSpellCastEventArgs spell)
         {
             if (!Config.Item("EFlash" + Id).GetValue<bool>() || unit.Team == ObjectManager.Player.Team)
+            {
                 return;
+            }
 
-            if (spell.SData.Name.ToLower() == "summonerflash")
+            if (spell.SData.Name.ToLower() == "summonerflash" && unit.Distance(ObjectManager.Player.Position) < 2000)
+            {
                 E.Cast(spell.End);
+            }
         }
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
             if (this.JungleClearActive)
             {
-                var jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range, Marksman.Utils.Utils.MobTypes.All);
+                this.ExecuteJungleClear();
+            }
 
-                if (jungleMobs != null)
-                {
-                    switch (this.GetValue<StringList>("UseQJ").SelectedIndex)
-                    {
-                        case 1:
-                            {
-                                if (AsheQCastReady)
-                                    Q.Cast();
-                                break;
-                            }
-                        case 2:
-                            {
-                                if (AsheQCastReady)
-                                {
-                                    jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range,Marksman.Utils.Utils.MobTypes.BigBoys);
-                                    if (jungleMobs != null)
-                                    {
-                                        Q.Cast(jungleMobs);
-                                    }
-                                }
-                                break;
-                            }
-                    }
-                }
+            if (this.LaneClearActive)
+            {
+                this.ExecuteLaneClear();
             }
 
             if (!ComboActive)
             {
                 var t = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
-                if (!t.IsValidTarget() || !W.IsReady())
-                    return;
+                if (!t.IsValidTarget() || !W.IsReady()) return;
 
                 if (Program.Config.Item("UseWTH").GetValue<KeyBind>().Active)
                 {
-                    if (ObjectManager.Player.HasBuff("Recall"))
-                        return;
+                    if (ObjectManager.Player.HasBuff("Recall")) return;
                     W.Cast(t);
                 }
 
-                if (t.HasBuffOfType(BuffType.Stun) || t.HasBuffOfType(BuffType.Snare) ||
-                    t.HasBuffOfType(BuffType.Charm) || t.HasBuffOfType(BuffType.Fear) ||
-                    t.HasBuffOfType(BuffType.Taunt) || t.HasBuff("zhonyasringshield") ||
-                    t.HasBuff("Recall"))
+                if (t.HasBuffOfType(BuffType.Stun) || t.HasBuffOfType(BuffType.Snare) || t.HasBuffOfType(BuffType.Charm)
+                    || t.HasBuffOfType(BuffType.Fear) || t.HasBuffOfType(BuffType.Taunt)
+                    || t.HasBuff("zhonyasringshield") || t.HasBuff("Recall"))
                 {
                     W.Cast(t.Position);
                 }
@@ -146,12 +161,11 @@ namespace Marksman.Champions
             /* [ Combo ] */
             if (ComboActive)
             {
-                var useQ = Config.Item("UseQC" + Id).GetValue<bool>();
                 var useW = Config.Item("UseWC" + Id).GetValue<bool>();
 
                 var t = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
 
-                if (useQ && Q.IsReady() && AsheQCastReady)
+                if (Q.IsReady() && AsheQCastReady)
                 {
                     if (t.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 90))
                     {
@@ -171,15 +185,14 @@ namespace Marksman.Champions
                     var maxRRange = Program.Config.SubMenu("Combo").Item("UseRCMaxRange").GetValue<Slider>().Value;
 
                     t = TargetSelector.GetTarget(maxRRange, TargetSelector.DamageType.Physical);
-                    if (!t.IsValidTarget())
-                        return;
+                    if (!t.IsValidTarget()) return;
 
                     var aaDamage = Orbwalking.InAutoAttackRange(t)
-                        ? ObjectManager.Player.GetAutoAttackDamage(t, true)
-                        : 0;
+                                       ? ObjectManager.Player.GetAutoAttackDamage(t, true)
+                                       : 0;
 
-                    if (t.Health > aaDamage && t.Health <= ObjectManager.Player.GetSpellDamage(t, SpellSlot.R) &&
-                        ObjectManager.Player.Distance(t) >= minRRange)
+                    if (t.Health > aaDamage && t.Health <= ObjectManager.Player.GetSpellDamage(t, SpellSlot.R)
+                        && ObjectManager.Player.Distance(t) >= minRRange)
                     {
                         R.Cast(t);
                     }
@@ -190,11 +203,9 @@ namespace Marksman.Champions
             if (HarassActive)
             {
                 var target = TargetSelector.GetTarget(1200, TargetSelector.DamageType.Physical);
-                if (target == null)
-                    return;
+                if (target == null) return;
 
-                if (Config.Item("UseWH" + Id).GetValue<bool>() && W.IsReady())
-                    W.Cast(target);
+                if (Config.Item("UseWH" + Id).GetValue<bool>() && W.IsReady()) W.Cast(target);
             }
 
             //Manual cast R
@@ -205,9 +216,123 @@ namespace Marksman.Champions
             }
         }
 
+        public override void ExecuteJungleClear()
+        {
+            if (Q.IsReady() && AsheQCastReady)
+            {
+                var jE = this.GetValue<StringList>("UseQJ").SelectedIndex;
+                if (jE != 0)
+                {
+                    if (jE == 1)
+                    {
+                        var jungleMobs = Utils.Utils.GetMobs(
+                            Orbwalking.GetRealAutoAttackRange(null) + 65,
+                            Utils.Utils.MobTypes.BigBoys);
+                        if (jungleMobs != null)
+                        {
+                            Q.Cast();
+                        }
+                    }
+                    else
+                    {
+                        var totalAa =
+                            MinionManager.GetMinions(
+                                ObjectManager.Player.Position,
+                                Orbwalking.GetRealAutoAttackRange(null) + 165,
+                                MinionTypes.All,
+                                MinionTeam.Neutral).Sum(mob => (int)mob.Health);
+                        totalAa = (int)(totalAa / ObjectManager.Player.TotalAttackDamage());
+                        if (totalAa > jE)
+                        {
+                            Q.Cast();
+                        }
+                    }
+                }
+            }
+
+            if (W.IsReady())
+            {
+                var jungleMobs = Marksman.Utils.Utils.GetMobs(W.Range, Marksman.Utils.Utils.MobTypes.All);
+                if (jungleMobs != null)
+                {
+                    var jW = GetValue<StringList>("UseWJ").SelectedIndex;
+                    switch (jW)
+                    {
+                        case 1:
+                            {
+                                jungleMobs = Marksman.Utils.Utils.GetMobs(
+                                    W.Range,
+                                    Marksman.Utils.Utils.MobTypes.All,
+                                    jW);
+                                W.CastOnUnit(jungleMobs);
+                                break;
+                            }
+                        case 2:
+                            {
+                                jungleMobs = Utils.Utils.GetMobs(W.Range, Utils.Utils.MobTypes.BigBoys);
+                                if (jungleMobs != null)
+                                {
+                                    W.CastOnUnit(jungleMobs);
+                                }
+                                break;
+                            }
+                    }
+                }
+            }
+        }
+
+        public override void ExecuteLaneClear()
+        {
+            if (!Program.Config.Item("Lane.Enabled").GetValue<bool>())
+            {
+                return;
+            }
+
+            if (Q.IsReady() && AsheQCastReady)
+            {
+                var jQ = GetValue<StringList>("UseQ.Lane").SelectedIndex;
+                if (jQ != 0)
+                {
+                    var totalAa =
+                        ObjectManager.Get<Obj_AI_Minion>()
+                            .Where(
+                                m => m.IsEnemy && !m.IsDead && m.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null)))
+                            .Sum(mob => (int)mob.Health);
+
+                    totalAa = (int)(totalAa / ObjectManager.Player.TotalAttackDamage());
+                    if (totalAa > jQ)
+                    {
+                        Q.Cast();
+                    }
+
+                }
+            }
+
+            if (E.IsReady())
+            {
+                var minions = MinionManager.GetMinions(
+                    ObjectManager.Player.Position,
+                    E.Range,
+                    MinionTypes.All,
+                    MinionTeam.Enemy);
+
+                if (minions != null)
+                {
+                    var jE = GetValue<StringList>("UseW.Lane").SelectedIndex;
+                    if (jE != 0)
+                    {
+                        var mE = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, W.Range, MinionTypes.All);
+                        if (mE.Count >= jE)
+                        {
+                            W.Cast(mE[0].Position);
+                        }
+                    }
+                }
+            }
+        }
+
         public override bool ComboMenu(Menu config)
         {
-            config.AddItem(new MenuItem("UseQC" + Id, "Q").SetValue(true));
             config.AddItem(new MenuItem("UseWC" + Id, "W").SetValue(true));
 
             var xRMenu = new Menu("R", "ComboR");
@@ -237,7 +362,65 @@ namespace Marksman.Champions
 
         public override bool LaneClearMenu(Menu config)
         {
-            config.AddItem(new MenuItem("UseQForBigBoys", "Use Q For Baron/Dragon/Red/Blue").SetValue(true));
+            config.AddItem(new MenuItem("Lane.Enabled", "Enable! (On/Off: Mouse Scroll").SetValue(true))
+                .Permashow(true, "Marksman | Enable Farm");
+
+            string[] strQ = new string[7];
+            strQ[0] = "Off";
+
+            for (var i = 1; i < 7; i++)
+            {
+                strQ[i] = "If need to AA more than >= " + i;
+            }
+
+            config.AddItem(new MenuItem("UseQ.Lane" + Id, Utils.Utils.Tab + "Use Q:").SetValue(new StringList(strQ, 0)));
+
+            string[] strW = new string[5];
+            strW[0] = "Off";
+
+            for (var i = 1; i < 5; i++)
+            {
+                strW[i] = "If W it'll Hit >= " + i;
+            }
+
+            config.AddItem(new MenuItem("UseW.Lane" + Id, Utils.Utils.Tab + "Use W:").SetValue(new StringList(strW, 0)));
+
+            config.AddItem(
+                new MenuItem("UseQ.Lane.UnderTurret" + Id, Utils.Utils.Tab + "Always Use Q Under Ally Turrent:")
+                    .SetValue(true));
+            config.AddItem(
+                new MenuItem("UseW.Lane.UnderTurret" + Id, Utils.Utils.Tab + "Always Use W Under Ally Turrent:")
+                    .SetValue(true));
+            return true;
+        }
+
+        public override bool JungleClearMenu(Menu config)
+        {
+            string[] strQ = new string[8];
+            {
+                strQ[0] = "Off";
+                strQ[1] = "Just for big Monsters";
+
+                for (var i = 2; i < 8; i++)
+                {
+                    strQ[i] = "If need to AA more than >= " + i;
+                }
+
+                config.AddItem(new MenuItem("UseQJ" + Id, "Use Q").SetValue(new StringList(strQ, 4)));
+            }
+
+            string[] strW = new string[4];
+            {
+                strW[0] = "Off";
+                strW[1] = "Just for big Monsters";
+
+                for (var i = 2; i < 4; i++)
+                {
+                    strW[i] = "If Mobs Count >= " + i;
+                }
+
+                config.AddItem(new MenuItem("UseWJ" + Id, "Use W").SetValue(new StringList(strW, 1)));
+            }
             return true;
         }
 
@@ -259,6 +442,14 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
+            //foreach (var e in HeroManager.Enemies.Where(e => e.IsValidTarget(3500)))
+            //{
+            //    var x = new Geometry.Polygon.Line(e.Position, e.Path[0]);
+
+            //    x.Draw(System.Drawing.Color.Red, 3);
+
+            //}
+            //return;
             var drawW = Config.Item("DrawW" + Id).GetValue<Circle>();
             if (drawW.Active)
             {
@@ -279,17 +470,5 @@ namespace Marksman.Champions
                 Render.Circle.DrawCircle(ObjectManager.Player.Position, maxRRange, drawRMax.Color, 2);
             }
         }
-
-        public override bool JungleClearMenu(Menu config)
-        {
-            config.AddItem(new MenuItem("UseQJ" + this.Id, "Use Q").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 1))).ValueChanged +=
-                (sender, args) =>
-                {
-                    Program.CClass.Config.Item("Jungle.Mana").Show(args.GetNewValue<StringList>().SelectedIndex != 0);
-                };
-            return true;
-        }
-
-
     }
 }

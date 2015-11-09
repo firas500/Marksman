@@ -1,10 +1,9 @@
 #region
-
 using System;
-using System.Drawing;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Utils;
 using SharpDX;
 using Color = System.Drawing.Color;
 
@@ -14,13 +13,16 @@ namespace Marksman.Champions
 {
     internal class Vayne : Champion
     {
-        public static Spell Q;
-        public static Spell E;
+        public static float rqTumbleBuffEndOfTime = 0;
+        public static bool VayneUltiIsActive { get; set; }
+        
+        public static Spell Q, E, R;
 
         public Vayne()
         {
             Q = new Spell(SpellSlot.Q, 300f);
             E = new Spell(SpellSlot.E, 650f);
+            R = new Spell(SpellSlot.E, 650f);
 
             E.SetTargetted(0.25f, 2200f);
 
@@ -28,6 +30,19 @@ namespace Marksman.Champions
             Interrupter2.OnInterruptableTarget += Interrupter2_OnInterruptableTarget;
 
             Utils.Utils.PrintMessage("Vayne loaded");
+        }
+
+        public override void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args)
+        {
+
+        }
+
+        public override void Obj_AI_Base_OnBuffAdd(Obj_AI_Base sender, Obj_AI_BaseBuffAddEventArgs args)
+        {
+            rqTumbleBuffEndOfTime = GetValue<bool>("Misc.R.DontAttack") && sender.IsMe &&
+                                    args.Buff.Name.ToLower() == "vaynetumblefade"
+                ? args.Buff.EndTime
+                : 0;
         }
 
         public void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
@@ -44,11 +59,13 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
+            
+            Orbwalker.SetAttack(Game.Time > rqTumbleBuffEndOfTime);
+
             if (this.JungleClearActive)
             {
                 this.ExecJungleClear();
             }
-
             
             if ((ComboActive || HarassActive))
             {
@@ -67,20 +84,20 @@ namespace Marksman.Champions
                     }
                 }
                 var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
-                var useE = GetValue<bool>("UseE" + (ComboActive ? "C" : "H"));
+                var useE = GetValue<StringList>("UseEC").SelectedIndex;
 
-                var t = TargetSelector.GetTarget(Q.Range + Orbwalking.GetRealAutoAttackRange(null) + 35, TargetSelector.DamageType.Physical);
+                var t = TargetSelector.GetTarget(Q.Range + Orbwalking.GetRealAutoAttackRange(null), TargetSelector.DamageType.Physical);
                 if (t.IsValidTarget() && useQ)
                 {
-                    if (!t.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 35))
+                    if (t.Distance(ObjectManager.Player.Position) > Orbwalking.GetRealAutoAttackRange(null) && Q.IsPositionSafe(t.Position.To2D()))
                     {
                         Q.Cast(t.Position);
                     }
-                    else
+                    else if (Q.IsPositionSafe(Game.CursorPos.To2D()))
                     {
                         Q.Cast(Game.CursorPos);
                     }
-                    Orbwalker.ForceTarget(t);
+                    this.Orbwalker.ForceTarget(t);
                 }
 
                 if (Q.IsReady() && GetValue<bool>("CompleteSilverBuff"))
@@ -91,20 +108,40 @@ namespace Marksman.Champions
                     }
                 }
 
-                if (E.IsReady() && useE)
+                if (E.IsReady() && useE != 0)
                 {
                     t = TargetSelector.GetTarget(E.Range + Q.Range, TargetSelector.DamageType.Physical);
-                    if (t.IsValidTarget())
+                    if (useE == 1)
                     {
-                        for (var i = 1; i < 8; i++)
+                        if (t.IsValidTarget())
                         {
-                            var targetBehind = t.Position +
-                                               Vector3.Normalize(t.ServerPosition - ObjectManager.Player.Position)*i*50;
-
-                            if (targetBehind.IsWall() && t.IsValidTarget(E.Range))
+                            for (var i = 1; i < 8; i++)
                             {
-                                E.CastOnUnit(t);
-                                return;
+                                var targetBehind = t.Position +
+                                                   Vector3.Normalize(t.ServerPosition - ObjectManager.Player.Position)*i*
+                                                   50;
+
+                                if (targetBehind.IsWall() && t.IsValidTarget(E.Range))
+                                {
+                                    E.CastOnUnit(t);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach (var e in HeroManager.Enemies.Where(e => e.IsValidTarget(E.Range) && !e.IsZombie))
+                        {
+                            for (var i = 1; i < 8; i++)
+                            {
+                                var targetBehind = t.Position + Vector3.Normalize(e.ServerPosition - ObjectManager.Player.Position)*i* 50;
+
+                                if (targetBehind.IsWall())
+                                {
+                                    E.CastOnUnit(e);
+                                    return;
+                                }
                             }
                         }
                     }
@@ -147,6 +184,8 @@ namespace Marksman.Champions
                 }
             }
         }
+
+       
 
         public void ExecJungleClear()
         {
@@ -224,19 +263,12 @@ namespace Marksman.Champions
 
         public override void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
-            var useQ = this.GetValue<bool>(
-                    "UseQ" +
-                    (this.ComboActive
-                        ? this.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo ? "C" : ""
-                        : this.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed ? "H" : ""));
-            if (unit.IsMe && useQ)
-                Q.Cast(Game.CursorPos);
         }
 
         public override bool ComboMenu(Menu config)
         {
             config.AddItem(new MenuItem("UseQC" + Id, "Use Q").SetValue(true));
-            config.AddItem(new MenuItem("UseEC" + Id, "Use E").SetValue(true));
+            config.AddItem(new MenuItem("UseEC" + Id, "Use E").SetValue(new StringList(new []{ "Off", "On", "Just Selected Target" }, 1)));
             config.AddItem(new MenuItem("FocusW" + Id, "Force Focus Marked Enemy").SetValue(true));
             return true;
         }
@@ -250,9 +282,13 @@ namespace Marksman.Champions
 
         public override bool MiscMenu(Menu config)
         {
-            config.AddItem(
-                new MenuItem("UseET" + Id, "Use E (Toggle)").SetValue(new KeyBind("T".ToCharArray()[0],
-                    KeyBindType.Toggle)));
+            var menuMiscR = new Menu("R", "Misc.R");
+            {
+                menuMiscR.AddItem(new MenuItem("Misc.R.DontAttack" + Id, "Don't Attack If I'm visible with ulti").SetValue(true));
+                config.AddSubMenu(menuMiscR);
+            }
+            // TODO: Add back-off option if Vayne's in dangerous
+            config.AddItem(new MenuItem("UseET" + Id, "Use E (Toggle)").SetValue(new KeyBind("T".ToCharArray()[0],KeyBindType.Toggle)));
             config.AddItem(new MenuItem("UseEInterrupt" + Id, "Use E To Interrupt").SetValue(true));
             config.AddItem(new MenuItem("UseEGapcloser" + Id, "Use E To Gapcloser").SetValue(true));
             config.AddItem(new MenuItem("PushDistance" + Id, "E Push Distance").SetValue(new Slider(425, 475, 300)));
@@ -283,6 +319,7 @@ namespace Marksman.Champions
                 {
                     Render.Circle.DrawCircle(ObjectManager.Player.Position, E.Range, Color.BurlyWood, 1);
                 }
+
                 if (drawE == 2 || drawE == 3)
                 { 
                     var t = TargetSelector.GetTarget(E.Range + Q.Range, TargetSelector.DamageType.Physical);
@@ -291,11 +328,8 @@ namespace Marksman.Champions
                         var color = System.Drawing.Color.Red;
                         for (var i = 1; i < 8; i++)
                         {
-                            var targetBehind = t.Position
-                                               + Vector3.Normalize(t.ServerPosition - ObjectManager.Player.Position)*i
-                                               *50;
-
-
+                            var targetBehind = t.Position + Vector3.Normalize(t.ServerPosition - ObjectManager.Player.Position) * i * 50;
+                            
                             if (!targetBehind.IsWall())
                             {
                                 color = System.Drawing.Color.Aqua;
@@ -304,7 +338,6 @@ namespace Marksman.Champions
                             {
                                 color = System.Drawing.Color.Red;
                             }
-
                         }
 
                         var tt = t.Position + Vector3.Normalize(t.ServerPosition - ObjectManager.Player.Position)*8*50;
