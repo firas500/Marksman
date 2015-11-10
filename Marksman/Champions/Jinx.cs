@@ -155,15 +155,15 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
+            /*
             var x = HeroManager.Enemies.Find(e => !e.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null)) && e.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + QAddRange));
             if (x != null && !FishBoneActive && Q.IsReady())
             {
                 Q.Cast();
                 Program.CClass.Orbwalker.ForceTarget(x);
             }
-
+            */
             if (Q.IsReady() && GetValue<bool>("SwapDistance") && Program.CClass.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
-            //if (Q.IsReady() && this.GetValue<bool>("SwapDistance"))
             {
                 var activeQ = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.Q).Level * 25 + 650;
                 var t = TargetSelector.GetTarget(activeQ, TargetSelector.DamageType.Physical);
