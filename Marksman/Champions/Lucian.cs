@@ -55,7 +55,7 @@ namespace Marksman.Champions
                     where
                         vMinion.Distance(vTarget) <= vTarget.Distance(ObjectManager.Player) &&
                         Intersection(ObjectManager.Player.ServerPosition.To2D(), endPoint.To2D(),
-                            vTarget.ServerPosition.To2D(), vTarget.BoundingRadius + Q.Width/4)
+                            vTarget.ServerPosition.To2D(), vTarget.BoundingRadius + vMinion.BoundingRadius)
                     select vMinion).FirstOrDefault();
             }
         }
