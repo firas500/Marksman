@@ -126,7 +126,7 @@ namespace Marksman.Evade
             Menu.AddSubMenu(drawings);
 
             var misc = new Menu("Misc", "Misc");
-            misc.AddItem(new MenuItem("DisableFow", "Disable fog of war dodging").SetValue(false));
+            misc.AddItem(new MenuItem("DisableFow", "Disable fog of war dodging").SetValue(true));
             misc.AddItem(new MenuItem("ShowEvadeStatus", "Show Evade Status").SetValue(false));
             Menu.AddSubMenu(misc);
 

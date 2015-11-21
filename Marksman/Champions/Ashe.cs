@@ -37,7 +37,6 @@ namespace Marksman.Champions
 
             Utility.HpBarDamageIndicator.DamageToUnit = GetComboDamage;
             Utility.HpBarDamageIndicator.Enabled = true;
-            Game.OnWndProc += Game_OnWndProc;
 
             Obj_AI_Base.OnBuffAdd += (sender, args) =>
                 {
@@ -60,14 +59,6 @@ namespace Marksman.Champions
 
             Utils.Utils.PrintMessage("Ashe loaded.");
         }
-
-        private static void Game_OnWndProc(WndEventArgs args)
-        {
-            if (args.Msg != 0x20a) return;
-
-            Program.Config.Item("Lane.Enabled").SetValue(!Program.Config.Item("Lane.Enabled").GetValue<bool>());
-        }
-
 
         private static bool AsheQCastReady
         {
@@ -129,16 +120,6 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
-            if (this.JungleClearActive)
-            {
-                this.ExecuteJungleClear();
-            }
-
-            if (this.LaneClearActive)
-            {
-                this.ExecuteLaneClear();
-            }
-
             if (!ComboActive)
             {
                 var t = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
@@ -167,7 +148,7 @@ namespace Marksman.Champions
 
                 if (Q.IsReady() && AsheQCastReady)
                 {
-                    if (t.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 90))
+                    if (t.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 90))
                     {
                         Q.Cast();
                     }
@@ -187,7 +168,7 @@ namespace Marksman.Champions
                     t = TargetSelector.GetTarget(maxRRange, TargetSelector.DamageType.Physical);
                     if (!t.IsValidTarget()) return;
 
-                    var aaDamage = Orbwalking.InAutoAttackRange(t)
+                    var aaDamage = Marksman.Utils.Orbwalking.InAutoAttackRange(t)
                                        ? ObjectManager.Player.GetAutoAttackDamage(t, true)
                                        : 0;
 
@@ -220,13 +201,13 @@ namespace Marksman.Champions
         {
             if (Q.IsReady() && AsheQCastReady)
             {
-                var jE = this.GetValue<StringList>("UseQJ").SelectedIndex;
+                var jE = GetValue<StringList>("UseQJ").SelectedIndex;
                 if (jE != 0)
                 {
                     if (jE == 1)
                     {
                         var jungleMobs = Utils.Utils.GetMobs(
-                            Orbwalking.GetRealAutoAttackRange(null) + 65,
+                            Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65,
                             Utils.Utils.MobTypes.BigBoys);
                         if (jungleMobs != null)
                         {
@@ -238,7 +219,7 @@ namespace Marksman.Champions
                         var totalAa =
                             MinionManager.GetMinions(
                                 ObjectManager.Player.Position,
-                                Orbwalking.GetRealAutoAttackRange(null) + 165,
+                                Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 165,
                                 MinionTypes.All,
                                 MinionTeam.Neutral).Sum(mob => (int)mob.Health);
                         totalAa = (int)(totalAa / ObjectManager.Player.TotalAttackDamage());
@@ -283,11 +264,6 @@ namespace Marksman.Champions
 
         public override void ExecuteLaneClear()
         {
-            if (!Program.Config.Item("Lane.Enabled").GetValue<bool>())
-            {
-                return;
-            }
-
             if (Q.IsReady() && AsheQCastReady)
             {
                 var jQ = GetValue<StringList>("UseQ.Lane").SelectedIndex;
@@ -296,7 +272,7 @@ namespace Marksman.Champions
                     var totalAa =
                         ObjectManager.Get<Obj_AI_Minion>()
                             .Where(
-                                m => m.IsEnemy && !m.IsDead && m.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null)))
+                                m => m.IsEnemy && !m.IsDead && m.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null)))
                             .Sum(mob => (int)mob.Health);
 
                     totalAa = (int)(totalAa / ObjectManager.Player.TotalAttackDamage());
@@ -362,9 +338,6 @@ namespace Marksman.Champions
 
         public override bool LaneClearMenu(Menu config)
         {
-            config.AddItem(new MenuItem("Lane.Enabled", "Enable! (On/Off: Mouse Scroll").SetValue(true))
-                .Permashow(true, "Marksman | Enable Farm");
-
             string[] strQ = new string[7];
             strQ[0] = "Off";
 

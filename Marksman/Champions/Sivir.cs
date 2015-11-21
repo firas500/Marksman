@@ -20,8 +20,8 @@ namespace Marksman.Champions
 
         public DangerousSpells(string championName, SpellSlot spellSlot)
         {
-            this.ChampionName = championName;
-            this.SpellSlot = spellSlot;
+            ChampionName = championName;
+            SpellSlot = spellSlot;
         }
     }
 
@@ -55,21 +55,10 @@ namespace Marksman.Champions
             DangerousList.Add(new DangerousSpells("zed", SpellSlot.R));
             DangerousList.Add(new DangerousSpells("tristana", SpellSlot.R));
 
-            Game.OnWndProc += Game_OnWndProc;
-
             Utils.PrintMessage("Sivir loaded.");
-//            Utils.Utils.PrintMessage("Sivir E Support Loaded! Please check the Marksman Menu for her E Spell");
         }
 
-        private static void Game_OnWndProc(WndEventArgs args)
-        {
-            if (args.Msg != 0x20a)
-                return;
-
-            Program.Config.Item("Lane.Enabled").SetValue(!Program.Config.Item("Lane.Enabled").GetValue<bool>());
-        }
-
-        public override void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
+        public override void Orbwalking_BeforeAttack(Marksman.Utils.Orbwalking.BeforeAttackEventArgs args)
         {
             if (!W.IsReady())
             {
@@ -104,14 +93,14 @@ namespace Marksman.Champions
                 return;
             }
 
-            if (sender.IsEnemy && sender is Obj_AI_Hero && args.Target.IsMe && this.E.IsReady())
+            if (sender.IsEnemy && sender is Obj_AI_Hero && args.Target.IsMe && E.IsReady())
             {
                 foreach (
                     var c in
                         DangerousList.Where(c => ((Obj_AI_Hero) sender).ChampionName.ToLower() == c.ChampionName)
                             .Where(c => args.SData.Name == ((Obj_AI_Hero) sender).GetSpell(c.SpellSlot).Name))
                 {
-                    this.E.Cast();
+                    E.Cast();
                 }
             }
 
@@ -126,7 +115,7 @@ namespace Marksman.Champions
                     if (championBehind.IsWall())
                     {
 
-                        this.E.Cast();
+                        E.Cast();
                     }
                 }
             }
@@ -134,16 +123,6 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
-            if (this.JungleClearActive)
-            {
-                ExecuteJungleClear();
-            }
-
-            if (this.LaneClearActive && Program.Config.Item("Lane.Enabled").GetValue<bool>())
-            {
-                ExecuteLaneClear();
-            }
-
             if (GetValue<bool>("AutoQ"))
             {
                 var t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
@@ -173,7 +152,7 @@ namespace Marksman.Champions
             }
         }
 
-        private void ExecuteJungleClear()
+        public override void ExecuteJungleClear()
         {
             var jungleMobs = Utils.GetMobs(Q.Range, Marksman.Utils.Utils.MobTypes.All);
 
@@ -207,7 +186,7 @@ namespace Marksman.Champions
                     {
                         if (jW == 1)
                         {
-                            jungleMobs = Utils.GetMobs(Orbwalking.GetRealAutoAttackRange(null) + 65,
+                            jungleMobs = Utils.GetMobs(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65,
                                 Utils.MobTypes.BigBoys);
                             if (jungleMobs != null)
                             {
@@ -221,7 +200,7 @@ namespace Marksman.Champions
                                     .Where(
                                         m =>
                                             m.Team == GameObjectTeam.Neutral &&
-                                            m.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 165))
+                                            m.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 165))
                                     .Sum(mob => (int) mob.Health);
                             totalAa = (int) (totalAa/ObjectManager.Player.TotalAttackDamage());
                             if (totalAa > jW)
@@ -234,7 +213,7 @@ namespace Marksman.Champions
             }
         }
 
-        private void ExecuteLaneClear()
+        public override void ExecuteLaneClear()
         {
             var qJ = Program.Config.Item("UseQ.Lane").GetValue<StringList>().SelectedIndex;
             if (qJ != 0)
@@ -257,7 +236,7 @@ namespace Marksman.Champions
             if (wJ != 0)
             {
                 var minionsW = MinionManager.GetMinions(ObjectManager.Player.ServerPosition,
-                    Orbwalking.GetRealAutoAttackRange(null) + 165, MinionTypes.All);
+                    Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 165, MinionTypes.All);
                 if (minionsW != null && minionsW.Count >= wJ)
                 {
                     if (W.IsReady())
@@ -351,9 +330,6 @@ namespace Marksman.Champions
 
         public override bool LaneClearMenu(Menu config)
         {
-            config.AddItem(new MenuItem("Lane.Enabled", "Enable! (On/Off: Mouse Scroll").SetValue(true))
-                .Permashow(true, "Tristana | Enable Farm");
-
             string[] strQ = new string[5];
             strQ[0] = "Off";
 

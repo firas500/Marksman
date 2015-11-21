@@ -20,7 +20,7 @@ namespace Marksman.Utils
             
             LocalMenu = new Menu("Auto Level", "Auto Level").SetFontStyle(FontStyle.Regular, Color.IndianRed);
             LocalMenu.AddItem(new MenuItem("AutoLevel.Set", "at Start:").SetValue(new StringList(new[] { "Allways Off", "Allways On", "Remember Last Settings" }, 2)));
-            LocalMenu.AddItem(new MenuItem("AutoLevel.Active", "Auto Level Active!").SetValue(new KeyBind("L".ToCharArray()[0], KeyBindType.Toggle))).Permashow(true, "Marksman| Auto Level");
+            LocalMenu.AddItem(new MenuItem("AutoLevel.Active", "Auto Level Active!").SetValue(true));
             
             var championName = ObjectManager.Player.ChampionName.ToLowerInvariant();
             
@@ -32,7 +32,7 @@ namespace Marksman.Utils
                     break;
 
                 case "caitlyn":
-                    SpellLevels = new int[] { 1, 3, 2, 1, 1, 4, 3, 1, 2, 1, 4, 3, 2, 3, 2, 4, 3, 2 };
+                    SpellLevels = new int[] { 1, 2, 3, 1, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
                     //LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
@@ -139,16 +139,15 @@ namespace Marksman.Utils
                     //LocalMenu.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
             }
-            
+
             switch (LocalMenu.Item("AutoLevel.Set").GetValue<StringList>().SelectedIndex)
             {
                 case 0:
-                    LocalMenu.Item("AutoLevel.Active")
-                        .SetValue(new KeyBind("L".ToCharArray()[0], KeyBindType.Toggle, false));
+                    LocalMenu.Item("AutoLevel.Active").SetValue(false);
                     break;
 
                 case 1:
-                    LocalMenu.Item("AutoLevel.Active").SetValue(new KeyBind("L".ToCharArray()[0], KeyBindType.Toggle, true));
+                    LocalMenu.Item("AutoLevel.Active").SetValue(true);
                     break;
             }
 
@@ -165,7 +164,7 @@ namespace Marksman.Utils
 
         private static void Game_OnUpdate(EventArgs args)
         {
-            if (!LocalMenu.Item("AutoLevel.Active").GetValue<KeyBind>().Active)
+            if (!LocalMenu.Item("AutoLevel.Active").GetValue<bool>())
             {
                 return;
             }

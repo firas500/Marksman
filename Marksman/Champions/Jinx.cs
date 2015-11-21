@@ -6,13 +6,14 @@ using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 using Marksman.Utils;
+using SharpDX;
+using Color = SharpDX.Color;
+using Orbwalking = Marksman.Utils.Orbwalking;
 
 #endregion
 
 namespace Marksman.Champions
 {
-    using Utils = LeagueSharp.Common.Utils;
-
     internal class Jinx : Champion
     {
         public static Spell Q, W, E, R;
@@ -59,7 +60,7 @@ namespace Marksman.Champions
             Utility.HpBarDamageIndicator.DamageToUnit = GetComboDamage;
             Utility.HpBarDamageIndicator.Enabled = true;
 
-            Marksman.Utils.Utils.PrintMessage("Jinx loaded.");
+            Utils.Utils.PrintMessage("Jinx loaded.");
         }
 
         private static float GetComboDamage(Obj_AI_Hero t)
@@ -110,12 +111,12 @@ namespace Marksman.Champions
         public override void Drawing_OnDraw(EventArgs args)
         {
 
-            if (R.IsReady() && this.GetValue<bool>("DrawCH"))
+            if (R.IsReady() && GetValue<bool>("DrawCH"))
             {
                 var enemies = HeroManager.Enemies.Where(e => e.IsEnemy);
                 var objAiHeroes = enemies as Obj_AI_Hero[] ?? enemies.ToArray();
 
-                Marksman.Utils.Utils.DrawText(Marksman.Utils.Utils.SmallText,"Kill with Ulti!",Drawing.Width * 0.895f,Drawing.Height * 0.419f,SharpDX.Color.Wheat);
+                Utils.Utils.DrawText(Utils.Utils.SmallText,"Kill with Ulti!",Drawing.Width * 0.895f,Drawing.Height * 0.419f,Color.Wheat);
                 for (var i = 0; i < objAiHeroes.Count(); i++)
                 {
                     //Drawing.DrawLine(Drawing.Width * 0.812f + 0,Drawing.Height * 0.419f + (float)(i + 1) * 20,Drawing.Width * 0.815f + 100,Drawing.Height * 0.419f + (float)(i + 1) * 20,16,Color.Black);
@@ -124,9 +125,9 @@ namespace Marksman.Champions
                     var hPercent = objAiHeroes[i].HealthPercent;
                     if (hPercent > 0)
                     {
-                        Drawing.DrawLine(Drawing.Width * 0.892f + 1,Drawing.Height * 0.420f + (float)(i + 1) * 20,Drawing.Width * 0.895f + hPercent - 1, Drawing.Height * 0.420f + (float)(i + 1) * 20, 14, hPercent < 50 && hPercent > 30 ? Color.Yellow : objAiHeroes[i].Health <= R.GetDamage(objAiHeroes[i]) ? Color.Red : Color.DarkOliveGreen);
+                        Drawing.DrawLine(Drawing.Width * 0.892f + 1,Drawing.Height * 0.420f + (float)(i + 1) * 20,Drawing.Width * 0.895f + hPercent - 1, Drawing.Height * 0.420f + (float)(i + 1) * 20, 14, hPercent < 50 && hPercent > 30 ? System.Drawing.Color.Yellow : objAiHeroes[i].Health <= R.GetDamage(objAiHeroes[i]) ? System.Drawing.Color.Red : System.Drawing.Color.DarkOliveGreen);
                     }
-                    Marksman.Utils.Utils.DrawText(Marksman.Utils.Utils.SmallText, objAiHeroes[i].ChampionName, Drawing.Width * 0.895f, Drawing.Height * 0.42f + (float)(i + 1) * 20, SharpDX.Color.Black);
+                    Utils.Utils.DrawText(Utils.Utils.SmallText, objAiHeroes[i].ChampionName, Drawing.Width * 0.895f, Drawing.Height * 0.42f + (float)(i + 1) * 20, Color.Black);
                 }
             }
             /*----------------------------------------------------*/
@@ -156,7 +157,7 @@ namespace Marksman.Champions
         public override void Game_OnGameUpdate(EventArgs args)
         {
             /*
-            var x = HeroManager.Enemies.Find(e => !e.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null)) && e.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + QAddRange));
+            var x = HeroManager.Enemies.Find(e => !e.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null)) && e.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + QAddRange));
             if (x != null && !FishBoneActive && Q.IsReady())
             {
                 Q.Cast();
@@ -173,7 +174,7 @@ namespace Marksman.Champions
                     if (!FishBoneActive)
                     {
                         Q.Cast();
-                        this.Orbwalker.ForceTarget(t);
+                        Orbwalker.ForceTarget(t);
                         return;
                     }
                 }
@@ -193,7 +194,7 @@ namespace Marksman.Champions
                         R.IsReady() && t.IsValidTarget() && R.GetDamage(t) > t.Health
                         && t.Distance(ObjectManager.Player) > Orbwalking.GetRealAutoAttackRange(null) + 65 + QAddRange))
                 {
-                    Marksman.Utils.Utils.MPing.Ping(enemy.Position.To2D());
+                    Utils.Utils.MPing.Ping(enemy.Position.To2D(), 2, PingCategory.Normal);
                 }
             }
 
@@ -266,7 +267,7 @@ namespace Marksman.Champions
                 }
             }
 
-            if (this.GetValue<bool>("SwapQ") && FishBoneActive && !this.ComboActive)
+            if (GetValue<bool>("SwapQ") && FishBoneActive && !ComboActive)
             {
                 Q.Cast();
             }
@@ -542,8 +543,51 @@ namespace Marksman.Champions
 
         public override bool LaneClearMenu(Menu config)
         {
-            config.AddItem(new MenuItem("UseQL" + Id, "Use Q for minion:").SetValue(new Slider(3, 0, 6)));
+            // Q
+            string[] strQ = new string[5];
+            {
+                strQ[0] = "Off";
+
+                for (var i = 1; i < 5; i++)
+                {
+                    strQ[i] = "Minion Count >= " + i;
+                }
+                config.AddItem(new MenuItem("Lane.UseQ" + Id, "Q:").SetValue(new StringList(strQ, 0))).SetFontStyle(FontStyle.Regular, W.MenuColor());
+            }
+            config.AddItem(new MenuItem("Lane.UseQ.Mode" + Id, "Q Mode:").SetValue(new StringList(new[] { "Under Ally Turret", "Out of AA Range", "Botch" }, 2))).SetFontStyle(FontStyle.Regular, Q.MenuColor());
+            
+            // W
+            config.AddItem(new MenuItem("Lane.UseW" + Id, "W:").SetValue(new StringList(new[] { "Off", "Out of AA Range" }, 1))).SetFontStyle(FontStyle.Regular, W.MenuColor());
             return true;
+        }
+
+        public override bool JungleClearMenu(Menu config)
+        {
+            // Q
+            string[] strQ = new string[4];
+            {
+                strQ[0] = "Off";
+                strQ[1] = "Just for big Monsters";
+
+                for (var i = 2; i < 4; i++)
+                {
+                    strQ[i] = "Mobs Count >= " + i;
+                }
+                config.AddItem(new MenuItem("Lane.UseQ", "Q:").SetValue(new StringList(strQ, 3))).SetFontStyle(FontStyle.Regular, Q.MenuColor());
+            }
+            
+            // W
+            config.AddItem(new MenuItem("Lane.UseW", "W [Just Big Mobs]:").SetValue(new StringList(new[] { "Off", "On", "Just Slows the Mob" }, 0))).SetFontStyle(FontStyle.Regular, W.MenuColor());
+
+            // R
+            config.AddItem(new MenuItem("Lane.UseR", "R:").SetValue(new StringList(new[] { "Off", "Baron/Dragon Steal"}, 1))).SetFontStyle(FontStyle.Regular, R.MenuColor());
+
+            return true;
+        }
+
+        public override bool MainMenu(Menu config)
+        {
+            return base.MainMenu(config);
         }
 
         public override bool MiscMenu(Menu config)
@@ -566,18 +610,35 @@ namespace Marksman.Champions
 
         public override bool DrawingMenu(Menu config)
         {
-            config.AddItem(
-                new MenuItem("DrawQBound" + Id, "Draw Q bound").SetValue(
-                    new Circle(true, Color.FromArgb(100, 255, 0, 0))));
-            config.AddItem(new MenuItem("DrawE" + Id, "E range").SetValue(new Circle(false, Color.CornflowerBlue)));
-            config.AddItem(new MenuItem("DrawW" + Id, "W range").SetValue(new Circle(false, Color.CornflowerBlue)));
+            config.AddItem(new MenuItem("DrawQBound" + Id, "Draw Q bound").SetValue(new Circle(true, System.Drawing.Color.FromArgb(100, 255, 0, 0))));
+            config.AddItem(new MenuItem("DrawE" + Id, "E range").SetValue(new Circle(false, System.Drawing.Color.CornflowerBlue)));
+            config.AddItem(new MenuItem("DrawW" + Id, "W range").SetValue(new Circle(false, System.Drawing.Color.CornflowerBlue)));
             config.AddItem(new MenuItem("DrawCH" + Id, "Draw Killable Enemy with R").SetValue(true));
             return true;
         }
 
-        public override bool JungleClearMenu(Menu config)
+        public override void ExecuteFlee()
         {
-            return true;
+            foreach (
+                Obj_AI_Hero unit in
+                    ObjectManager.Get<Obj_AI_Hero>()
+                        .Where(e => e.IsValidTarget(E.Range) && !e.IsDead && e.IsEnemy)
+                        .OrderBy(e => ObjectManager.Player.Distance(e)))
+            {
+                PredictionOutput ePred = E.GetPrediction(unit);
+                Vector3 eBehind = ePred.CastPosition -
+                                  Vector3.Normalize(unit.ServerPosition - ObjectManager.Player.ServerPosition)*150;
+
+                if (E.IsReady())
+                    E.Cast(eBehind);
+            }
+
+            base.ExecuteFlee();
         }
+
+        public override void PermaActive()
+        {
+        }
+
     }
 }

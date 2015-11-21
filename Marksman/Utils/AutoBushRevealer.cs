@@ -18,10 +18,10 @@ namespace Marksman.Utils
 
         public EnemyHeros(Obj_AI_Hero player)
         {
-            this.Player = player;
+            Player = player;
         }
     }
-    // TODO: Add Support Corki Q, Ashe E, Quinn W, Kalista W
+    // TODO: Add Support Corki Q, Ashe E, Quinn W, Kalista W, Jinx E
     internal class Helper
     {
         public static List<EnemyHeros> EnemyInfo = new List<EnemyHeros>();
@@ -31,7 +31,7 @@ namespace Marksman.Utils
             var champions = ObjectManager.Get<Obj_AI_Hero>().ToList();
 
             EnemyInfo = HeroManager.Enemies.Select(e => new EnemyHeros(e)).ToList();
-            Game.OnUpdate += this.Game_OnGameUpdate;
+            Game.OnUpdate += Game_OnGameUpdate;
             
         }
 
@@ -66,11 +66,6 @@ namespace Marksman.Utils
 
             return default(T);
         }
-
-        public void Ping(Vector3 pos)
-        {
-            Packet.S2C.Ping.Encoded(new Packet.S2C.Ping.Struct(pos.X, pos.Y, 0, 0, Packet.PingType.Normal)).Process();
-        }
     }
 
     internal class AutoBushRevealer
@@ -98,10 +93,10 @@ namespace Marksman.Utils
 
         public AutoBushRevealer()
         {
-            this.menu = Program.MenuActivator.AddSubMenu(new Menu("Auto Bush Revealer", "AutoBushRevealer"));
+            menu = Program.MenuActivator.AddSubMenu(new Menu("Auto Bush Revealer", "AutoBushRevealer"));
            
             var useWardsMenu = new Menu("Use Wards: ", "AutoBushUseWards");
-            this.menu.AddSubMenu(useWardsMenu);
+            menu.AddSubMenu(useWardsMenu);
             foreach (var ward in _wards)
             {
                 useWardsMenu.AddItem(new MenuItem("AutoBush." + ward.Key, ward.Value).SetValue(true));
@@ -132,14 +127,19 @@ namespace Marksman.Utils
                         menu.AddItem(new MenuItem(useMenuItemName, useMenuItemText + " W").SetValue(true));
                         break;
                     }
+                case "Jinx":
+                    {
+                        menu.AddItem(new MenuItem(useMenuItemName, useMenuItemText + " E").SetValue(true));
+                        break;
+                    }
             }
-            this.menu.AddItem(new MenuItem("AutoBushEnabled", "Enabled").SetValue(true));
-            this.menu.AddItem(new MenuItem("AutoBushKey", "Key").SetValue(new KeyBind(Program.Config.Item("Orbwalk").GetValue<KeyBind>().Key, KeyBindType.Press)));
+            menu.AddItem(new MenuItem("AutoBushEnabled", "Enabled").SetValue(true));
+            menu.AddItem(new MenuItem("AutoBushKey", "Key").SetValue(new KeyBind(Program.Config.Item("Orbwalk").GetValue<KeyBind>().Key, KeyBindType.Press)));
             new Helper();
 
             ChampionSpell = GetSpell();
 
-            Game.OnUpdate += this.Game_OnGameUpdate;
+            Game.OnUpdate += Game_OnGameUpdate;
         }
 
         private static Spell GetSpell()
@@ -162,6 +162,10 @@ namespace Marksman.Utils
                     {
                         return new Spell(SpellSlot.W, 700);
                     }
+                case "Jinx":
+                    {
+                        return new Spell(SpellSlot.E, 900);
+                    }
             }
             return null;
         }
@@ -170,7 +174,7 @@ namespace Marksman.Utils
             get
             {
                 return
-                    this.wardIds.Select(x => x)
+                    wardIds.Select(x => x)
                         .Where(
                             id =>
                                 //menu.Item("AutoBush." + id).GetValue<bool>() && 
@@ -193,7 +197,7 @@ namespace Marksman.Utils
         {
             int time = Environment.TickCount;
 
-            if (this.menu.Item("AutoBushEnabled").GetValue<bool>() || this.menu.Item("AutoBushKey").GetValue<KeyBind>().Active)
+            if (menu.Item("AutoBushEnabled").GetValue<bool>() || menu.Item("AutoBushKey").GetValue<KeyBind>().Active)
             {
 
                 foreach (Obj_AI_Hero enemy in
@@ -225,18 +229,19 @@ namespace Marksman.Utils
                             if ((ObjectManager.Player.ChampionName == "Corki"
                                  || ObjectManager.Player.ChampionName == "Ashe"
                                  || ObjectManager.Player.ChampionName == "Quinn"
-                                 || ObjectManager.Player.ChampionName == "Kalista") && ChampionSpell.IsReady())
+                                 || ObjectManager.Player.ChampionName == "Kalista"
+                                 || ObjectManager.Player.ChampionName == "Jinx") && ChampionSpell.IsReady())
                             {
                                 ChampionSpell.Cast(wardPosition);
-                                this.lastTimeWarded = Environment.TickCount;
+                                lastTimeWarded = Environment.TickCount;
                                 return;
                             }
 
-                            var wardSlot = this.GetWardSlot;
+                            var wardSlot = GetWardSlot;
                             if (wardSlot != null && wardSlot.Id != ItemId.Unknown)
                             {
                                 ObjectManager.Player.Spellbook.CastSpell(wardSlot.SpellSlot, wardPosition);
-                                this.lastTimeWarded = Environment.TickCount;
+                                lastTimeWarded = Environment.TickCount;
                             }
                         }
                     }
@@ -302,8 +307,8 @@ namespace Marksman.Utils
 
             public WardLocation(Vector3 pos, bool grass)
             {
-                this.Pos = pos;
-                this.Grass = grass;
+                Pos = pos;
+                Grass = grass;
             }
         }
 
@@ -315,8 +320,8 @@ namespace Marksman.Utils
 
             public GrassLocation(int index, int count)
             {
-                this.Index = index;
-                this.Count = count;
+                Index = index;
+                Count = count;
             }
         }
     }

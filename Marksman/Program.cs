@@ -11,17 +11,20 @@ using Marksman.Utils;
 using SharpDX;
 using SharpDX.Direct3D9;
 using Activator = Marksman.Utils.Activator;
-using Color = System.Drawing.Color;
+using Orbwalking = Marksman.Utils.Orbwalking;
 
 #endregion
 
 namespace Marksman
 {
     using System.Collections.Generic;
+
+    using Color = SharpDX.Color;
+
     internal class Program
     {
         public static Menu Config;
-        
+
         public static Menu OrbWalking;
 
         public static Menu QuickSilverMenu;
@@ -38,7 +41,7 @@ namespace Marksman
 
         public static AutoBushRevealer AutoBushRevealer;
 
-        
+
         //public static Utils.EarlyEvade EarlyEvade;
 
         public static double ActivatorTime;
@@ -47,10 +50,8 @@ namespace Marksman
 
         private static float AsmLoadingTime = 0;
 
-        
+        public static Spell Smite;
 
-        public static Spell Smite; 
-        
         public static SpellSlot SmiteSlot = SpellSlot.Unknown;
 
         private static readonly int[] SmitePurple = { 3713, 3726, 3725, 3726, 3723 };
@@ -151,7 +152,7 @@ namespace Marksman
             CClass.Config = Config;
 
             OrbWalking = Config.AddSubMenu(new Menu("Orbwalking", "Orbwalking"));
-            CClass.Orbwalker = new Orbwalking.Orbwalker(OrbWalking);
+            CClass.Orbwalker = new Marksman.Utils.Orbwalking.Orbwalker(OrbWalking);
 
             OrbWalking.AddItem(new MenuItem("Orb.AutoWindUp", "Marksman - Auto Windup").SetValue(false)).ValueChanged +=
                 (sender, argsEvent) => { if (argsEvent.GetNewValue<bool>()) CheckAutoWindUp(); };
@@ -190,7 +191,7 @@ namespace Marksman
                 }
                 items.AddItem(
                     new MenuItem("UseItemsMode", "Use items on").SetValue(
-                        new StringList(new[] {"No", "Mixed mode", "Combo mode", "Both"}, 2)));
+                        new StringList(new[] { "No", "Mixed mode", "Combo mode", "Both" }, 2)));
 
                 new PotionManager(MenuActivator);
 
@@ -245,16 +246,29 @@ namespace Marksman
                 var laneclear = new Menu("Lane Mode", "LaneClear");
                 if (CClass.LaneClearMenu(laneclear))
                 {
-                    laneclear.AddItem(
-                        new MenuItem("LaneClearMana", "Min. Mana Percent").SetValue(new Slider(50, 100, 0)));
+                    laneclear.AddItem(new MenuItem("Lane.Enabled", ":: Enable Lane Farm!").SetValue(new KeyBind("L".ToCharArray()[0], KeyBindType.Toggle, true))).Permashow(true, "Marsman | Enable Lane Farm", SharpDX.Color.Aqua);
+
+                    var minManaMenu = new Menu("Min. Mana Settings", "Lane.MinMana.Title");
+                    {
+                        minManaMenu.AddItem(new MenuItem("LaneMana.Alone", "If I'm Alone %:").SetValue(new Slider(30, 100, 0))).SetFontStyle(FontStyle.Regular, Color.LightSkyBlue);
+                        minManaMenu.AddItem(new MenuItem("LaneMana.Enemy", "If Enemy Close %:").SetValue(new Slider(60, 100, 0))).SetFontStyle(FontStyle.Regular, Color.IndianRed);
+                        laneclear.AddSubMenu(minManaMenu);
+                    }
                     Config.AddSubMenu(laneclear);
                 }
 
                 var jungleClear = new Menu("Jungle Mode", "JungleClear");
                 if (CClass.JungleClearMenu(jungleClear))
                 {
-                    jungleClear.AddItem(new MenuItem("Jungle.Mana", "Min. Mana %:").SetValue(new Slider(50, 100, 0)));
-                    //jungleClear.AddItem(new MenuItem("Jungle.MyJungle", "Dont Check Min. Mana If I'm taking ").SetValue(new Slider(50, 100, 0)));
+                    var minManaMenu = new Menu("Min. Mana Settings", "Jungle.MinMana.Title");
+                    {
+                        minManaMenu.AddItem(new MenuItem("Jungle.Mana.Ally", "Ally Mobs %:").SetValue(new Slider(50, 100, 0))).SetFontStyle(FontStyle.Regular, Color.LightSkyBlue);
+                        minManaMenu.AddItem(new MenuItem("Jungle.Mana.Enemy", "Enemy Mobs %:").SetValue(new Slider(30, 100, 0))).SetFontStyle(FontStyle.Regular, Color.IndianRed);
+                        minManaMenu.AddItem(new MenuItem("Jungle.Mana.BigBoys", "Baron/Dragon %:").SetValue(new Slider(70, 100, 0))).SetFontStyle(FontStyle.Regular, Color.HotPink);
+                        jungleClear.AddSubMenu(minManaMenu);
+                    }
+                    jungleClear.AddItem(new MenuItem("Jungle.Items", ":: Use Items:").SetValue(new StringList(new[] { "Off", "Use for Baron", "Use for Baron", "Both" }, 3)));
+                    jungleClear.AddItem(new MenuItem("Jungle.Enabled", ":: Enable Jungle Farm!").SetValue(new KeyBind("J".ToCharArray()[0], KeyBindType.Toggle, true))).Permashow(true, "Marsman | Enable Jungle Farm", SharpDX.Color.Aqua);
                     Config.AddSubMenu(jungleClear);
                 }
 
@@ -357,6 +371,7 @@ namespace Marksman
 
                 var GlobalDrawings = new Menu("Global", "GDrawings");
                 {
+                    marksmanDrawings.AddItem(new MenuItem("Draw.TurnOff", "Drawings").SetValue(new StringList(new[] { "Disable", "Enable", "Disable on Combo Mode", "Disable on Lane/Jungle Mode", "Both" }, 1)));
                     var menuCompare = new Menu("Compare me with", "Menu.Compare");
                     {
                         string[] strCompare = new string[HeroManager.Enemies.Count + 1];
@@ -367,18 +382,21 @@ namespace Marksman
                             strCompare[i] = e.ChampionName;
                             i += 1;
                         }
-                        menuCompare.AddItem(new MenuItem("Marksman.Compare.Set", "Set").SetValue(new StringList(new []{"Off", "Auto Compare at Startup"}, 1)));
+                        menuCompare.AddItem(new MenuItem("Marksman.Compare.Set", "Set").SetValue(new StringList(new[] { "Off", "Auto Compare at Startup" }, 1)));
                         menuCompare.AddItem(new MenuItem("Marksman.Compare", "Compare me with").SetValue(new StringList(strCompare, 0)));
                         GlobalDrawings.AddSubMenu(menuCompare);
                     }
-                    
-                    GlobalDrawings.AddItem(new MenuItem("Draw.KillableEnemy", "Killable Enemy Text").SetValue(true));
-                    GlobalDrawings.AddItem(new MenuItem("drawMinionLastHit", "Minion Last Hit").SetValue(new Circle(true, Color.GreenYellow)));
-                    GlobalDrawings.AddItem(new MenuItem("drawMinionNearKill", "Minion Near Kill").SetValue(new Circle(true, Color.Gray)));
-                    GlobalDrawings.AddItem(new MenuItem("Draw.JunglePosition", "Jungle Farm Position").SetValue(new StringList(new[] { "Off", "If I'm Close to Mobs", "If Jungle Clear Active" }, 2)));
+
+                    GlobalDrawings.AddItem(new MenuItem("Draw.KillableEnemy", "Killable Enemy Text").SetValue(false));
+                    GlobalDrawings.AddItem(new MenuItem("Draw.MinionLastHit", "Minion Last Hit").SetValue(new StringList(new[] { "Off", "On", "Just Out of AA Range Minions" }, 2)));
+
+
+
+                    //GlobalDrawings.AddItem(new MenuItem("Draw.JunglePosition", "Jungle Farm Position").SetValue(new StringList(new[] { "Off", "If I'm Close to Mobs", "If Jungle Clear Active" }, 2)));
                     GlobalDrawings.AddItem(new MenuItem("Draw.DrawMinion", "Draw Minions Sprite").SetValue(false));
                     GlobalDrawings.AddItem(new MenuItem("Draw.DrawTarget", "Draw Target Sprite").SetValue(true));
                     marksmanDrawings.AddSubMenu(GlobalDrawings);
+
                 }
             }
 
@@ -386,7 +404,7 @@ namespace Marksman
             {
                 LoadDefaultCompareChampion();
             }
-            
+
             CClass.MainMenu(Config);
 
             if (championName == "sivir")
@@ -400,15 +418,40 @@ namespace Marksman
             //Config.AddSubMenu(Evade.Config.Menu);
 
             Config.AddToMainMenu();
+
+            foreach (var i in Config.Children.Cast<Menu>().SelectMany(GetChildirens))
+            {
+                i.DisplayName = ":: " + i.DisplayName;
+            }
+
             Sprite.Load();
             CheckAutoWindUp();
 
             Drawing.OnDraw += Drawing_OnDraw;
             Game.OnUpdate += Game_OnGameUpdate;
-            
-            Orbwalking.AfterAttack += Orbwalking_AfterAttack;
-            Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
-            Orbwalking.OnNonKillableMinion += Orbwalking_OnNonKillableMinion;
+            Game.OnUpdate += eventArgs =>
+            {
+
+                if (CClass.FleeActive)
+                {
+                    ExecuteFlee();
+                }
+
+                if (CClass.LaneClearActive)
+                {
+                    ExecuteLaneClear();
+                }
+
+                if (CClass.JungleClearActive)
+                {
+                    ExecuteJungleClear();
+                }
+
+                PermaActive();
+            };
+
+            Marksman.Utils.Orbwalking.AfterAttack += Orbwalking_AfterAttack;
+            Marksman.Utils.Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
             GameObject.OnCreate += OnCreateObject;
             GameObject.OnDelete += OnDeleteObject;
 
@@ -419,27 +462,14 @@ namespace Marksman
             Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
 
             AsmLoadingTime = Game.Time;
-            //Game.OnWndProc += Game_OnWndProc;
         }
 
-        private static void Game_OnWndProc(WndEventArgs args)
+        private static IEnumerable<Menu> GetChildirens(Menu menu)
         {
-            if (args.Msg != 0x201)
-                return;
+            yield return menu;
 
-            foreach (var objAiHero in (from hero in ObjectManager.Get<Obj_AI_Hero>()
-                where hero.IsValidTarget()
-                select hero
-                into h
-                orderby h.Distance(Game.CursorPos) descending
-                select h
-                into enemy
-                where enemy.Distance(Game.CursorPos) < 150f
-                select enemy).Where(objAiHero => objAiHero != null && objAiHero != xSelectedTarget))
-            {
-                xSelectedTarget = objAiHero;
-                TargetSelector.SetTarget(objAiHero);
-            }
+            foreach (var childChild in menu.Children.SelectMany(GetChildirens))
+                yield return childChild;
         }
 
         private static void CheckAutoWindUp()
@@ -448,11 +478,11 @@ namespace Marksman
 
             if (Game.Ping >= 100)
             {
-                additional = Game.Ping/100*10;
+                additional = Game.Ping / 100 * 10;
             }
             else if (Game.Ping > 40 && Game.Ping < 100)
             {
-                additional = Game.Ping/100*20;
+                additional = Game.Ping / 100 * 20;
             }
             else if (Game.Ping <= 40)
             {
@@ -501,6 +531,33 @@ namespace Marksman
         }
         private static void Drawing_OnDraw(EventArgs args)
         {
+            var turnOffDrawings = Config.Item("Draw.TurnOff").GetValue<StringList>().SelectedIndex;
+
+            if (turnOffDrawings == 0)
+            {
+                return;
+            }
+
+            if ((turnOffDrawings == 2 || turnOffDrawings == 4) && CClass.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
+            {
+                return;
+            }
+
+            if ((turnOffDrawings == 3 || turnOffDrawings == 4) && (CClass.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LastHit || CClass.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear))
+            {
+                return;
+            }
+
+            if (Config.Item("Draw.KillableEnemy").GetValue<bool>())
+            {
+                var t = KillableEnemyAa;
+                if (t.Key != null && t.Key.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 1000) && t.Value > 0)
+                {
+                    Utils.Utils.DrawText(Utils.Utils.Text, string.Format("{0}: {1} x AA Damage = Kill", t.Key.ChampionName, t.Value), (int)t.Key.HPBarPosition.X + 145, (int)t.Key.HPBarPosition.Y + 5, SharpDX.Color.White);
+                }
+            }
+
+
             var myChampionKilled = ObjectManager.Player.ChampionsKilled;
             var myAssists = ObjectManager.Player.Assists;
             var myDeaths = ObjectManager.Player.Deaths;
@@ -531,55 +588,45 @@ namespace Marksman
                                 compChampion.ChampionName + " : " + compChampionKilled + " / " + compDeaths + " | " +
                                 compAssists + " | " + compMinionsKilled;
 
-                    DrawBox(new Vector2(Drawing.Width*0.400f, Drawing.Height*0.132f), 350, 26,
-                        Color.FromArgb(100, 255, 200, 37), 1, Color.Black);
-                    Utils.Utils.DrawText(Utils.Utils.Text, xText, Drawing.Width*0.422f, Drawing.Height*0.140f,
+                    DrawBox(new Vector2(Drawing.Width * 0.400f, Drawing.Height * 0.132f), 350, 26,
+                        System.Drawing.Color.FromArgb(100, 255, 200, 37), 1, System.Drawing.Color.Black);
+                    Utils.Utils.DrawText(Utils.Utils.Text, xText, Drawing.Width * 0.422f, Drawing.Height * 0.140f,
                         SharpDX.Color.Wheat);
 
                     if (Game.Time - AsmLoadingTime < 15)
                     {
-                        var timer = string.Format("0:{0:D2}", (int) 15 - (int) (Game.Time - AsmLoadingTime));
+                        var timer = string.Format("0:{0:D2}", (int)15 - (int)(Game.Time - AsmLoadingTime));
                         var notText =
                             "You can turn on/off this option. Go to 'Marksman -> Global Drawings -> Compare With Me'";
-                        Utils.Utils.DrawText(Utils.Utils.Text, notText, Drawing.Width*0.291f, Drawing.Height*0.166f,
+                        Utils.Utils.DrawText(Utils.Utils.Text, notText, Drawing.Width * 0.291f, Drawing.Height * 0.166f,
                             SharpDX.Color.Black);
                         Utils.Utils.DrawText(Utils.Utils.Text, notText, Drawing.Width * 0.290f, Drawing.Height * 0.165f,
                             SharpDX.Color.White);
                         Utils.Utils.DrawText(Utils.Utils.Text, "This message will self destruct in " + timer,
-                            Drawing.Width*0.400f, Drawing.Height*0.195f, SharpDX.Color.Aqua);
+                            Drawing.Width * 0.400f, Drawing.Height * 0.195f, SharpDX.Color.Aqua);
                     }
                 }
             }
 
-            if (Config.Item("Draw.KillableEnemy").GetValue<bool>())
-            {
-                var t = KillableEnemyAA;
-                if (t.Item1 != null && t.Item1.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 1400) &&
-                    t.Item2 > 0)
-                {
-                    Utils.Utils.DrawText(Utils.Utils.Text,string.Format("{0}: {1} x AA Damage = Kill", t.Item1.ChampionName, t.Item2),(int) t.Item1.HPBarPosition.X + 145,(int) t.Item1.HPBarPosition.Y + 5,SharpDX.Color.White);
-                }
-            }
+            /*            var toD = CClass.Config.Item("Draw.ToD").GetValue<bool>();
+                        if (toD)
+                        {
+                            var enemyCount =
+                                CClass.Config.Item("Draw.ToDMinEnemy").GetValue<Slider>().Value;
+                            var controlRange =
+                                CClass.Config.Item("Draw.ToDControlRange").GetValue<Slider>().Value;
 
-/*            var toD = CClass.Config.Item("Draw.ToD").GetValue<bool>();
-            if (toD)
-            {
-                var enemyCount =
-                    CClass.Config.Item("Draw.ToDMinEnemy").GetValue<Slider>().Value;
-                var controlRange =
-                    CClass.Config.Item("Draw.ToDControlRange").GetValue<Slider>().Value;
+                            var xEnemies = HeroManager.Enemies.Count(enemies => enemies.IsValidTarget(controlRange));
+                            if (xEnemies >= enemyCount)
+                                return;
 
-                var xEnemies = HeroManager.Enemies.Count(enemies => enemies.IsValidTarget(controlRange));
-                if (xEnemies >= enemyCount)
-                    return;
+                            var toDRangeColor =
+                                CClass.Config.Item("Draw.ToDControlRangeColor").GetValue<Circle>();
+                            if (toDRangeColor.Active)
+                                Render.Circle.DrawCircle(ObjectManager.Player.Position, controlRange, toDRangeColor.Color);
 
-                var toDRangeColor =
-                    CClass.Config.Item("Draw.ToDControlRangeColor").GetValue<Circle>();
-                if (toDRangeColor.Active)
-                    Render.Circle.DrawCircle(ObjectManager.Player.Position, controlRange, toDRangeColor.Color);
-
-            }
-            */
+                        }
+                        */
             /*
             var t = TargetSelector.SelectedTarget;
             if (!t.IsValidTarget())
@@ -593,29 +640,26 @@ namespace Marksman
                 Render.Circle.DrawCircle(t.Position, 150, Color.Yellow);
             }
             */
-            Utils.Utils.Jungle.DrawJunglePosition(Config.Item("Draw.JunglePosition").GetValue<StringList>().SelectedIndex);
-            
-            var drawMinionLastHit = Config.Item("drawMinionLastHit").GetValue<Circle>();
-            var drawMinionNearKill = Config.Item("drawMinionNearKill").GetValue<Circle>();
-            if (drawMinionLastHit.Active || drawMinionNearKill.Active)
-            {
-                var xMinions =
-                    MinionManager.GetMinions(ObjectManager.Player.Position,
-                        ObjectManager.Player.AttackRange + ObjectManager.Player.BoundingRadius + 300, MinionTypes.All,
-                        MinionTeam.Enemy, MinionOrderTypes.MaxHealth);
+            //Utils.Jungle.DrawJunglePosition(Config.Item("Draw.JunglePosition").GetValue<StringList>().SelectedIndex);
 
-                foreach (var xMinion in xMinions)
+
+            var drawMinionLastHit = Config.Item("Draw.MinionLastHit").GetValue<StringList>().SelectedIndex;
+            if (drawMinionLastHit != 0)
+            {
+                var mx = ObjectManager.Get<Obj_AI_Minion>().Where(m => !m.IsDead && m.IsEnemy).Where(m => m.Health <= ObjectManager.Player.TotalAttackDamage);
+
+                if (drawMinionLastHit == 1)
                 {
-                    if (drawMinionLastHit.Active && ObjectManager.Player.GetAutoAttackDamage(xMinion, true) >=
-                        xMinion.Health)
-                    {
-                        Render.Circle.DrawCircle(xMinion.Position, xMinion.BoundingRadius, drawMinionLastHit.Color);
-                    }
-                    else if (drawMinionNearKill.Active &&
-                             ObjectManager.Player.GetAutoAttackDamage(xMinion, true)*2 >= xMinion.Health)
-                    {
-                        Render.Circle.DrawCircle(xMinion.Position, xMinion.BoundingRadius, drawMinionNearKill.Color);
-                    }
+                    mx = mx.Where(m => m.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65));
+                }
+                else
+                {
+                    mx = mx.Where(m => m.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65 + 300) && m.Distance(ObjectManager.Player.Position) > Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65);
+                }
+
+                foreach (var minion in mx)
+                {
+                    Render.Circle.DrawCircle(minion.Position, minion.BoundingRadius, System.Drawing.Color.GreenYellow, 1);
                 }
             }
 
@@ -627,43 +671,44 @@ namespace Marksman
 
         private void MySupport()
         {
-            
+
         }
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
-            Obj_AI_Hero shen = HeroManager.Allies.Find(e => e.ChampionName.ToLower() == "shen");
-            if (shen != null)
-            {
+            //Obj_AI_Hero shen = HeroManager.Allies.Find(e => e.ChampionName.ToLower() == "shen");
+            //if (shen != null)
+            //{
 
-            }
-            var shenVorpalStar = HeroManager.Enemies.Find(e => e.Buffs.Any(b => b.Name.ToLower() == "shenvorpalstar" && e.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65)));
-            if (shenVorpalStar != null)
-            {
-                CClass.Orbwalker.ForceTarget(shenVorpalStar);
-            }
+            //}
+            //var shenVorpalStar = HeroManager.Enemies.Find(e => e.Buffs.Any(b => b.Name.ToLower() == "shenvorpalstar" && e.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65)));
+            //if (shenVorpalStar != null)
+            //{
+            //    CClass.Orbwalker.ForceTarget(shenVorpalStar);
+            //}
 
-            Obj_AI_Hero Tahm = HeroManager.Allies.Find(e => e.ChampionName.ToLower() == "Tahm");
-            if (Tahm != null)
-            {
-                
-            }
+            //Obj_AI_Hero Tahm = HeroManager.Allies.Find(e => e.ChampionName.ToLower() == "Tahm");
+            //if (Tahm != null)
+            //{
 
-            var enemy = HeroManager.Enemies.Find(e => e.Buffs.Any(b => b.Name.ToLower() == "Tahmmark" && e.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65)));
-            if (enemy != null)
-            {
-                CClass.Orbwalker.ForceTarget(enemy);
-            }
+            //}
 
-
-
+            //var enemy = HeroManager.Enemies.Find(e => e.Buffs.Any(b => b.Name.ToLower() == "Tahmmark" && e.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65)));
+            //if (enemy != null)
+            //{
+            //    CClass.Orbwalker.ForceTarget(enemy);
+            //}
+            
             /*-------------------------------------------------------------*/
 
             if (Items.HasItem(3139) || Items.HasItem(3140))
+            {
                 CheckChampionBuff();
+            }
 
             //Update the combo and harass values.
             CClass.ComboActive = CClass.Config.Item("Orbwalk").GetValue<KeyBind>().Active;
+            CClass.FleeActive = CClass.Config.Item("Flee").GetValue<KeyBind>().Active;
 
             var vHarassManaPer = Config.Item("HarassMana").GetValue<Slider>().Value;
             CClass.HarassActive = CClass.Config.Item("Farm").GetValue<KeyBind>().Active &&
@@ -671,13 +716,44 @@ namespace Marksman
 
             CClass.ToggleActive = ObjectManager.Player.ManaPercent >= vHarassManaPer;
 
-            var vLaneClearManaPer = Config.Item("LaneClearMana").GetValue<Slider>().Value;
-            CClass.LaneClearActive = CClass.Config.Item("LaneClear").GetValue<KeyBind>().Active &&
-                                     ObjectManager.Player.ManaPercent >= vLaneClearManaPer;
+            var vLaneClearManaPer = HeroManager.Enemies.Find(e => e.IsValidTarget(2000) && !e.IsZombie) == null
+                ? Config.Item("LaneMana.Enemy").GetValue<Slider>().Value
+                : Config.Item("LaneMana.Alone").GetValue<Slider>().Value;
 
-            CClass.JungleClearActive = CClass.Config.Item("LaneClear").GetValue<KeyBind>().Active &&
-                                       ObjectManager.Player.ManaPercent >=
-                                       Config.Item("Jungle.Mana").GetValue<Slider>().Value;
+            CClass.LaneClearActive = CClass.Config.Item("LaneClear").GetValue<KeyBind>().Active &&
+                                     ObjectManager.Player.ManaPercent >= vLaneClearManaPer && Config.Item("Lane.Enabled").GetValue<KeyBind>().Active;
+
+            CClass.JungleClearActive = false;
+            if (CClass.Config.Item("LaneClear").GetValue<KeyBind>().Active && Config.Item("Jungle.Enabled").GetValue<KeyBind>().Active)
+            {
+                List<Obj_AI_Base> mobs = MinionManager.GetMinions(ObjectManager.Player.Position, 1000, MinionTypes.All, MinionTeam.Neutral);
+
+                if (mobs.Count > 0)
+                {
+                    var minMana = Config.Item("Jungle.Mana.Enemy").GetValue<Slider>().Value;
+
+                    if (mobs[0].SkinName.ToLower().Contains("baron") || mobs[0].SkinName.ToLower().Contains("dragon") || mobs[0].Team() == Jungle.GameObjectTeam.Neutral)
+                    {
+                        minMana = Config.Item("Jungle.Mana.BigBoys").GetValue<Slider>().Value;
+                    }
+
+                    else if (mobs[0].Team() == (Jungle.GameObjectTeam)ObjectManager.Player.Team)
+                    {
+                        minMana = Config.Item("Jungle.Mana.Ally").GetValue<Slider>().Value;
+                    }
+
+                    else if (mobs[0].Team() != (Jungle.GameObjectTeam)ObjectManager.Player.Team)
+                    {
+                        minMana = Config.Item("Jungle.Mana.Enemy").GetValue<Slider>().Value;
+                    }
+
+                    if (ObjectManager.Player.ManaPercent >= minMana)
+                    {
+                        CClass.JungleClearActive = true;
+                    }
+                }
+            }
+            //CClass.JungleClearActive = CClass.Config.Item("LaneClear").GetValue<KeyBind>().Active && ObjectManager.Player.ManaPercent >= Config.Item("Jungle.Mana").GetValue<Slider>().Value;
 
             CClass.Game_OnGameUpdate(args);
 
@@ -686,10 +762,10 @@ namespace Marksman
 
             //Items
             if (
-                !((CClass.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo &&
+                !((CClass.Orbwalker.ActiveMode == Marksman.Utils.Orbwalking.OrbwalkingMode.Combo &&
                    (useItemModes == 2 || useItemModes == 3))
                   ||
-                  (CClass.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed &&
+                  (CClass.Orbwalker.ActiveMode == Marksman.Utils.Orbwalking.OrbwalkingMode.Mixed &&
                    (useItemModes == 1 || useItemModes == 3))))
                 return;
 
@@ -702,7 +778,7 @@ namespace Marksman
             var smiteReady = (SmiteSlot != SpellSlot.Unknown &&
                               ObjectManager.Player.Spellbook.CanUseSpell(SmiteSlot) == SpellState.Ready);
 
-            if (smiteReady && CClass.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
+            if (smiteReady && CClass.Orbwalker.ActiveMode == Marksman.Utils.Orbwalking.OrbwalkingMode.Combo)
                 Smiteontarget(target as Obj_AI_Hero);
 
             if (botrk)
@@ -725,12 +801,12 @@ namespace Marksman
 
             if (ghostblade && target != null && target.Type == ObjectManager.Player.Type &&
                 !ObjectManager.Player.HasBuff("ItemSoTD", true) /*if Sword of the divine is not active */
-                && Orbwalking.InAutoAttackRange(target))
+                && Marksman.Utils.Orbwalking.InAutoAttackRange(target))
                 Items.UseItem(3142);
 
             if (sword && target != null && target.Type == ObjectManager.Player.Type &&
                 !ObjectManager.Player.HasBuff("spectralfury", true) /*if ghostblade is not active*/
-                && Orbwalking.InAutoAttackRange(target))
+                && Marksman.Utils.Orbwalking.InAutoAttackRange(target))
                 Items.UseItem(3131);
 
             if (muramana && Items.HasItem(3042))
@@ -764,7 +840,7 @@ namespace Marksman
             {
                 var xSlot = ObjectManager.Player.GetSpellSlot("summonerheal");
                 var xCanUse = ObjectManager.Player.Health <=
-                              ObjectManager.Player.MaxHealth/100*Config.Item("SUMHEALSLIDER").GetValue<Slider>().Value;
+                              ObjectManager.Player.MaxHealth / 100 * Config.Item("SUMHEALSLIDER").GetValue<Slider>().Value;
 
                 if (xCanUse && !ObjectManager.Player.InShop() &&
                     (xSlot != SpellSlot.Unknown || ObjectManager.Player.Spellbook.CanUseSpell(xSlot) == SpellState.Ready)
@@ -778,7 +854,7 @@ namespace Marksman
             {
                 var xSlot = ObjectManager.Player.GetSpellSlot("summonerbarrier");
                 var xCanUse = ObjectManager.Player.Health <=
-                              ObjectManager.Player.MaxHealth/100*
+                              ObjectManager.Player.MaxHealth / 100 *
                               Config.Item("SUMBARRIERSLIDER").GetValue<Slider>().Value;
 
                 if (xCanUse && !ObjectManager.Player.InShop() &&
@@ -812,17 +888,27 @@ namespace Marksman
             CClass.Orbwalking_AfterAttack(unit, target);
         }
 
-        private static void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
+        private static void Orbwalking_BeforeAttack(Utils.Orbwalking.BeforeAttackEventArgs args)
         {
             CClass.Orbwalking_BeforeAttack(args);
         }
-
-        private static void Orbwalking_OnNonKillableMinion(AttackableUnit minion)
+        private static void ExecuteFlee()
         {
-            CClass.Orbwalking_OnNonKillableMinion(minion);
+            CClass.ExecuteFlee();
         }
 
-
+        private static void ExecuteJungleClear()
+        {
+            CClass.ExecuteJungleClear();
+        }
+        private static void ExecuteLaneClear()
+        {
+            CClass.ExecuteLaneClear();
+        }
+        private static void PermaActive()
+        {
+            CClass.PermaActive();
+        }
         private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
             CClass.Obj_AI_Base_OnProcessSpellCast(sender, args);
@@ -844,19 +930,6 @@ namespace Marksman
 
         private static void Obj_AI_Base_OnBuffAdd(Obj_AI_Base sender, Obj_AI_BaseBuffAddEventArgs args)
         {
-            /*
-            if (sender.IsEnemy)
-            {
-                Game.PrintChat(args.Buff.Name + " : " + args.Buff.DisplayName);
-            }
-            */
-            /*
-            if (sender.IsEnemy && sender.Target.IsMe && args.Buff.EndTime > ExecutedTime)
-            {
-                ExecutedTime = Game.Time;
-            }
-            */
-           
             CClass.Obj_AI_Base_OnBuffAdd(sender, args);
         }
 
@@ -985,7 +1058,7 @@ namespace Marksman
                 ObjectManager.Player.Spellbook.CastSpell(SmiteSlot, t);
             }
         }
-        public static void DrawBox(Vector2 position, int width, int height, Color color, int borderwidth, Color borderColor)
+        public static void DrawBox(Vector2 position, int width, int height, System.Drawing.Color color, int borderwidth, System.Drawing.Color borderColor)
         {
             Drawing.DrawLine(position.X, position.Y, position.X + width, position.Y, height, color);
 
@@ -997,27 +1070,26 @@ namespace Marksman
                 Drawing.DrawLine(position.X + width, position.Y + 1, position.X + width, position.Y + height, borderwidth, borderColor);
             }
         }
-        private static Tuple<Obj_AI_Hero, int> KillableEnemyAA
+        private static KeyValuePair<Obj_AI_Hero, int> KillableEnemyAa
         {
             get
             {
                 var x = 0;
-                var t = TargetSelector.GetTarget(Orbwalking.GetRealAutoAttackRange(null) + 1400,
+                var t = TargetSelector.GetTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 1400,
                     TargetSelector.DamageType.Physical);
                 {
                     if (t.IsValidTarget())
                     {
                         if (t.Health
                             < ObjectManager.Player.TotalAttackDamage
-                            *(1/ObjectManager.Player.AttackCastDelay > 1400 ? 8 : 4))
+                            * (1 / ObjectManager.Player.AttackCastDelay > 1400 ? 8 : 4))
                         {
-                            x = (int) Math.Ceiling(t.Health/ObjectManager.Player.TotalAttackDamage);
+                            x = (int)Math.Ceiling(t.Health / ObjectManager.Player.TotalAttackDamage);
                         }
-                        return new Tuple<Obj_AI_Hero, int>(t, x);
+                        return new KeyValuePair<Obj_AI_Hero, int>(t, x);
                     }
-
                 }
-                return new Tuple<Obj_AI_Hero, int>(t, x);
+                return new KeyValuePair<Obj_AI_Hero, int>(t, x);
             }
         }
     }

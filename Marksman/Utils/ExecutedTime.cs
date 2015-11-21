@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 
@@ -49,6 +50,7 @@ namespace Marksman.Utils
             text = executedTime > 13 ? "Executed: Ready" : string.Format("Remaining: 0:{0:D2}", (int) t);
             var heropos = Drawing.WorldToScreen(ObjectManager.Player.Position);
             Drawing.DrawText(heropos.X, heropos.Y + 20, System.Drawing.Color.Red, text);
+            //Drawing.DrawText(heropos.X, heropos.Y + 50, System.Drawing.Color.Red, "Length: " + ObjectManager.Player.Path.Length + " Count: " + ObjectManager.Player.Path.Count());
         }
     }
 }

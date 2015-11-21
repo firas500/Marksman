@@ -30,13 +30,13 @@ namespace Marksman.Utils
         public static Menu MenuLocal;
         public EarlyEvade()
         {
-            this.Load();
+            Load();
             
             MenuLocal = new Menu("Early Evade Warning", "Early Evade").SetFontStyle(FontStyle.Regular, Color.Aqua);
 
             foreach (var e in HeroManager.Enemies)
             {
-                foreach (var eList in this.EarlyList)
+                foreach (var eList in EarlyList)
                 {
                     if (eList.ChampionName == e.ChampionName)
                     {
@@ -102,7 +102,7 @@ namespace Marksman.Utils
 
             foreach (var e in HeroManager.Enemies.Where(e => e.IsValidTarget(2000)))
             {
-                foreach (var eList in this.EarlyList)
+                foreach (var eList in EarlyList)
                 {
                     if (eList.ChampionName == e.ChampionName)
                     {
@@ -179,145 +179,145 @@ namespace Marksman.Utils
 
         private void Load()
         {
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "LeBlanc", SpellName = "E", Width = 75, Range = 1200,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Morgana", SpellName = "Q", Width = 75, Range = 1200,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Blitzcrank", SpellName = "Q", Width = 75, Range = 1200,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Amumu", SpellName = "Q", Width = 75, Range = 1200,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Braum", SpellName = "Q", Width = 75, Range = 1200,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Ezreal", SpellName = "Q", Width = 75, Range = 1200,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Brand", SpellName = "Q", Width = 75, Range = 1200,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Jinx", SpellName = "W", Width = 75, Range = 1200,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Braum", SpellName = "Q", Width = 75, Range = 1000,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Corki", SpellName = "R", Width = 75, Range = 1500,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Mundo", SpellName = "Q", Width = 75, Range = 1000,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Kalista", SpellName = "Q", Width = 75, Range = 1000,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Karma", SpellName = "Q", Width = 75, Range = 1000,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Kogmaw", SpellName = "Q", Width = 75, Range = 1000,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "LeeSin", SpellName = "Q", Width = 75, Range = 1000,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Lux", SpellName = "Q", Width = 75, Range = 1000,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Nautilius", SpellName = "Q", Width = 75, Range = 1000,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Nidalee", SpellName = "Q", Width = 75, Range = 1500,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Quinn", SpellName = "Q", Width = 75, Range = 850,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Rumble", SpellName = "E", Width = 75, Range = 850,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "TahmKench", SpellName = "Q", Width = 75, Range = 850,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Thresh", SpellName = "Q", Width = 75, Range = 1200,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Veigar", SpellName = "Q", Width = 75, Range = 900,
                         Color = System.Drawing.Color.AliceBlue
                     });
-            this.EarlyList.Add(
+            EarlyList.Add(
                 new EarlyList
                     {
                         ChampionName = "Zyra", SpellName = "E", Width = 75, Range = 900,

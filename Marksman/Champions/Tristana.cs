@@ -2,11 +2,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Security.Policy;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Utils;
 using SharpDX;
-using SharpDX.Direct3D9;
+using Font = SharpDX.Direct3D9.Font;
 
 #endregion
 
@@ -29,42 +32,32 @@ namespace Marksman.Champions
             E = new Spell(SpellSlot.E, 703);
             R = new Spell(SpellSlot.R, 703);
 
-            Utility.HpBarDamageIndicator.DamageToUnit = GetComboDamage;
+            Utility.HpBarDamageIndicator.DamageToUnit = TristanaData.GetComboDamage;
             Utility.HpBarDamageIndicator.Enabled = true;
 
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Interrupter2.OnInterruptableTarget += Interrupter2_OnInterruptableTarget;
 
-            font = new Font(
-                Drawing.Direct3DDevice,
-                new FontDescription
-                {
-                    FaceName = "Segoe UI",
-                    Height = 35,
-                    OutputPrecision = FontPrecision.Default,
-                    Quality = FontQuality.Default
-                });
-            fontsmall = new Font(
-                Drawing.Direct3DDevice,
-                new FontDescription
-                {
-                    FaceName = "Segoe UI",
-                    Height = 15,
-                    OutputPrecision = FontPrecision.Default,
-                    Quality = FontQuality.Default
-                });
-
-            Game.OnWndProc += Game_OnWndProc;
+            //font = new Font(
+            //    Drawing.Direct3DDevice,
+            //    new FontDescription
+            //    {
+            //        FaceName = "Segoe UI",
+            //        Height = 25,
+            //        OutputPrecision = FontPrecision.Default,
+            //        Quality = FontQuality.Default
+            //    });
+            //fontsmall = new Font(
+            //    Drawing.Direct3DDevice,
+            //    new FontDescription
+            //    {
+            //        FaceName = "Segoe UI",
+            //        Height = 15,
+            //        OutputPrecision = FontPrecision.Default,
+            //        Quality = FontQuality.Default
+            //    });
 
             Utils.Utils.PrintMessage("Tristana loaded.");
-        }
-
-        private static void Game_OnWndProc(WndEventArgs args)
-        {
-            if (args.Msg != 0x20a)
-                return;
-
-            Program.Config.Item("Lane.Enabled").SetValue(!Program.Config.Item("Lane.Enabled").GetValue<bool>());
         }
 
         public void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
@@ -79,7 +72,7 @@ namespace Marksman.Champions
                 R.CastOnUnit(unit);
         }
 
-        public override void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
+        public override void Orbwalking_BeforeAttack(Marksman.Utils.Orbwalking.BeforeAttackEventArgs args)
         {
             if (GetValue<bool>("Misc.UseQ.Inhibitor") && args.Target is Obj_BarracksDampener && Q.IsReady())
             {
@@ -113,30 +106,17 @@ namespace Marksman.Champions
                     }
                 }
             }
-
-            var t = args.Target as Obj_AI_Hero;
-            if (t.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null)) && ComboActive)
+            if (args.Target is Obj_AI_Hero)
             {
-                var useQ = Q.IsReady() && GetValue<bool>("UseQC");
-                var useE = E.IsReady() && GetValue<bool>("UseEC");
-
-                if (useQ)
-                    Q.CastOnUnit(Player);
-
-                if (useE && E.IsReady() && canUseE(t))
-                    E.CastOnUnit(t);
+                var t = args.Target as Obj_AI_Hero;
+                if (t.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null)) && ComboActive)
+                {
+                    var useQ = Q.IsReady() && GetValue<bool>("UseQC");
+                    if (useQ)
+                        Q.CastOnUnit(Player);
+                }
             }
         }
-
-        private static bool canUseE(Obj_AI_Hero t)
-        {
-            if (Player.CountEnemiesInRange(W.Range + (E.Range/2)) == 1)
-                return true;
-
-            return (Program.Config.Item("DontUseE" + t.ChampionName) != null &&
-                    Program.Config.Item("DontUseE" + t.ChampionName).GetValue<bool>() == false);
-        }
-
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
@@ -144,19 +124,9 @@ namespace Marksman.Champions
             {
                 return;
             }
-            if (!Orbwalking.CanMove(100))
+            if (!Marksman.Utils.Orbwalking.CanMove(100))
             {
                 return;
-            }
-
-            if (this.JungleClearActive)
-            {
-                ExecuteJungleClear();
-            }
-
-            if (this.LaneClearActive && Program.Config.Item("Lane.Enabled").GetValue<bool>())
-            {
-                ExecuteLaneClear();
             }
 
             var getEMarkedEnemy = TristanaData.GetEMarkedEnemy;
@@ -166,7 +136,7 @@ namespace Marksman.Champions
             }
             else
             {
-                var attackRange = Orbwalking.GetRealAutoAttackRange(Player);
+                var attackRange = Marksman.Utils.Orbwalking.GetRealAutoAttackRange(Player);
                 TargetSelector.SetTarget(TargetSelector.GetTarget(attackRange, TargetSelector.DamageType.Physical));
             }
 
@@ -178,8 +148,8 @@ namespace Marksman.Champions
             {
                 if (Player.HasBuff("Recall"))
                     return;
-                var t = TristanaData.GetTarget(E.Range);
-                if (t.IsValidTarget() && E.IsReady() && canUseE(t))
+                var t = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
+                if (t.IsValidTarget() && E.IsReady())
                 {
                     E.CastOnUnit(t);
                 }
@@ -201,30 +171,30 @@ namespace Marksman.Champions
                 }
                 else
                 {
-                    t = TristanaData.GetTarget(W.Range);
+                    t = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
                 }
 
-                if (useE && E.IsReady() && canUseE(t))
+                if (useE && E.IsReady())
                 {
-                    if (E.IsReady() && t.IsValidTarget(E.Range) && canUseE(t))
+                    if (E.IsReady() && t.IsValidTarget(E.Range))
                         E.CastOnUnit(t);
                 }
 
                 if (useW)
                 {
-                    t = TristanaData.GetTarget(W.Range);
+                    t = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
                     if (t.IsValidTarget())
                         W.Cast(t);
                 }
                 else if (useWks)
                 {
-                    t = TristanaData.GetTarget(W.Range);
+                    t = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
                     if (t.IsValidTarget() && t.Health < TristanaData.GetWDamage)
                         W.Cast(t);
                 }
                 else if (useWc)
                 {
-                    t = TristanaData.GetTarget(W.Range);
+                    t = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
                     if (t.IsValidTarget() && TristanaData.GetEMarkedCount == 4)
                         W.Cast(t);
                 }
@@ -234,7 +204,7 @@ namespace Marksman.Champions
             {
                 if (useR)
                 {
-                    var t = TristanaData.GetTarget(R.Range - 20);
+                    var t = TargetSelector.GetTarget(R.Range - 10, TargetSelector.DamageType.Physical);
 
                     if (!t.IsValidTarget())
                         return;
@@ -248,7 +218,7 @@ namespace Marksman.Champions
             }
         }
 
-        private void ExecuteJungleClear()
+        public override void ExecuteJungleClear()
         {
             var jungleMobs = Marksman.Utils.Utils.GetMobs(E.Range, Marksman.Utils.Utils.MobTypes.All);
 
@@ -256,7 +226,7 @@ namespace Marksman.Champions
             {
                 if (E.IsReady())
                 {
-                    switch (Program.Config.Item("UseEJ").GetValue<StringList>().SelectedIndex)
+                    switch (GetValue<StringList>("Jungle.UseE").SelectedIndex)
                     {
                         case 1:
                         {
@@ -277,12 +247,12 @@ namespace Marksman.Champions
 
                 if (Q.IsReady())
                 {
-                    var jE = Program.Config.Item("UseQJ").GetValue<StringList>().SelectedIndex;
+                    var jE = GetValue<StringList>("Jungle.UseQ").SelectedIndex;
                     if (jE != 0)
                     {
                         if (jE == 1)
                         {
-                            jungleMobs = Utils.Utils.GetMobs(Orbwalking.GetRealAutoAttackRange(null) + 65,
+                            jungleMobs = Utils.Utils.GetMobs(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65,
                                 Utils.Utils.MobTypes.BigBoys);
                             if (jungleMobs != null)
                             {
@@ -296,7 +266,7 @@ namespace Marksman.Champions
                                     .Where(
                                         m =>
                                             m.Team == GameObjectTeam.Neutral &&
-                                            m.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 165))
+                                            m.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 165))
                                     .Sum(mob => (int) mob.Health);
 
                             totalAa = (int) (totalAa/ObjectManager.Player.TotalAttackDamage());
@@ -311,15 +281,15 @@ namespace Marksman.Champions
             }
         }
 
-        private void ExecuteLaneClear()
+        public override void ExecuteLaneClear()
         {
-            var minions = MinionManager.GetMinions(ObjectManager.Player.Position, E.Range, MinionTypes.All,
-                MinionTeam.Enemy);
+
+            if (E.IsReady())
+            {
+                var minions = MinionManager.GetMinions(ObjectManager.Player.Position, E.Range, MinionTypes.All, MinionTeam.Enemy);
 
             if (minions != null)
             {
-                if (E.IsReady())
-                {
                     var eJ = Program.Config.Item("UseE.Lane").GetValue<StringList>().SelectedIndex;
                     if (eJ != 0)
                     {
@@ -348,7 +318,7 @@ namespace Marksman.Champions
                                 .Where(
                                     m =>
                                         m.IsEnemy && !m.IsDead &&
-                                        m.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null)))
+                                        m.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null)))
                                 .Sum(mob => (int) mob.Health);
 
                         totalAa = (int) (totalAa/ObjectManager.Player.TotalAttackDamage());
@@ -361,11 +331,6 @@ namespace Marksman.Champions
             }
         }
 
-        private static float GetComboDamage(Obj_AI_Hero t)
-        {
-            return TristanaData.GetComboDamage;
-        }
-
         public override void Drawing_OnDraw(EventArgs args)
         {
             if (ObjectManager.Player.IsDead)
@@ -374,34 +339,34 @@ namespace Marksman.Champions
             }
 
             // Draw marked enemy status
-            var drawEMarksStatus = GetValue<bool>("DrawEMarkStatus");
-            var drawEMarkEnemy = GetValue<Circle>("DrawEMarkEnemy");
-            if (drawEMarksStatus || drawEMarkEnemy.Active)
-            {
-                var vText1 = font;
-                var getEMarkedEnemy = TristanaData.GetEMarkedEnemy;
-                if (getEMarkedEnemy != null)
-                {
-                    if (drawEMarksStatus)
-                    {
-                        if (LastTickTime < Environment.TickCount)
-                            LastTickTime = Environment.TickCount + 5000;
-                        var xTime = LastTickTime - Environment.TickCount;
+            //var drawEMarksStatus = GetValue<bool>("DrawEMarkStatus");
+            //var drawEMarkEnemy = GetValue<Circle>("DrawEMarkEnemy");
+            //if (drawEMarksStatus || drawEMarkEnemy.Active)
+            //{
+            //    var vText1 = font;
+            //    var getEMarkedEnemy = TristanaData.GetEMarkedEnemy;
+            //    if (getEMarkedEnemy != null)
+            //    {
+            //        if (drawEMarksStatus)
+            //        {
+            //            if (LastTickTime < Environment.TickCount)
+            //                LastTickTime = Environment.TickCount + 5000;
+            //            var xTime = LastTickTime - Environment.TickCount;
 
-                        var timer = string.Format("0:{0:D2}", xTime/1000);
-                        Utils.Utils.DrawText(vText1, TristanaData.GetEMarkedCount + " of 4 Stacks",
-                            (int) getEMarkedEnemy.HPBarPosition.X + 145, (int) getEMarkedEnemy.HPBarPosition.Y + 5,
-                            Color.Red);
-                        Utils.Utils.DrawText(fontsmall, "End: " + timer, (int) getEMarkedEnemy.HPBarPosition.X + 145,
-                            (int) getEMarkedEnemy.HPBarPosition.Y + 35, Color.White);
-                    }
+            //            var timer = string.Format("0:{0:D2}", xTime/1000);
+            //            Utils.Utils.DrawText(vText1, TristanaData.GetEMarkedCount + " of 4 Stacks",
+            //                (int) getEMarkedEnemy.HPBarPosition.X + 145, (int) getEMarkedEnemy.HPBarPosition.Y + 5,
+            //                Color.Red);
+            //            Utils.Utils.DrawText(fontsmall, "End: " + timer, (int) getEMarkedEnemy.HPBarPosition.X + 145,
+            //                (int) getEMarkedEnemy.HPBarPosition.Y + 35, Color.White);
+            //        }
 
-                    if (drawEMarkEnemy.Active)
-                    {
-                        Render.Circle.DrawCircle(TristanaData.GetEMarkedEnemy.Position, 140f, drawEMarkEnemy.Color, 1);
-                    }
-                }
-            }
+            //        if (drawEMarkEnemy.Active)
+            //        {
+            //            Render.Circle.DrawCircle(TristanaData.GetEMarkedEnemy.Position, 140f, drawEMarkEnemy.Color, 1);
+            //        }
+            //    }
+            //}
 
             Spell[] spellList = {W};
             foreach (var spell in spellList)
@@ -421,10 +386,10 @@ namespace Marksman.Champions
         public override bool ComboMenu(Menu config)
         {
             config.AddItem(new MenuItem("UseQC" + Id, "Use Q").SetValue(true));
-            config.AddItem(new MenuItem("UseWC" + Id, "Use W").SetValue(true));
+            config.AddItem(new MenuItem("UseWC" + Id, "Use W").SetValue(false));
             config.AddItem(new MenuItem("UseEC" + Id, "Use E").SetValue(true));
-            config.AddItem(new MenuItem("UseWKs" + Id, "Use W Kill Steal").SetValue(true));
-            config.AddItem(new MenuItem("UseWCS" + Id, "Complete E stacks with W").SetValue(true));
+            config.AddItem(new MenuItem("UseWKs" + Id, "Use W Kill Steal").SetValue(false));
+            config.AddItem(new MenuItem("UseWCS" + Id, "Complete E stacks with W").SetValue(false));
 
             config.AddSubMenu(new Menu("Don't Use E to", "DontUseE"));
             {
@@ -455,8 +420,8 @@ namespace Marksman.Champions
             var drawE = new Menu("Draw E", "menuDrawE");
             {
                 drawE.AddItem(new MenuItem("DrawE" + Id, "E range").SetValue(new Circle(true, System.Drawing.Color.Beige)));
-                drawE.AddItem(new MenuItem("DrawEMarkEnemy" + Id, "E Marked Enemy").SetValue(new Circle(true,System.Drawing.Color.GreenYellow)));
-                drawE.AddItem(new MenuItem("DrawEMarkStatus" + Id, "E Marked Status").SetValue(true));
+//                drawE.AddItem(new MenuItem("DrawEMarkEnemy" + Id, "E Marked Enemy").SetValue(new Circle(true,System.Drawing.Color.GreenYellow)));
+//                drawE.AddItem(new MenuItem("DrawEMarkStatus" + Id, "E Marked Status").SetValue(true));
                 config.AddSubMenu(drawE);
             }
 
@@ -501,9 +466,6 @@ namespace Marksman.Champions
 
         public override bool LaneClearMenu(Menu config)
         {
-            config.AddItem(new MenuItem("Lane.Enabled", "Enable! (On/Off: Mouse Scroll").SetValue(true))
-                .Permashow(true, "Tristana | Enable Farm");
-
             string[] strQ = new string[7];
             strQ[0] = "Off";
 
@@ -512,18 +474,18 @@ namespace Marksman.Champions
                 strQ[i] = "If need to AA more than >= " + i;
             }
 
-            config.AddItem(new MenuItem("UseQ.Lane", Utils.Utils.Tab + "Use Q:").SetValue(new StringList(strQ, 0)));
+            config.AddItem(new MenuItem("UseQ.Lane", "Q:").SetValue(new StringList(strQ, 0))).SetFontStyle(FontStyle.Regular, Q.MenuColor());
 
 
-            string[] strW = new string[5];
-            strW[0] = "Off";
+            string[] strE = new string[5];
+            strE[0] = "Off";
 
             for (var i = 1; i < 5; i++)
             {
-                strW[i] = "Minion Count >= " + i;
+                strE[i] = "Minion Count >= " + i;
             }
 
-            config.AddItem(new MenuItem("UseE.Lane", Utils.Utils.Tab + "Use E:").SetValue(new StringList(strW, 0)));
+            config.AddItem(new MenuItem("UseE.Lane", "E:").SetValue(new StringList(strE, 0))).SetFontStyle(FontStyle.Regular, E.MenuColor()); ;
             return true;
         }
 
@@ -538,8 +500,8 @@ namespace Marksman.Champions
                 strLaneMinCount[i] = "If need to AA more than >= " + i;
             }
 
-            config.AddItem(new MenuItem("UseQJ", "Use Q").SetValue(new StringList(strLaneMinCount, 4)));
-            config.AddItem(new MenuItem("UseEJ", "Use E").SetValue(new StringList(new[] {"Off", "On", "Just for big Monsters"}, 1)));
+            config.AddItem(new MenuItem("Jungle.UseQ", "Q:").SetValue(new StringList(strLaneMinCount, 4))).SetFontStyle(FontStyle.Regular, Q.MenuColor());
+            config.AddItem(new MenuItem("Jungle.UseE", "E:").SetValue(new StringList(new[] {"Off", "On", "Just for big Monsters"}, 1))).SetFontStyle(FontStyle.Regular, E.MenuColor());
 
             return true;
         }
@@ -552,8 +514,7 @@ namespace Marksman.Champions
                 {
                     if (W.IsReady())
                     {
-                        var wDamage = new double[] {80, 105, 130, 155, 180}[W.Level - 1] +
-                                      0.5*Player.FlatMagicDamageMod;
+                        var wDamage = new double[] {80, 105, 130, 155, 180}[W.Level - 1] + 0.5*Player.FlatMagicDamageMod;
                         if (GetEMarkedCount > 0 && GetEMarkedCount < 4)
                         {
                             return wDamage + (wDamage*GetEMarkedCount*.20);
@@ -570,14 +531,14 @@ namespace Marksman.Champions
                 }
             }
 
-            public static float GetComboDamage
+            public static float GetComboDamage(Obj_AI_Hero t)
             {
-                get
+                if (!t.IsValidTarget(W.Range))
                 {
-                    var fComboDamage = 0d;
-                    var t = GetTarget(W.Range*2);
-                    if (!t.IsValidTarget())
-                        return 0;
+                    return 0;
+                }
+
+                var fComboDamage = 0d;
                     /*
                     if (Q.IsReady())
                     {
@@ -603,44 +564,26 @@ namespace Marksman.Champions
 
                     if (R.IsReady())
                     {
-                        fComboDamage += new double[] {300, 400, 500}[R.Level - 1] + Player.FlatMagicDamageMod;
+                        fComboDamage += R.GetDamage(t);
+                            //new double[] {300, 400, 500}[R.Level - 1] + Player.FlatMagicDamageMod);
                     }
                     return (float) fComboDamage;
-                }
             }
 
             public static Obj_AI_Hero GetEMarkedEnemy
-            {
-                get
-                {
-                    return
-                        ObjectManager.Get<Obj_AI_Hero>()
-                            .Where(
-                                enemy =>
-                                    !enemy.IsDead &&
-                                    enemy.IsValidTarget(W.Range + Orbwalking.GetRealAutoAttackRange(Player)))
-                            .FirstOrDefault(
-                                enemy => enemy.Buffs.Any(buff => buff.DisplayName == "TristanaEChargeSound"));
-                }
-            }
+                =>
+                    ObjectManager.Get<Obj_AI_Hero>()
+                        .Where(
+                            enemy =>
+                                !enemy.IsDead &&
+                                enemy.IsValidTarget(W.Range + Marksman.Utils.Orbwalking.GetRealAutoAttackRange(Player)))
+                        .FirstOrDefault(enemy => enemy.Buffs.Any(buff => buff.DisplayName == "TristanaEChargeSound"));
 
             public static int GetEMarkedCount
-            {
-                get
-                {
-                    if (GetEMarkedEnemy == null)
-                        return 0;
-                    return
-                        GetEMarkedEnemy.Buffs.Where(buff => buff.DisplayName == "TristanaECharge")
-                            .Select(xBuff => xBuff.Count)
-                            .FirstOrDefault();
-                }
-            }
-
-            public static Obj_AI_Hero GetTarget(float vRange)
-            {
-                return TargetSelector.GetTarget(vRange, TargetSelector.DamageType.Physical);
-            }
+                =>
+                    GetEMarkedEnemy?.Buffs.Where(buff => buff.DisplayName == "TristanaECharge")
+                        .Select(xBuff => xBuff.Count)
+                        .FirstOrDefault() ?? 0;
         }
     }
 }

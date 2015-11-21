@@ -1221,6 +1221,7 @@ namespace Marksman.Evade
 
         private static void Drawing_OnDraw(EventArgs args)
         {
+            return;
             if (!Config.Menu.Item("Enabled").GetValue<bool>() || !Config.Menu.Item("EnableDrawings").GetValue<bool>())
             {
                 return;

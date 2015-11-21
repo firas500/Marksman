@@ -89,7 +89,7 @@ namespace Marksman.Champions
                     Q.CastOnUnit(qTarget);
             }
 
-            if (Orbwalking.CanMove(100) && (ComboActive || HarassActive))
+            if (Marksman.Utils.Orbwalking.CanMove(100) && (ComboActive || HarassActive))
             {
                 var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
                 if (useQ)

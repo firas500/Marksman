@@ -26,8 +26,6 @@ namespace Marksman.Champions
         }
         public static Spell W;
         public static Spell E;
-        private static readonly List<EnemyMarker> xEnemyMarker = new List<EnemyMarker>();
-        private static bool canCastE = false;
         private static string twitchEBuffName = "twitchdeadlyvenom";
         public Twitch()
         {
@@ -66,17 +64,6 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
-            
-            if (this.LaneClearActive)
-            {
-                ExecuteLaneClear();
-            }
-
-            if (this.JungleClearActive)
-            {
-                ExecuteJungleClear();
-            }
-
             //var killableMinionCount = 0;
             //foreach (
             //    var m in
@@ -97,7 +84,7 @@ namespace Marksman.Champions
 
             //foreach (
             //    var m in
-            //        MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range, MinionTypes.All,
+            //        MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range, MinionGroup.All,
             //            MinionTeam.Neutral).Where(m => E.CanCast(m) && m.Health <= E.GetDamage(m)))
             //{
             //    if (m.SkinName.ToLower().Contains("baron") || m.SkinName.ToLower().Contains("dragon") && E.CanCast(m))
@@ -106,7 +93,7 @@ namespace Marksman.Champions
             //        Render.Circle.DrawCircle(m.Position, (float) (m.BoundingRadius*1.5), Color.White);
             //}
          
-            if (Orbwalking.CanMove(100) && (ComboActive || HarassActive))
+            if (Marksman.Utils.Orbwalking.CanMove(100) && (ComboActive || HarassActive))
             {
                 var useW = GetValue<bool>("UseW" + (ComboActive ? "C" : "H"));
                 var useE = GetValue<bool>("UseE" + (ComboActive ? "C" : "H"));
@@ -146,7 +133,7 @@ namespace Marksman.Champions
             }
         }
 
-        private static void ExecuteLaneClear()
+        public override void ExecuteLaneClear()
         {
             var prepareMinions = Program.Config.Item("PrepareMinionsE.Lane").GetValue<StringList>().SelectedIndex;
             if (prepareMinions != 0)
@@ -159,7 +146,7 @@ namespace Marksman.Champions
                             .Where(
                                 m =>
                                     m.Health > ObjectManager.Player.TotalAttackDamage() &&
-                                    m.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65))
+                                    m.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65))
                     select m;
 
                 var objAiMinions = minions as Obj_AI_Minion[] ?? minions.ToArray();
@@ -181,14 +168,15 @@ namespace Marksman.Champions
                 }
             }
         }
-        private static void ExecuteJungleClear()
+
+        public override void ExecuteJungleClear()
         {
-            var useW = Program.Config.Item("UseW.Jungle").GetValue<StringList>().SelectedIndex;
-            if (W.IsReady() && useW != 0)
+            var jungleWValue = Program.Config.Item("UseW.Jungle").GetValue<StringList>().SelectedIndex;
+            if (W.IsReady() && jungleWValue != 0)
             {
                 var jungleMobs = Utils.Utils.GetMobs(W.Range, 
-                    useW != 3 ? Utils.Utils.MobTypes.All : Utils.Utils.MobTypes.BigBoys,
-                    useW != 3 ? useW : 1);
+                    jungleWValue != 3 ? Utils.Utils.MobTypes.All : Utils.Utils.MobTypes.BigBoys,
+                    jungleWValue != 3 ? jungleWValue : 1);
 
                 if (jungleMobs != null)
                 {

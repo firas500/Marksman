@@ -5,6 +5,7 @@ using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
 using Color = System.Drawing.Color;
+using Orbwalking = Marksman.Utils.Orbwalking;
 
 namespace Marksman.Champions
 {
@@ -60,7 +61,7 @@ namespace Marksman.Champions
             }
         }
 
-        private static void OnDeleteObject(GameObject sender, EventArgs args)
+        public override void OnDeleteObject(GameObject sender, EventArgs args)
         {
             if ((sender.Name.Contains("Q_reticle_self")))
             {
@@ -75,7 +76,7 @@ namespace Marksman.Champions
             }
         }
 
-        private static void OnCreateObject(GameObject sender, EventArgs args)
+        public override void OnCreateObject(GameObject sender, EventArgs args)
         {
             if ((sender.Name.Contains("Q_reticle_self")))
             {
@@ -123,7 +124,7 @@ namespace Marksman.Champions
             if (drawCatchRadius.Active)
             {
                 if (GetOrbwalkPos() != Game.CursorPos &&
-                    (ComboActive || LaneClearActive || Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LastHit))
+                    (ComboActive || LaneClearActive || Orbwalker.ActiveMode == Marksman.Utils.Orbwalking.OrbwalkingMode.LastHit))
                 {
                     Render.Circle.DrawCircle(Game.CursorPos, Config.Item("CatchRadius").GetValue<Slider>().Value,
                         Color.Red);
@@ -161,13 +162,13 @@ namespace Marksman.Champions
             var orbwalkPos = GetOrbwalkPos();
             var cursor = Game.CursorPos;
             if (orbwalkPos != cursor &&
-                (ComboActive || LaneClearActive || Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LastHit))
+                (ComboActive || LaneClearActive || Orbwalker.ActiveMode == Marksman.Utils.Orbwalking.OrbwalkingMode.LastHit))
             {
-                Orbwalker.SetOrbwalkingPoint(orbwalkPos);
+                Orbwalking.Orbwalker.SetOrbwalkingPoint(orbwalkPos);
             }
             else
             {
-                Orbwalker.SetOrbwalkingPoint(cursor);
+                Orbwalking.Orbwalker.SetOrbwalkingPoint(cursor);
             }
             Obj_AI_Hero t;
             //Combo
@@ -181,7 +182,7 @@ namespace Marksman.Champions
                 {
                     return;
                 }
-                if (W.IsReady() && Config.Item("UseWC").GetValue<bool>() && t.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65) &&
+                if (W.IsReady() && Config.Item("UseWC").GetValue<bool>() && t.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65) &&
                     ObjectManager.Player.Buffs.FirstOrDefault(
                         buff => buff.Name == "dravenfurybuff" || buff.Name == "DravenFury") == null)
                 {

@@ -1,11 +1,15 @@
 #region
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SharpDX;
 using SharpDX.Direct3D9;
+using Collision = LeagueSharp.Common.Collision;
+using Color = System.Drawing.Color;
 using Font = SharpDX.Direct3D9.Font;
 
 #endregion
@@ -111,31 +115,6 @@ namespace Marksman.Champions
             {
                 //Game.PrintChat(i.IData.Id.ToString());
             }
-            if (this.JungleClearActive)
-            {
-                var jungleMobs = Utils.GetMobs(Q.Range, Utils.MobTypes.All);
-
-                if (jungleMobs != null)
-                {
-                    switch (this.GetValue<StringList>("UseQJ").SelectedIndex)
-                    {
-                        case 1:
-                            {
-                                Q.Cast(jungleMobs);
-                                break;
-                            }
-                        case 2:
-                            {
-                                jungleMobs = Utils.GetMobs(Q.Range, Utils.MobTypes.BigBoys);
-                                if (jungleMobs != null)
-                                {
-                                    Q.Cast(jungleMobs);
-                                }
-                                break;
-                            }
-                    }
-                }
-            }
 
             if (GetValue<bool>("PingCH"))
             {
@@ -148,25 +127,7 @@ namespace Marksman.Champions
                     Utils.MPing.Ping(enemy.Position.To2D());
                 }
             }
-
-            if (LaneClearActive)
-            {
-                var useQ = GetValue<bool>("UseQL");
-                if (Q.IsReady() && useQ)
-                {
-                    var vMinions = MinionManager.GetMinions(ObjectManager.Player.Position, Q.Range);
-                    foreach (var minions in
-                        vMinions.Where(
-                            minions => minions.Health < ObjectManager.Player.GetSpellDamage(minions, SpellSlot.Q)))
-                    {
-                        var qP = Q.GetPrediction(minions);
-                        var hit = qP.CastPosition.Extend(ObjectManager.Player.Position, -140);
-                        if (qP.Hitchance >= HitChance.High) Q.Cast(hit);
-                    }
-                }
-            }
-
-
+            
             Obj_AI_Hero t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
             var toggleQ = Program.Config.Item("UseQTH").GetValue<KeyBind>().Active;
             var toggleW = Program.Config.Item("UseWTH").GetValue<KeyBind>().Active;
@@ -197,11 +158,11 @@ namespace Marksman.Champions
             {
                 t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
 
-                var useQ = this.GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
-                var useW = this.GetValue<bool>("UseW" + (ComboActive ? "C" : "H"));
+                var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
+                var useW = GetValue<bool>("UseW" + (ComboActive ? "C" : "H"));
                 var useR = Program.Config.SubMenu("Combo").Item("UseRC").GetValue<bool>();
 
-                if (Orbwalking.CanMove(100) && !t.HasKindredUltiBuff())
+                if (Marksman.Utils.Orbwalking.CanMove(100) && !t.HasKindredUltiBuff())
                 {
                     if (useQ && Q.IsReady() && t.IsValidTarget(Q.Range))
                     {
@@ -235,6 +196,49 @@ namespace Marksman.Champions
             {
                 t = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Physical);
                 if (t.IsValidTarget()) R.Cast(t);
+            }
+        }
+
+        public override void ExecuteLaneClear()
+        {
+            var useQ = GetValue<bool>("Lane.UseQ");
+            if (Q.IsReady() && useQ)
+            {
+                var vMinions = MinionManager.GetMinions(ObjectManager.Player.Position, Q.Range);
+                foreach (var minions in
+                    vMinions.Where(
+                        minions => minions.Health < ObjectManager.Player.GetSpellDamage(minions, SpellSlot.Q)))
+                {
+                    var qP = Q.GetPrediction(minions);
+                    var hit = qP.CastPosition.Extend(ObjectManager.Player.Position, -140);
+                    if (qP.Hitchance >= HitChance.High) Q.Cast(hit);
+                }
+            }
+        }
+
+        public override void ExecuteJungleClear()
+        {
+            var jungleMobs = Utils.GetMobs(Q.Range, Utils.MobTypes.All);
+
+            if (jungleMobs != null)
+            {
+                switch (GetValue<StringList>("UseQJ").SelectedIndex)
+                {
+                    case 1:
+                        {
+                            Q.Cast(jungleMobs);
+                            break;
+                        }
+                    case 2:
+                        {
+                            jungleMobs = Utils.GetMobs(Q.Range, Utils.MobTypes.BigBoys);
+                            if (jungleMobs != null)
+                            {
+                                Q.Cast(jungleMobs);
+                            }
+                            break;
+                        }
+                }
             }
         }
 
@@ -334,20 +338,35 @@ namespace Marksman.Champions
 
         public override bool LaneClearMenu(Menu config)
         {
-            config.AddItem(new MenuItem("UseQL" + Id, "Use Q").SetValue(true));
+            config.AddItem(new MenuItem("Lane.UseQ" + Id, "Q:").SetValue(true)).SetFontStyle(FontStyle.Regular, Q.MenuColor());
+            config.AddItem(new MenuItem("Lane.UseQ.DontMissFarm" + Id, "Q Don't Miss Farm:").SetValue(true)).SetFontStyle(FontStyle.Regular, Q.MenuColor());
             return true;
         }
 
         public override bool JungleClearMenu(Menu config)
         {
-            config.AddItem(
-                new MenuItem("UseQJ" + this.Id, "Use Q").SetValue(
-                    new StringList(new[] { "Off", "On", "Just big Monsters" }, 1))).ValueChanged += (sender, args) =>
-                        {
-                            Program.CClass.Config.Item("Jungle.Mana")
-                                .Show(args.GetNewValue<StringList>().SelectedIndex != 0);
-                        };
+            config.AddItem(new MenuItem("UseQJ" + Id, "Use Q").SetValue(new StringList(new[] {"Off", "On", "Just big Monsters"}, 1))).SetFontStyle(FontStyle.Regular, Q.MenuColor());
             return true;
+        }
+
+        public override void PermaActive()
+        {
+            if (GetValue<bool>("Lane.UseQ.DontMissFarm"))
+            {
+                var minions = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, Q.Range);
+
+                foreach (var n in minions)
+                {
+                    var xH = HealthPrediction.GetHealthPrediction(n, (int)(ObjectManager.Player.AttackCastDelay * 1000), Game.Ping * 2);
+                    if (xH < 0)
+                    {
+                        if (n.Health < Q.GetDamage(n) && Q.CanCast(n))
+                        {
+                            Q.Cast(n);
+                        }
+                    }
+                }
+            }
         }
     }
 }

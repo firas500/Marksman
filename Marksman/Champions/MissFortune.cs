@@ -22,15 +22,14 @@ namespace Marksman.Champions
 
             W = new Spell(SpellSlot.W);
 
-            E = new Spell(SpellSlot.E, 1000);
+            E = new Spell(SpellSlot.E, 800);
             E.SetSkillshot(0.5f, 100f, float.MaxValue, false, SkillshotType.SkillshotCircle);
             Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
-            Game.OnWndProc += Game_OnWndProc;
 
             Utils.Utils.PrintMessage("MissFortune loaded.");
         }
 
-        private void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        public override void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
             if (sender.IsMe && args.SData.Name == "MissFortuneBulletTime")
                 UltiCastedTime = Game.Time;
@@ -79,19 +78,9 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
-            if (this.JungleClearActive)
-            {
-                ExecuteJungleClear();
-            }
-
-            if (this.LaneClearActive)
-            {
-                ExecuteLaneClear();
-            }
-
             var ultCasting = Game.Time - UltiCastedTime < 0.2 || ObjectManager.Player.IsChannelingImportantSpell();
-            Orbwalking.Attack = !ultCasting;
-            Orbwalking.Move = !ultCasting;
+            Marksman.Utils.Orbwalking.Attack = !ultCasting;
+            Marksman.Utils.Orbwalking.Move = !ultCasting;
 
             if (Q.IsReady() && GetValue<KeyBind>("UseQTH").Active)
             {
@@ -149,7 +138,7 @@ namespace Marksman.Champions
             }
         }
 
-        private void ExecuteJungleClear()
+        public override void ExecuteJungleClear()
         {
             var jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range, Marksman.Utils.Utils.MobTypes.All);
 
@@ -183,7 +172,7 @@ namespace Marksman.Champions
                     {
                         if (jW == 1)
                         {
-                            jungleMobs = Utils.Utils.GetMobs(Orbwalking.GetRealAutoAttackRange(null) + 65,
+                            jungleMobs = Utils.Utils.GetMobs(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65,
                                 Utils.Utils.MobTypes.BigBoys);
                             if (jungleMobs != null)
                             {
@@ -197,7 +186,7 @@ namespace Marksman.Champions
                                     .Where(
                                         m =>
                                             m.Team == GameObjectTeam.Neutral &&
-                                            m.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 165))
+                                            m.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 165))
                                     .Sum(mob => (int) mob.Health);
 
                             totalAa = (int) (totalAa/ObjectManager.Player.TotalAttackDamage());
@@ -226,16 +215,7 @@ namespace Marksman.Champions
             }
         }
 
-        private static void Game_OnWndProc(WndEventArgs args)
-        {
-            if (args.Msg != 0x20a)
-                return;
-
-            Program.Config.Item("Lane.Enabled").SetValue(!Program.Config.Item("Lane.Enabled").GetValue<bool>());
-        }
-
-
-        public override void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
+        public override void Orbwalking_BeforeAttack(Marksman.Utils.Orbwalking.BeforeAttackEventArgs args)
         {
             if (!W.IsReady())
             {
@@ -264,7 +244,7 @@ namespace Marksman.Champions
             }
         }
 
-        private void ExecuteLaneClear()
+        public override void ExecuteLaneClear()
         {
             if (Q.IsReady())
             {
@@ -293,7 +273,7 @@ namespace Marksman.Champions
                             .Where(
                                 m =>
                                     m.IsEnemy && !m.IsDead &&
-                                    m.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null)))
+                                    m.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null)))
                             .Sum(mob => (int) mob.Health);
 
                     totalAa = (int) (totalAa/ObjectManager.Player.TotalAttackDamage());
@@ -366,9 +346,6 @@ namespace Marksman.Champions
 
         public override bool LaneClearMenu(Menu config)
         {
-            config.AddItem(new MenuItem("Lane.Enabled", "Enable! (On/Off: Mouse Scroll").SetValue(true))
-                .Permashow(true, "Marksman | Enable Farm", SharpDX.Color.Aqua);
-
             config.AddItem(
                 new MenuItem("Lane.UseQ", Utils.Utils.Tab + "Use Q:").SetValue(new StringList(new[] {"Off", "On"})));
 

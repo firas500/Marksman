@@ -8,12 +8,12 @@ namespace Marksman.Utils
 {
     internal class PotionManager
     {
-        private readonly Menu ExtrasMenu;
+        private readonly Menu _menu;
         private List<Potion> potions;
 
-        public PotionManager(Menu extrasMenu)
+        public PotionManager(Menu menu)
         {
-            ExtrasMenu = extrasMenu;
+            _menu = menu;
             potions = new List<Potion>
             {
                 new Potion
@@ -55,28 +55,15 @@ namespace Marksman.Utils
         private void Load()
         {
             potions = potions.OrderBy(x => x.Priority).ToList();
-            ExtrasMenu.AddSubMenu(new Menu("Potion Manager", "PotionManager"));
+            _menu.AddSubMenu(new Menu("Potion Manager", "PotionManager"));
 
-            ExtrasMenu.SubMenu("PotionManager").AddSubMenu(new Menu("Health", "Health"));
-            ExtrasMenu.SubMenu("PotionManager")
-                .SubMenu("Health")
-                .AddItem(new MenuItem("HealthPotion", "Use Health Potion").SetValue(true));
-            ExtrasMenu.SubMenu("PotionManager")
-                .SubMenu("Health")
-                .AddItem(new MenuItem("HealthPercent", "HP Trigger Percent").SetValue(new Slider(30)));
+            _menu.SubMenu("PotionManager").AddItem(new MenuItem("HealthPotion", "Use Health Potion").SetValue(true));
+            _menu.SubMenu("PotionManager").AddItem(new MenuItem("HealthPercent", "HP Trigger Percent").SetValue(new Slider(30)));
 
-            ExtrasMenu.SubMenu("PotionManager").AddSubMenu(new Menu("Mana", "Mana"));
-            ExtrasMenu.SubMenu("PotionManager")
-                .SubMenu("Mana")
-                .AddItem(new MenuItem("ManaPotion", "Use Mana Potion").SetValue(true));
-            ExtrasMenu.SubMenu("PotionManager")
-                .SubMenu("Mana")
-                .AddItem(new MenuItem("ManaPercent", "MP Trigger Percent").SetValue(new Slider(30)));
-
-            Game.OnUpdate += OnGameUpdate;
+            Game.OnUpdate += Game_OnUpdate;
         }
 
-        private void OnGameUpdate(EventArgs args)
+        private void Game_OnUpdate(EventArgs args)
         {
             if (ObjectManager.Player.HasBuff("Recall") ||
                 ObjectManager.Player.InFountain() && ObjectManager.Player.InShop())
@@ -84,22 +71,13 @@ namespace Marksman.Utils
 
             try
             {
-                if (ExtrasMenu.Item("HealthPotion").GetValue<bool>())
+                if (_menu.Item("HealthPotion").GetValue<bool>())
                 {
-                    if (ObjectManager.Player.HealthPercent <= ExtrasMenu.Item("HealthPercent").GetValue<Slider>().Value)
+                    if (ObjectManager.Player.HealthPercent <= _menu.Item("HealthPercent").GetValue<Slider>().Value)
                     {
                         var healthSlot = GetPotionSlot(PotionType.Health);
                         if (!IsBuffActive(PotionType.Health))
                             ObjectManager.Player.Spellbook.CastSpell(healthSlot.SpellSlot);
-                    }
-                }
-                if (ExtrasMenu.Item("ManaPotion").GetValue<bool>())
-                {
-                    if (ObjectManager.Player.ManaPercent <= ExtrasMenu.Item("ManaPercent").GetValue<Slider>().Value)
-                    {
-                        var manaSlot = GetPotionSlot(PotionType.Mana);
-                        if (!IsBuffActive(PotionType.Mana))
-                            ObjectManager.Player.Spellbook.CastSpell(manaSlot.SpellSlot);
                     }
                 }
             }

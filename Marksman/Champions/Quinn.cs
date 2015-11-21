@@ -54,18 +54,18 @@ namespace Marksman.Champions
         public override void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
             var t = target as Obj_AI_Hero;
-            if (t == null || (!this.ComboActive && !HarassActive) || unit.IsMe) return;
+            if (t == null || (!ComboActive && !HarassActive) || unit.IsMe) return;
 
-            if (Q.IsReady() && this.GetValue<bool>("UseQ" + (ComboActive ? "C" : "H")))
+            if (Q.IsReady() && GetValue<bool>("UseQ" + (ComboActive ? "C" : "H")))
                 Q.Cast(t, false, true);
         }
 
         public override void Drawing_OnDraw(EventArgs args)
         {
-            Spell[] spellList = { this.Q, this.E};
+            Spell[] spellList = { Q, E};
             foreach (var spell in spellList)
             {
-                var menuItem = this.GetValue<Circle>("Draw" + spell.Slot);
+                var menuItem = GetValue<Circle>("Draw" + spell.Slot);
                 if (menuItem.Active && spell.Level > 0)
                     Render.Circle.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
 
@@ -134,11 +134,11 @@ namespace Marksman.Champions
                     e => e.Buffs.Any(b => b.Name.ToLower() == "quinnw_cosmetic" && e.IsValidTarget(E.Range)));
             if (enemy != null)
             {
-                if (enemy.Distance(ObjectManager.Player.Position) > Orbwalking.GetRealAutoAttackRange(null) + 65)
+                if (enemy.Distance(ObjectManager.Player.Position) > Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65)
                 {
                     ObjectManager.Player.IssueOrder(GameObjectOrder.MoveTo, enemy);
                 }
-                this.Orbwalker.ForceTarget(enemy);
+                Orbwalker.ForceTarget(enemy);
             }
 
             if (Q.IsReady() && GetValue<KeyBind>("UseQTH").Active)
@@ -155,12 +155,12 @@ namespace Marksman.Champions
                 var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
                 var useE = GetValue<bool>("UseE" + (ComboActive ? "C" : "H"));
 
-                if (Orbwalking.CanMove(100))
+                if (Marksman.Utils.Orbwalking.CanMove(100))
                 {
                     if (E.IsReady() && useE)
                     {
                         var t = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
-                        if (useE && t.IsValidTarget() && !t.IsZombie && !isHePantheon(t) && !t.HasBuff("QuinnW_Cosmetic", true))
+                        if (t.IsValidTarget() && !t.IsZombie && !isHePantheon(t) && !t.HasBuff("QuinnW_Cosmetic", true))
                         {
                             E.CastOnUnit(t);
                         }
@@ -187,14 +187,14 @@ namespace Marksman.Champions
             }
         }
 
-        public virtual void ExecuteJungleClear()
+        public override void ExecuteJungleClear()
         {
             if (E.IsReady())
             {
-                var jQ = Marksman.Utils.Utils.GetMobs(Orbwalking.GetRealAutoAttackRange(null) + 65, Marksman.Utils.Utils.MobTypes.All);
+                var jQ = Marksman.Utils.Utils.GetMobs(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65, Marksman.Utils.Utils.MobTypes.All);
                 if (jQ != null)
                 {
-                    switch (this.GetValue<StringList>("UseQJ").SelectedIndex)
+                    switch (GetValue<StringList>("UseQJ").SelectedIndex)
                     {
                         case 1:
                             {
@@ -203,7 +203,7 @@ namespace Marksman.Champions
                             }
                         case 2:
                             {
-                                jQ = Utils.Utils.GetMobs(Orbwalking.GetRealAutoAttackRange(null) + 65, Utils.Utils.MobTypes.BigBoys);
+                                jQ = Utils.Utils.GetMobs(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65, Utils.Utils.MobTypes.BigBoys);
                                 if (jQ != null)
                                 {
                                     Q.Cast(jQ);
@@ -221,7 +221,7 @@ namespace Marksman.Champions
 
                 if (jungleMobs != null)
                 {
-                    switch (this.GetValue<StringList>("UseEJ").SelectedIndex)
+                    switch (GetValue<StringList>("UseEJ").SelectedIndex)
                     {
                         case 1:
                             {

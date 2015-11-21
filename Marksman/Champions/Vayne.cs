@@ -62,9 +62,9 @@ namespace Marksman.Champions
             
             Orbwalker.SetAttack(Game.Time > rqTumbleBuffEndOfTime);
 
-            if (this.JungleClearActive)
+            if (JungleClearActive)
             {
-                this.ExecJungleClear();
+                ExecJungleClear();
             }
             
             if ((ComboActive || HarassActive))
@@ -78,7 +78,7 @@ namespace Marksman.Champions
                     }
                     else
                     {
-                        var attackRange = Orbwalking.GetRealAutoAttackRange(ObjectManager.Player);
+                        var attackRange = Marksman.Utils.Orbwalking.GetRealAutoAttackRange(ObjectManager.Player);
                         TargetSelector.SetTarget(
                             TargetSelector.GetTarget(attackRange, TargetSelector.DamageType.Physical));
                     }
@@ -86,10 +86,10 @@ namespace Marksman.Champions
                 var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
                 var useE = GetValue<StringList>("UseEC").SelectedIndex;
 
-                var t = TargetSelector.GetTarget(Q.Range + Orbwalking.GetRealAutoAttackRange(null), TargetSelector.DamageType.Physical);
+                var t = TargetSelector.GetTarget(Q.Range + Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null), TargetSelector.DamageType.Physical);
                 if (t.IsValidTarget() && useQ)
                 {
-                    if (t.Distance(ObjectManager.Player.Position) > Orbwalking.GetRealAutoAttackRange(null) && Q.IsPositionSafe(t.Position.To2D()))
+                    if (t.Distance(ObjectManager.Player.Position) > Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) && Q.IsPositionSafe(t.Position.To2D()))
                     {
                         Q.Cast(t.Position);
                     }
@@ -97,7 +97,7 @@ namespace Marksman.Champions
                     {
                         Q.Cast(Game.CursorPos);
                     }
-                    this.Orbwalker.ForceTarget(t);
+                    Orbwalker.ForceTarget(t);
                 }
 
                 if (Q.IsReady() && GetValue<bool>("CompleteSilverBuff"))
@@ -170,9 +170,9 @@ namespace Marksman.Champions
                 }
             }
 
-            if (this.LaneClearActive)
+            if (LaneClearActive)
             {
-                var useQ = this.GetValue<bool>("UseQL");
+                var useQ = GetValue<bool>("UseQL");
 
                 if (Q.IsReady() && useQ)
                 {
@@ -189,19 +189,19 @@ namespace Marksman.Champions
 
         public void ExecJungleClear()
         {
-            var jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range + Orbwalking.GetRealAutoAttackRange(null) + 65,
+            var jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range + Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65,
                 Marksman.Utils.Utils.MobTypes.All);
 
             if (jungleMobs != null)
             {
-                switch (this.GetValue<StringList>("UseQJ").SelectedIndex)
+                switch (GetValue<StringList>("UseQJ").SelectedIndex)
                 {
                     case 1:
                         {
                             if (!jungleMobs.SkinName.ToLower().Contains("baron") || !jungleMobs.SkinName.ToLower().Contains("dragon"))
                             {
-                                if (jungleMobs.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65))
-                                    Q.Cast(jungleMobs.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65)
+                                if (jungleMobs.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65))
+                                    Q.Cast(jungleMobs.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65)
                                         ? Game.CursorPos
                                         : jungleMobs.Position);
                             }
@@ -211,11 +211,11 @@ namespace Marksman.Champions
                         {
                             if (!jungleMobs.SkinName.ToLower().Contains("baron") || !jungleMobs.SkinName.ToLower().Contains("dragon"))
                             {
-                                jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range + Orbwalking.GetRealAutoAttackRange(null) + 65,
+                                jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range + Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65,
                                     Marksman.Utils.Utils.MobTypes.BigBoys);
                                 if (jungleMobs != null)
                                 {
-                                    Q.Cast(jungleMobs.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65)
+                                    Q.Cast(jungleMobs.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65)
                                         ? Game.CursorPos
                                         : jungleMobs.Position);
                                 }
@@ -224,7 +224,7 @@ namespace Marksman.Champions
                         }
                 }
 
-                switch (this.GetValue<StringList>("UseEJ").SelectedIndex)
+                switch (GetValue<StringList>("UseEJ").SelectedIndex)
                 {
                     case 1:
                         {
@@ -302,10 +302,18 @@ namespace Marksman.Champions
             return true;
         }
 
+        public override bool JungleClearMenu(Menu config)
+        {
+            config.AddItem(new MenuItem("UseQJ" + Id, "Use Q").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 2)));
+            config.AddItem(new MenuItem("UseEJ" + Id, "Use E").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 2)));
+            return true;
+        }
+
+
         public override bool DrawingMenu(Menu config)
         {
-            config.AddItem(new MenuItem("DrawQ" + this.Id, "Q range").SetValue(new StringList(new[] { "Off", "Q Range", "Q + AA Range" }, 2)));
-            config.AddItem(new MenuItem("DrawE" + this.Id, "E range").SetValue(new StringList(new[] { "Off", "E Range", "E Stun Status", "Both" }, 3)));
+            config.AddItem(new MenuItem("DrawQ" + Id, "Q range").SetValue(new StringList(new[] { "Off", "Q Range", "Q + AA Range" }, 2)));
+            config.AddItem(new MenuItem("DrawE" + Id, "E range").SetValue(new StringList(new[] { "Off", "E Range", "E Stun Status", "Both" }, 3)));
 
             return true;
         }
@@ -370,15 +378,9 @@ namespace Marksman.Champions
                     Render.Circle.DrawCircle(ObjectManager.Player.Position, Q.Range, System.Drawing.Color.Aqua);
                     break;
                 case 2:
-                    Render.Circle.DrawCircle(ObjectManager.Player.Position, Q.Range + Orbwalking.GetRealAutoAttackRange(null) + 65, System.Drawing.Color.Aqua);
+                    Render.Circle.DrawCircle(ObjectManager.Player.Position, Q.Range + Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65, System.Drawing.Color.Aqua);
                     break;
             }
-        }
-        public override bool JungleClearMenu(Menu config)
-        {
-            config.AddItem(new MenuItem("UseQJ" + this.Id, "Use Q").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 2)));
-            config.AddItem(new MenuItem("UseEJ" + this.Id, "Use E").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 2)));
-            return true;
         }
 
         public class VayneData
@@ -408,7 +410,7 @@ namespace Marksman.Champions
                                     !enemy.IsDead &&
                                     enemy.IsValidTarget(
                                         (Q.IsReady() ? Q.Range : 0) +
-                                        Orbwalking.GetRealAutoAttackRange(ObjectManager.Player)))
+                                        Marksman.Utils.Orbwalking.GetRealAutoAttackRange(ObjectManager.Player)))
                             .FirstOrDefault(
                                 enemy => enemy.Buffs.Any(buff => buff.Name == "vaynesilvereddebuff" && buff.Count > 0));
                 }
