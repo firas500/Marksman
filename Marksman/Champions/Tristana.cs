@@ -186,6 +186,7 @@ namespace Marksman.Champions
                     if (t.IsValidTarget())
                         W.Cast(t);
                 }
+                /*
                 else if (useWks)
                 {
                     t = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
@@ -198,6 +199,7 @@ namespace Marksman.Champions
                     if (t.IsValidTarget() && TristanaData.GetEMarkedCount == 4)
                         W.Cast(t);
                 }
+                */
             }
 
             if (ComboActive)
@@ -554,7 +556,8 @@ namespace Marksman.Champions
                     */
                     if (W.IsReady())
                     {
-                        fComboDamage += GetWDamage;
+                        //fComboDamage += GetWDamage;
+                        fComboDamage += W.GetDamage(t);
                     }
 
                     if (E.IsReady())
