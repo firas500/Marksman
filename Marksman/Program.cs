@@ -350,6 +350,7 @@ namespace Marksman
                 var misc = new Menu("Misc", "Misc").SetFontStyle(FontStyle.Regular, SharpDX.Color.DarkOrange);
                 if (CClass.MiscMenu(misc))
                 {
+                    misc.AddItem(new MenuItem("Misc.SaveManaForUltimate", "Save Mana for Ultimate").SetValue(false));                    
                     Config.AddSubMenu(misc);
                 }
                 /*
@@ -915,6 +916,18 @@ namespace Marksman
         }
         private static void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args)
         {
+            if (Config.Item("Misc.SaveManaForUltimate").GetValue<bool>() &&
+                ObjectManager.Player.Spellbook.GetSpell(SpellSlot.R).Level > 0 &&
+                Math.Abs(ObjectManager.Player.Spellbook.GetSpell(SpellSlot.R).Cooldown) < 0.00001 &&
+                args.Slot != SpellSlot.R)
+            {
+                var lastMana = ObjectManager.Player.Mana - ObjectManager.Player.Spellbook.GetSpell(args.Slot).ManaCost;
+                if (lastMana < ObjectManager.Player.Spellbook.GetSpell(SpellSlot.R).ManaCost)
+                {
+                    args.Process = false;
+                }
+            }
+            
             CClass.Spellbook_OnCastSpell(sender, args);
         }
 
