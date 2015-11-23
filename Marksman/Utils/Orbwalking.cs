@@ -449,6 +449,8 @@ namespace Marksman.Utils
                 {
                     return true;
                 }
+                
+                return false;
             }
 
             return LeagueSharp.Common.Utils.GameTimeTickCount + Game.Ping / 2 + 25 >= LastAATick + Orbwalker.AttackSpeedDelay * 1000 && Attack;
