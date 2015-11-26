@@ -1146,7 +1146,7 @@ namespace Marksman.Utils
                 }
 
                 //Forced target
-                if (forcedTarget.IsValidTarget() && InAutoAttackRange(forcedTarget))
+                if (ActiveMode == OrbwalkingMode.Combo && forcedTarget.IsValidTarget() && InAutoAttackRange(forcedTarget))
                 {
                     return forcedTarget;
                 }
