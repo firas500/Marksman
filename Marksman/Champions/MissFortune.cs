@@ -114,11 +114,13 @@ namespace Marksman.Champions
                 if (E.IsReady() && useE)
                 {
                     var t = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
-                    if (ObjectManager.Player.Distance(t) > 600)
-                        E.CastIfHitchanceEquals(t, t.Path.Count() > 1 ? HitChance.High : HitChance.Medium);
-                    else
-                        E.CastIfHitchanceEquals(t, HitChance.Low);
-                }
+                    if (t.IsValidTarget())
+                    {
+                        if (ObjectManager.Player.Distance(t) > 600)
+                            E.CastIfHitchanceEquals(t, t.Path.Count() > 1 ? HitChance.High : HitChance.Medium);
+                        else
+                            E.CastIfHitchanceEquals(t, HitChance.Low);
+                    }                }
             }
 
             if (LaneClearActive)
