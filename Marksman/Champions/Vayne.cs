@@ -22,7 +22,7 @@ namespace Marksman.Champions
         {
             Q = new Spell(SpellSlot.Q, 300f);
             E = new Spell(SpellSlot.E, 650f);
-            R = new Spell(SpellSlot.E, 650f);
+            R = new Spell(SpellSlot.R);
 
             E.SetTargetted(0.25f, 2200f);
 
