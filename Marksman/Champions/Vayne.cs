@@ -83,21 +83,48 @@ namespace Marksman.Champions
                             TargetSelector.GetTarget(attackRange, TargetSelector.DamageType.Physical));
                     }
                 }
-                var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
-                var useE = GetValue<StringList>("UseEC").SelectedIndex;
-
-                var t = TargetSelector.GetTarget(Q.Range + Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null), TargetSelector.DamageType.Physical);
-                if (t.IsValidTarget() && useQ)
+                
+                var useQ = GetValue<StringList>("Combo.UseQ").SelectedIndex;
+                var t = TargetSelector.GetTarget(Q.Range + Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null),
+                    TargetSelector.DamageType.Physical);
+                if (Q.IsReady() && t.IsValidTarget() && useQ != 0)
                 {
-                    if (t.Distance(ObjectManager.Player.Position) > Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) && Q.IsPositionSafe(t.Position.To2D()))
+                    switch (useQ)
                     {
-                        Q.Cast(t.Position);
+                        case 1:
+                        {
+                            Q.Cast(Game.CursorPos);
+                            break;
+                        }
+
+                        case 2:
+                        {
+                            var silverEnemy = VayneData.GetSilverBuffMarkedEnemy;
+                            if (silverEnemy != null && t.ChampionName == silverEnemy.ChampionName &&
+                                VayneData.GetSilverBuffMarkedCount == 2)
+                            {
+                                Q.Cast(Game.CursorPos);
+                                Orbwalker.ForceTarget(t);
+                            }
+                            break;
+                        }
+
+                        case 3:
+                        {
+                            if (t.Distance(ObjectManager.Player.Position) >
+                                Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) &&
+                                Q.IsPositionSafe(t.Position.To2D()))
+                            {
+                                Q.Cast(t.Position);
+                            }
+                            else if (Q.IsPositionSafe(Game.CursorPos.To2D()))
+                            {
+                                Q.Cast(Game.CursorPos);
+                            }
+                            Orbwalker.ForceTarget(t);
+                            break;
+                        }
                     }
-                    else if (Q.IsPositionSafe(Game.CursorPos.To2D()))
-                    {
-                        Q.Cast(Game.CursorPos);
-                    }
-                    Orbwalker.ForceTarget(t);
                 }
 
                 if (Q.IsReady() && GetValue<bool>("CompleteSilverBuff"))
@@ -107,7 +134,8 @@ namespace Marksman.Champions
                         Q.Cast(Game.CursorPos);
                     }
                 }
-
+                
+                var useE = GetValue<StringList>("UseEC").SelectedIndex;
                 if (E.IsReady() && useE != 0)
                 {
                     t = TargetSelector.GetTarget(E.Range + Q.Range, TargetSelector.DamageType.Physical);
@@ -267,7 +295,12 @@ namespace Marksman.Champions
 
         public override bool ComboMenu(Menu config)
         {
-            config.AddItem(new MenuItem("UseQC" + Id, "Use Q").SetValue(true));
+            config.AddItem(
+                new MenuItem("Combo.UseQ" + Id, "Use Q").SetValue(
+                    new StringList(
+                        new[]
+                        {"Off", "Tumble to Mouse Cursor", "Just Complete 3rd Silver Buff Mark", "Marksman Settings"}, 1)));
+
             config.AddItem(new MenuItem("UseEC" + Id, "Use E").SetValue(new StringList(new []{ "Off", "On", "Just Selected Target" }, 1)));
             config.AddItem(new MenuItem("FocusW" + Id, "Force Focus Marked Enemy").SetValue(true));
             return true;
