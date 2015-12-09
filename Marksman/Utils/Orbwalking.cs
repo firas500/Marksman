@@ -1,4 +1,4 @@
-﻿#region LICENSE
+#region LICENSE
 
 /*
  Copyright 2014 - 2015 LeagueSharp
@@ -442,16 +442,17 @@ namespace Marksman.Utils
         /// <returns><c>true</c> if this instance can attack; otherwise, <c>false</c>.</returns>
         public static bool CanAttack()
         {
-            if (Player.ChampionName == "Graves"
-                && (LeagueSharp.Common.Utils.GameTimeTickCount + Game.Ping / 2 + 25 >= LastAATick + 1000 && Attack))
+            if (Player.ChampionName == "Graves" && Attack)
             {
-                if (Player.HasBuff("GravesBasicAttackAmmo1") || Player.HasBuff("GravesBasicAttackAmmo2"))
+                var attackDelay = 1.0740296828d * 1000 * Player.AttackDelay - 716.2381256175d;
+                if (LeagueSharp.Common.Utils.GameTimeTickCount + Game.Ping / 2 + 25 >= LastAATick + attackDelay && Player.HasBuff("GravesBasicAttackAmmo1"))
                 {
                     return true;
                 }
-                
+
                 return false;
             }
+
 
             return LeagueSharp.Common.Utils.GameTimeTickCount + Game.Ping / 2 + 25 >= LastAATick + Orbwalker.AttackSpeedDelay * 1000 && Attack;
         }
