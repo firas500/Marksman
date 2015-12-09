@@ -15,7 +15,7 @@ namespace Marksman.Champions
     {
         public static float rqTumbleBuffEndOfTime = 0;
         public static bool VayneUltiIsActive { get; set; }
-        
+
         public static Spell Q, E, R;
 
         public Vayne()
@@ -57,16 +57,35 @@ namespace Marksman.Champions
                 E.Cast(unit);
         }
 
+        private static bool CastE(Obj_AI_Base t)
+        {
+            for (var i = 1; i < 8; i++)
+            {
+                var targetBehind = t.Position + Vector3.Normalize(t.ServerPosition - ObjectManager.Player.Position)*i*50;
+
+                if (targetBehind.IsWall() && t.IsValidTarget(E.Range))
+                {
+                    E.CastOnUnit(t);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public override bool ToggleMenu(Menu config)
+        {
+            return true;
+        }
+
         public override void Game_OnGameUpdate(EventArgs args)
         {
-            
             Orbwalker.SetAttack(Game.Time > rqTumbleBuffEndOfTime);
 
             if (JungleClearActive)
             {
                 ExecJungleClear();
             }
-            
+
             if ((ComboActive || HarassActive))
             {
                 if (GetValue<bool>("FocusW"))
@@ -83,7 +102,7 @@ namespace Marksman.Champions
                             TargetSelector.GetTarget(attackRange, TargetSelector.DamageType.Physical));
                     }
                 }
-                
+
                 var useQ = GetValue<StringList>("Combo.UseQ").SelectedIndex;
                 var t = TargetSelector.GetTarget(Q.Range + Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null),
                     TargetSelector.DamageType.Physical);
@@ -127,14 +146,6 @@ namespace Marksman.Champions
                     }
                 }
 
-                if (Q.IsReady() && GetValue<bool>("CompleteSilverBuff"))
-                {
-                    if (VayneData.GetSilverBuffMarkedEnemy != null && VayneData.GetSilverBuffMarkedCount == 2)
-                    {
-                        Q.Cast(Game.CursorPos);
-                    }
-                }
-                
                 var useE = GetValue<StringList>("UseEC").SelectedIndex;
                 if (E.IsReady() && useE != 0)
                 {
@@ -143,34 +154,14 @@ namespace Marksman.Champions
                     {
                         if (t.IsValidTarget())
                         {
-                            for (var i = 1; i < 8; i++)
-                            {
-                                var targetBehind = t.Position +
-                                                   Vector3.Normalize(t.ServerPosition - ObjectManager.Player.Position)*i*
-                                                   50;
-
-                                if (targetBehind.IsWall() && t.IsValidTarget(E.Range))
-                                {
-                                    E.CastOnUnit(t);
-                                    return;
-                                }
-                            }
+                            CastE(t);
                         }
                     }
                     else
                     {
                         foreach (var e in HeroManager.Enemies.Where(e => e.IsValidTarget(E.Range) && !e.IsZombie))
                         {
-                            for (var i = 1; i < 8; i++)
-                            {
-                                var targetBehind = t.Position + Vector3.Normalize(e.ServerPosition - ObjectManager.Player.Position)*i* 50;
-
-                                if (targetBehind.IsWall())
-                                {
-                                    E.CastOnUnit(e);
-                                    return;
-                                }
-                            }
+                            CastE(e);
                         }
                     }
                     /*
@@ -213,78 +204,73 @@ namespace Marksman.Champions
             }
         }
 
-       
-
         public void ExecJungleClear()
         {
-            var jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range + Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65,
-                Marksman.Utils.Utils.MobTypes.All);
+            var jungleMobs =
+                Marksman.Utils.Utils.GetMobs(Q.Range + Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65,
+                    Marksman.Utils.Utils.MobTypes.All);
 
             if (jungleMobs != null)
             {
                 switch (GetValue<StringList>("UseQJ").SelectedIndex)
                 {
                     case 1:
+                    {
+                        if (!jungleMobs.SkinName.ToLower().Contains("baron") ||
+                            !jungleMobs.SkinName.ToLower().Contains("dragon"))
                         {
-                            if (!jungleMobs.SkinName.ToLower().Contains("baron") || !jungleMobs.SkinName.ToLower().Contains("dragon"))
-                            {
-                                if (jungleMobs.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65))
-                                    Q.Cast(jungleMobs.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65)
+                            if (jungleMobs.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65))
+                                Q.Cast(
+                                    jungleMobs.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65)
                                         ? Game.CursorPos
                                         : jungleMobs.Position);
-                            }
-                            break;
                         }
+                        break;
+                    }
                     case 2:
+                    {
+                        if (!jungleMobs.SkinName.ToLower().Contains("baron") ||
+                            !jungleMobs.SkinName.ToLower().Contains("dragon"))
                         {
-                            if (!jungleMobs.SkinName.ToLower().Contains("baron") || !jungleMobs.SkinName.ToLower().Contains("dragon"))
-                            {
-                                jungleMobs = Marksman.Utils.Utils.GetMobs(Q.Range + Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65,
+                            jungleMobs =
+                                Marksman.Utils.Utils.GetMobs(
+                                    Q.Range + Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65,
                                     Marksman.Utils.Utils.MobTypes.BigBoys);
-                                if (jungleMobs != null)
-                                {
-                                    Q.Cast(jungleMobs.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65)
+                            if (jungleMobs != null)
+                            {
+                                Q.Cast(
+                                    jungleMobs.IsValidTarget(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65)
                                         ? Game.CursorPos
                                         : jungleMobs.Position);
-                                }
                             }
-                            break;
                         }
+                        break;
+                    }
                 }
 
                 switch (GetValue<StringList>("UseEJ").SelectedIndex)
                 {
                     case 1:
-                        {
-                            if (jungleMobs.IsValidTarget(E.Range))
-                                E.CastOnUnit(jungleMobs);
-                            break;
-                        }
+                    {
+                        if (jungleMobs.IsValidTarget(E.Range))
+                            E.CastOnUnit(jungleMobs);
+                        break;
+                    }
                     case 2:
+                    {
+                        jungleMobs = Marksman.Utils.Utils.GetMobs(E.Range, Marksman.Utils.Utils.MobTypes.BigBoys);
+                        if (jungleMobs != null)
                         {
-                            jungleMobs = Marksman.Utils.Utils.GetMobs(E.Range, Marksman.Utils.Utils.MobTypes.BigBoys);
-                            if (jungleMobs != null)
+                            CastE(jungleMobs);
+
+                            if (ObjectManager.Player.Distance(jungleMobs) < ObjectManager.Player.AttackRange/2)
                             {
-                                for (var i = 1; i < 8; i++)
-                                {
-                                    var targetBehind = jungleMobs.Position
-                                                       + Vector3.Normalize(jungleMobs.ServerPosition - ObjectManager.Player.Position) * i
-                                                       * 50;
-
-                                    if (targetBehind.IsWall() && jungleMobs.IsValidTarget(E.Range))
-                                    {
-                                        E.CastOnUnit(jungleMobs);
-                                    }
-                                }
-
-                                if (ObjectManager.Player.Distance(jungleMobs) < ObjectManager.Player.AttackRange/2)
-                                {
-                                    E.CastOnUnit(jungleMobs);
-                                }
-
+                                E.CastOnUnit(jungleMobs);
                             }
-                            break;
+
                         }
+                        break;
+                    }
                 }
             }
         }
@@ -300,8 +286,9 @@ namespace Marksman.Champions
                     new StringList(
                         new[]
                         {"Off", "Tumble to Mouse Cursor", "Just Complete 3rd Silver Buff Mark", "Marksman Settings"}, 1)));
-
-            config.AddItem(new MenuItem("UseEC" + Id, "Use E").SetValue(new StringList(new []{ "Off", "On", "Just Selected Target" }, 1)));
+            config.AddItem(
+                new MenuItem("UseEC" + Id, "Use E").SetValue(new StringList(
+                    new[] {"Off", "On", "Just Selected Target"}, 1)));
             config.AddItem(new MenuItem("FocusW" + Id, "Force Focus Marked Enemy").SetValue(true));
             return true;
         }
@@ -317,11 +304,14 @@ namespace Marksman.Champions
         {
             var menuMiscR = new Menu("R", "Misc.R");
             {
-                menuMiscR.AddItem(new MenuItem("Misc.R.DontAttack" + Id, "Don't Attack If I'm visible with ulti").SetValue(true));
+                menuMiscR.AddItem(
+                    new MenuItem("Misc.R.DontAttack" + Id, "Don't Attack If I'm visible with ulti").SetValue(true));
                 config.AddSubMenu(menuMiscR);
             }
             // TODO: Add back-off option if Vayne's in dangerous
-            config.AddItem(new MenuItem("UseET" + Id, "Use E (Toggle)").SetValue(new KeyBind("T".ToCharArray()[0],KeyBindType.Toggle)));
+            config.AddItem(
+                new MenuItem("UseET" + Id, "Use E (Toggle)").SetValue(new KeyBind("T".ToCharArray()[0],
+                    KeyBindType.Toggle)));
             config.AddItem(new MenuItem("UseEInterrupt" + Id, "Use E To Interrupt").SetValue(true));
             config.AddItem(new MenuItem("UseEGapcloser" + Id, "Use E To Gapcloser").SetValue(true));
             config.AddItem(new MenuItem("PushDistance" + Id, "E Push Distance").SetValue(new Slider(425, 475, 300)));
@@ -337,16 +327,22 @@ namespace Marksman.Champions
 
         public override bool JungleClearMenu(Menu config)
         {
-            config.AddItem(new MenuItem("UseQJ" + Id, "Use Q").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 2)));
-            config.AddItem(new MenuItem("UseEJ" + Id, "Use E").SetValue(new StringList(new[] { "Off", "On", "Just big Monsters" }, 2)));
+            config.AddItem(
+                new MenuItem("UseQJ" + Id, "Use Q").SetValue(new StringList(new[] {"Off", "On", "Just big Monsters"}, 2)));
+            config.AddItem(
+                new MenuItem("UseEJ" + Id, "Use E").SetValue(new StringList(new[] {"Off", "On", "Just big Monsters"}, 2)));
             return true;
         }
 
 
         public override bool DrawingMenu(Menu config)
         {
-            config.AddItem(new MenuItem("DrawQ" + Id, "Q range").SetValue(new StringList(new[] { "Off", "Q Range", "Q + AA Range" }, 2)));
-            config.AddItem(new MenuItem("DrawE" + Id, "E range").SetValue(new StringList(new[] { "Off", "E Range", "E Stun Status", "Both" }, 3)));
+            config.AddItem(
+                new MenuItem("DrawQ" + Id, "Q range").SetValue(new StringList(new[] {"Off", "Q Range", "Q + AA Range"},
+                    2)));
+            config.AddItem(
+                new MenuItem("DrawE" + Id, "E range").SetValue(
+                    new StringList(new[] {"Off", "E Range", "E Stun Status", "Both"}, 3)));
 
             return true;
         }
@@ -362,15 +358,16 @@ namespace Marksman.Champions
                 }
 
                 if (drawE == 2 || drawE == 3)
-                { 
+                {
                     var t = TargetSelector.GetTarget(E.Range + Q.Range, TargetSelector.DamageType.Physical);
                     if (t.IsValidTarget())
                     {
                         var color = System.Drawing.Color.Red;
                         for (var i = 1; i < 8; i++)
                         {
-                            var targetBehind = t.Position + Vector3.Normalize(t.ServerPosition - ObjectManager.Player.Position) * i * 50;
-                            
+                            var targetBehind = t.Position +
+                                               Vector3.Normalize(t.ServerPosition - ObjectManager.Player.Position)*i*50;
+
                             if (!targetBehind.IsWall())
                             {
                                 color = System.Drawing.Color.Aqua;
@@ -395,11 +392,19 @@ namespace Marksman.Champions
                         var width = 2;
 
                         var x = new Geometry.Polygon.Line(startpos, endpos);
-                        x.Draw(color, width);
+                        {
+                            x.Draw(color, width);
+                        }
+
                         var y = new Geometry.Polygon.Line(endpos, endpos1);
-                        y.Draw(color, width);
+                        {
+                            y.Draw(color, width);
+                        }
+
                         var z = new Geometry.Polygon.Line(endpos, endpos2);
-                        z.Draw(color, width);
+                        {
+                            z.Draw(color, width);
+                        }
                     }
                 }
             }
@@ -411,7 +416,8 @@ namespace Marksman.Champions
                     Render.Circle.DrawCircle(ObjectManager.Player.Position, Q.Range, System.Drawing.Color.Aqua);
                     break;
                 case 2:
-                    Render.Circle.DrawCircle(ObjectManager.Player.Position, Q.Range + Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65, System.Drawing.Color.Aqua);
+                    Render.Circle.DrawCircle(ObjectManager.Player.Position,
+                        Q.Range + Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65, System.Drawing.Color.Aqua);
                     break;
             }
         }
