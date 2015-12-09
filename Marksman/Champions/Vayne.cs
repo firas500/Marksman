@@ -72,11 +72,6 @@ namespace Marksman.Champions
             return false;
         }
 
-        public override bool ToggleMenu(Menu config)
-        {
-            return true;
-        }
-
         public override void Game_OnGameUpdate(EventArgs args)
         {
             Orbwalker.SetAttack(Game.Time > rqTumbleBuffEndOfTime);
