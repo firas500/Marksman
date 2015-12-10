@@ -133,7 +133,7 @@ namespace Marksman.Utils
                 "sivirw", "takedown", "talonnoxiandiplomacy",
                 "trundletrollsmash", "vaynetumble", "vie", "volibearq",
                 "xenzhaocombotarget", "yorickspectral", "reksaiq",
-                "itemtitanichydracleave"
+                "itemtitanichydracleave", "masochism", "illaoiw"
             };
 
 
