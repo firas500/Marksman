@@ -160,7 +160,7 @@ namespace Marksman
 
             MenuActivator = new Menu("Activator", "Activator").SetFontStyle(FontStyle.Regular, SharpDX.Color.Aqua);
             {
-                AutoLevel = new Utils.AutoLevel();
+                //AutoLevel = new Utils.AutoLevel();
                 AutoPink = new Utils.AutoPink();
                 AutoPink.Initialize();
                 IncomingDangerous.Initialize();
