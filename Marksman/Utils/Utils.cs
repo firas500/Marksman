@@ -27,7 +27,7 @@ namespace Marksman.Utils
         public static Font FontX, Text, TextBig, SmallText, TextWarning;
         static Utils()
         {
-
+            /*
             var device = new Device(new Direct3D(), 0, DeviceType.Hardware, IntPtr.Zero, CreateFlags.HardwareVertexProcessing, new PresentParameters(800, 800) { PresentationInterval = PresentInterval.One });
             FontDescription fontDescription = new FontDescription()
             {
@@ -43,7 +43,7 @@ namespace Marksman.Utils
             };
 
             FontX = new Font(device, fontDescription);
-
+            */
             TextBig = new Font(
               Drawing.Direct3DDevice,
               new FontDescription
