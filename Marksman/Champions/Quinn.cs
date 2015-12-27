@@ -44,9 +44,13 @@ namespace Marksman.Champions
             
         }
 
-
         public void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
+            if (Program.Config.Item("Misc.AntiGapCloser").GetValue<bool>())
+            {
+                return;
+            }
+
             if (E.IsReady() && gapcloser.Sender.IsValidTarget(E.Range))
                 E.CastOnUnit(gapcloser.Sender);
         }
@@ -276,7 +280,12 @@ namespace Marksman.Champions
         {
             config.AddItem(new MenuItem("UseQJ" + Id, "Use Q").SetValue(new StringList(new[] { "Off", "On", "Just for big Monsters" }, 1)));
             config.AddItem(new MenuItem("UseEJ" + Id, "Use E").SetValue(new StringList(new[] { "Off", "On", "Just for big Monsters" }, 1)));
+            return true;
+        }
 
+        public override bool MiscMenu(Menu config)
+        {
+            config.AddItem(new MenuItem("Misc.AntiGapCloser" + Id, "E Anti Gap Closer").SetValue(true));
             return true;
         }
     }
