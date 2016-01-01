@@ -79,6 +79,14 @@ namespace Marksman.Champions
 
         public void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
+
+            if (Program.Config.Item("Misc.AntiGapCloser").GetValue<bool>())
+            {
+                return;
+            }
+
+            
+
             if (E.IsReady() && gapcloser.Sender.IsValidTarget(E.Range))
             {
                 E.CastOnUnit(gapcloser.Sender);
@@ -280,6 +288,7 @@ namespace Marksman.Champions
 
         public override bool MiscMenu(Menu config)
         {
+            config.AddItem(new MenuItem("Misc.AntiGapCloser" + Id, "E Anti Gap Closer").SetValue(true));
             config.AddItem(new MenuItem("UltHelp" + Id, "Ult Target on R").SetValue(new KeyBind("R".ToCharArray()[0], KeyBindType.Press)));
             config.AddItem(new MenuItem("UseEQC" + Id, "Use E-Q Combo").SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Press)));
             config.AddItem(new MenuItem("Dash" + Id, "Dash to Mouse").SetValue(new KeyBind("Z".ToCharArray()[0], KeyBindType.Press)));
