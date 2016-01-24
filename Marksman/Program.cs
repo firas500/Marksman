@@ -1,19 +1,11 @@
-#region
-
 using System;
-using System.Drawing;
-using System.Globalization;
+using System.Collections.Generic;
 using System.Linq;
-using LeagueSharp;
-using LeagueSharp.Common;
-using Marksman.Champions;
-using Marksman.Utils;
-using SharpDX;
-using SharpDX.Direct3D9;
-using Activator = Marksman.Utils.Activator;
-using Orbwalking = Marksman.Utils.Orbwalking;
-
-#endregion
+using System.Text;
+using System.Threading.Tasks;
+using EloBuddy;
+using EloBuddy.SDK.Events;
+using System.Reflection;
 
 namespace Marksman
 {
@@ -616,16 +608,13 @@ namespace Marksman
                                 CClass.Config.Item("Draw.ToDMinEnemy").GetValue<Slider>().Value;
                             var controlRange =
                                 CClass.Config.Item("Draw.ToDControlRange").GetValue<Slider>().Value;
-
                             var xEnemies = HeroManager.Enemies.Count(enemies => enemies.IsValidTarget(controlRange));
                             if (xEnemies >= enemyCount)
                                 return;
-
                             var toDRangeColor =
                                 CClass.Config.Item("Draw.ToDControlRangeColor").GetValue<Circle>();
                             if (toDRangeColor.Active)
                                 Render.Circle.DrawCircle(ObjectManager.Player.Position, controlRange, toDRangeColor.Color);
-
                         }
                         */
             /*
@@ -635,7 +624,6 @@ namespace Marksman
                 t = TargetSelector.GetTarget(1100, TargetSelector.DamageType.Physical);
                 TargetSelector.SetTarget(t);
             }
-
             if (t.IsValidTarget() && ObjectManager.Player.Distance(t) < 1110)
             {
                 Render.Circle.DrawCircle(t.Position, 150, Color.Yellow);
