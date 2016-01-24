@@ -39,23 +39,26 @@ namespace Marksman.Champions
             Utility.HpBarDamageIndicator.Enabled = true;
 
             Obj_AI_Base.OnBuffAdd += (sender, args) =>
+            {
+                if (!Config.Item("RInterruptable" + Id).GetValue<bool>())
+                    return;
+
+                BuffInstance aBuff =
+                    (from fBuffs in
+                        sender.Buffs.Where(
+                            s =>
+                                sender.Team != ObjectManager.Player.Team
+                                && sender.Distance(ObjectManager.Player.Position) < 2500)
+                        from b in new[] {"katarinar", "MissFortuneBulletTime", "crowstorm"}
+
+                        where b.Contains(args.Buff.Name.ToLower())
+                        select fBuffs).FirstOrDefault();
+
+                if (aBuff != null && R.IsReady())
                 {
-                    BuffInstance aBuff =
-                        (from fBuffs in
-                             sender.Buffs.Where(
-                                 s =>
-                                 sender.Team != ObjectManager.Player.Team
-                                 && sender.Distance(ObjectManager.Player.Position) < 2500)
-                         from b in new[] { "katarinar", "MissFortuneBulletTime", "crowstorm" }
-
-                         where b.Contains(args.Buff.Name.ToLower())
-                         select fBuffs).FirstOrDefault();
-
-                    if (aBuff != null && E.IsReady())
-                    {
-                        R.Cast(sender.Position);
-                    }
-                };
+                    R.Cast(sender.Position);
+                }
+            };
 
             Utils.Utils.PrintMessage("Ashe loaded.");
         }
