@@ -45,10 +45,10 @@ namespace Marksman.Champions
             Utility.HpBarDamageIndicator.Enabled = true;
 
             Obj_AI_Base.OnBuffAdd += (sender, args) =>
-                {
-                    //if (sender.IsMe)
-                    //Game.PrintChat(args.Buff.Name);
-                };
+            {
+                //if (sender.IsMe)
+                //Game.PrintChat(args.Buff.Name);
+            };
 
             Utils.PrintMessage("Ezreal loaded.");
         }
@@ -86,11 +86,12 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
-            Spell[] spellList = { Q, W };
+            Spell[] spellList = {Q, W};
             foreach (var spell in spellList)
             {
                 var menuItem = GetValue<Circle>("Draw" + spell.Slot);
-                if (menuItem.Active) Render.Circle.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
+                if (menuItem.Active)
+                    Render.Circle.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
             }
 
             var drawRMin = Program.Config.SubMenu("Combo").Item("DrawRMin").GetValue<Circle>();
@@ -121,13 +122,13 @@ namespace Marksman.Champions
                 foreach (var enemy in
                     HeroManager.Enemies.Where(
                         enemy =>
-                        R.IsReady() && enemy.IsValidTarget() && R.GetDamage(enemy) > enemy.Health
-                        && enemy.Distance(ObjectManager.Player) > Q.Range))
+                            R.IsReady() && enemy.IsValidTarget() && R.GetDamage(enemy) > enemy.Health
+                            && enemy.Distance(ObjectManager.Player) > Q.Range))
                 {
                     Utils.MPing.Ping(enemy.Position.To2D());
                 }
             }
-            
+
             Obj_AI_Hero t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
             var toggleQ = Program.Config.Item("UseQTH").GetValue<KeyBind>().Active;
             var toggleW = Program.Config.Item("UseWTH").GetValue<KeyBind>().Active;
@@ -141,8 +142,8 @@ namespace Marksman.Champions
                                  && Program.Config.Item("DontQToggleHarass" + t.ChampionName).GetValue<bool>() == false);
                     if (useQt)
                     {
+                        CastQ();
                     }
-                    CastQ();
                 }
 
                 if (W.IsReady() && t.IsValidTarget(W.Range) && toggleW)
@@ -150,7 +151,10 @@ namespace Marksman.Champions
                     if (ObjectManager.Player.HasBuff("Recall")) return;
                     var useWt = (Program.Config.Item("DontWToggleHarass" + t.ChampionName) != null
                                  && Program.Config.Item("DontWToggleHarass" + t.ChampionName).GetValue<bool>() == false);
-                    if (useWt) W.Cast(t);
+                    if (useWt)
+                    {
+                        W.Cast(t);
+                    }
                 }
             }
 
@@ -225,19 +229,19 @@ namespace Marksman.Champions
                 switch (GetValue<StringList>("UseQJ").SelectedIndex)
                 {
                     case 1:
+                    {
+                        Q.Cast(jungleMobs);
+                        break;
+                    }
+                    case 2:
+                    {
+                        jungleMobs = Utils.GetMobs(Q.Range, Utils.MobTypes.BigBoys);
+                        if (jungleMobs != null)
                         {
                             Q.Cast(jungleMobs);
-                            break;
                         }
-                    case 2:
-                        {
-                            jungleMobs = Utils.GetMobs(Q.Range, Utils.MobTypes.BigBoys);
-                            if (jungleMobs != null)
-                            {
-                                Q.Cast(jungleMobs);
-                            }
-                            break;
-                        }
+                        break;
+                    }
                 }
             }
         }
@@ -246,21 +250,24 @@ namespace Marksman.Champions
         {
             var fComboDamage = 0f;
 
-            if (Q.IsReady()) fComboDamage += (float)ObjectManager.Player.GetSpellDamage(t, SpellSlot.Q);
+            if (Q.IsReady()) fComboDamage += (float) ObjectManager.Player.GetSpellDamage(t, SpellSlot.Q);
 
-            if (W.IsReady()) fComboDamage += (float)ObjectManager.Player.GetSpellDamage(t, SpellSlot.W);
+            if (W.IsReady()) fComboDamage += (float) ObjectManager.Player.GetSpellDamage(t, SpellSlot.W);
 
-            if (E.IsReady()) fComboDamage += (float)ObjectManager.Player.GetSpellDamage(t, SpellSlot.E);
+            if (E.IsReady()) fComboDamage += (float) ObjectManager.Player.GetSpellDamage(t, SpellSlot.E);
 
-            if (R.IsReady()) fComboDamage += (float)ObjectManager.Player.GetSpellDamage(t, SpellSlot.R);
+            if (R.IsReady()) fComboDamage += (float) ObjectManager.Player.GetSpellDamage(t, SpellSlot.R);
 
             if (ObjectManager.Player.GetSpellSlot("summonerdot") != SpellSlot.Unknown
                 && ObjectManager.Player.Spellbook.CanUseSpell(ObjectManager.Player.GetSpellSlot("summonerdot"))
-                == SpellState.Ready && ObjectManager.Player.Distance(t) < 550) fComboDamage += (float)ObjectManager.Player.GetSummonerSpellDamage(t, Damage.SummonerSpell.Ignite);
+                == SpellState.Ready && ObjectManager.Player.Distance(t) < 550)
+                fComboDamage += (float) ObjectManager.Player.GetSummonerSpellDamage(t, Damage.SummonerSpell.Ignite);
 
-            if (Items.CanUseItem(3144) && ObjectManager.Player.Distance(t) < 550) fComboDamage += (float)ObjectManager.Player.GetItemDamage(t, Damage.DamageItems.Bilgewater);
+            if (Items.CanUseItem(3144) && ObjectManager.Player.Distance(t) < 550)
+                fComboDamage += (float) ObjectManager.Player.GetItemDamage(t, Damage.DamageItems.Bilgewater);
 
-            if (Items.CanUseItem(3153) && ObjectManager.Player.Distance(t) < 550) fComboDamage += (float)ObjectManager.Player.GetItemDamage(t, Damage.DamageItems.Botrk);
+            if (Items.CanUseItem(3153) && ObjectManager.Player.Distance(t) < 550)
+                fComboDamage += (float) ObjectManager.Player.GetItemDamage(t, Damage.DamageItems.Botrk);
 
             return fComboDamage;
         }
@@ -338,14 +345,18 @@ namespace Marksman.Champions
 
         public override bool LaneClearMenu(Menu config)
         {
-            config.AddItem(new MenuItem("Lane.UseQ" + Id, "Q:").SetValue(true)).SetFontStyle(FontStyle.Regular, Q.MenuColor());
-            config.AddItem(new MenuItem("Lane.UseQ.DontMissFarm" + Id, "Q Don't Miss Farm:").SetValue(true)).SetFontStyle(FontStyle.Regular, Q.MenuColor());
+            config.AddItem(new MenuItem("Lane.UseQ" + Id, "Q:").SetValue(true))
+                .SetFontStyle(FontStyle.Regular, Q.MenuColor());
+            config.AddItem(new MenuItem("Lane.UseQ.DontMissFarm" + Id, "Q Don't Miss Farm:").SetValue(true))
+                .SetFontStyle(FontStyle.Regular, Q.MenuColor());
             return true;
         }
 
         public override bool JungleClearMenu(Menu config)
         {
-            config.AddItem(new MenuItem("UseQJ" + Id, "Use Q").SetValue(new StringList(new[] {"Off", "On", "Just big Monsters"}, 1))).SetFontStyle(FontStyle.Regular, Q.MenuColor());
+            config.AddItem(
+                new MenuItem("UseQJ" + Id, "Use Q").SetValue(new StringList(new[] {"Off", "On", "Just big Monsters"}, 1)))
+                .SetFontStyle(FontStyle.Regular, Q.MenuColor());
             return true;
         }
 
@@ -357,7 +368,8 @@ namespace Marksman.Champions
 
                 foreach (var n in minions)
                 {
-                    var xH = HealthPrediction.GetHealthPrediction(n, (int)(ObjectManager.Player.AttackCastDelay * 1000), Game.Ping * 2);
+                    var xH = HealthPrediction.GetHealthPrediction(n, (int) (ObjectManager.Player.AttackCastDelay*1000),
+                        Game.Ping*2);
                     if (xH < 0)
                     {
                         if (n.Health < Q.GetDamage(n) && Q.CanCast(n))

@@ -144,14 +144,17 @@ namespace Marksman.Champions
             E.Range = 630 + 7*(Player.Level - 1);
             R.Range = 630 + 7*(Player.Level - 1);
 
-            if (GetValue<KeyBind>("UseETH").Active)
+            if (!Player.HasBuff("Recall") && GetValue<KeyBind>("UseETH").Active && ToggleActive && E.IsReady())
             {
-                if (Player.HasBuff("Recall"))
-                    return;
                 var t = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
-                if (t.IsValidTarget() && E.IsReady())
+
+                if (t.IsValidTarget(E.Range))
                 {
-                    E.CastOnUnit(t);
+                    if (Program.Config.Item("DontEToggleHarass" + t.ChampionName) != null &&
+                        Program.Config.Item("DontEToggleHarass" + t.ChampionName).GetValue<bool>() == false)
+                    {
+                        E.CastOnUnit(t);
+                    }
                 }
             }
 
@@ -254,7 +257,8 @@ namespace Marksman.Champions
                     {
                         if (jE == 1)
                         {
-                            jungleMobs = Utils.Utils.GetMobs(Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65,
+                            jungleMobs = Utils.Utils.GetMobs(
+                                Marksman.Utils.Orbwalking.GetRealAutoAttackRange(null) + 65,
                                 Utils.Utils.MobTypes.BigBoys);
                             if (jungleMobs != null)
                             {
@@ -288,10 +292,11 @@ namespace Marksman.Champions
 
             if (E.IsReady())
             {
-                var minions = MinionManager.GetMinions(ObjectManager.Player.Position, E.Range, MinionTypes.All, MinionTeam.Enemy);
+                var minions = MinionManager.GetMinions(ObjectManager.Player.Position, E.Range, MinionTypes.All,
+                    MinionTeam.Enemy);
 
-            if (minions != null)
-            {
+                if (minions != null)
+                {
                     var eJ = Program.Config.Item("UseE.Lane").GetValue<StringList>().SelectedIndex;
                     if (eJ != 0)
                     {
@@ -408,10 +413,21 @@ namespace Marksman.Champions
 
         public override bool HarassMenu(Menu config)
         {
+            config.AddSubMenu(new Menu("Don't E Toggle to", "DontEToggleHarass"));
+            {
+                foreach (var enemy in
+                    ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.Team != ObjectManager.Player.Team))
+                {
+                    config.SubMenu("DontEToggleHarass")
+                        .AddItem(
+                            new MenuItem("DontEToggleHarass" + enemy.ChampionName, enemy.ChampionName).SetValue(false));
+                }
+            }
+
             config.AddItem(
                 new MenuItem("UseETH" + Id, "Use E (Toggle)").SetValue(new KeyBind("H".ToCharArray()[0],
                     KeyBindType.Toggle))).Permashow(true, "Tristana | Toggle E");
-            ;
+
             return true;
         }
 
@@ -421,7 +437,8 @@ namespace Marksman.Champions
 
             var drawE = new Menu("Draw E", "menuDrawE");
             {
-                drawE.AddItem(new MenuItem("DrawE" + Id, "E range").SetValue(new Circle(true, System.Drawing.Color.Beige)));
+                drawE.AddItem(
+                    new MenuItem("DrawE" + Id, "E range").SetValue(new Circle(true, System.Drawing.Color.Beige)));
 //                drawE.AddItem(new MenuItem("DrawEMarkEnemy" + Id, "E Marked Enemy").SetValue(new Circle(true,System.Drawing.Color.GreenYellow)));
 //                drawE.AddItem(new MenuItem("DrawEMarkStatus" + Id, "E Marked Status").SetValue(true));
                 config.AddSubMenu(drawE);
@@ -476,7 +493,8 @@ namespace Marksman.Champions
                 strQ[i] = "If need to AA more than >= " + i;
             }
 
-            config.AddItem(new MenuItem("UseQ.Lane", "Q:").SetValue(new StringList(strQ, 0))).SetFontStyle(FontStyle.Regular, Q.MenuColor());
+            config.AddItem(new MenuItem("UseQ.Lane", "Q:").SetValue(new StringList(strQ, 0)))
+                .SetFontStyle(FontStyle.Regular, Q.MenuColor());
 
 
             string[] strE = new string[5];
@@ -487,7 +505,9 @@ namespace Marksman.Champions
                 strE[i] = "Minion Count >= " + i;
             }
 
-            config.AddItem(new MenuItem("UseE.Lane", "E:").SetValue(new StringList(strE, 0))).SetFontStyle(FontStyle.Regular, E.MenuColor()); ;
+            config.AddItem(new MenuItem("UseE.Lane", "E:").SetValue(new StringList(strE, 0)))
+                .SetFontStyle(FontStyle.Regular, E.MenuColor());
+            ;
             return true;
         }
 
@@ -502,8 +522,11 @@ namespace Marksman.Champions
                 strLaneMinCount[i] = "If need to AA more than >= " + i;
             }
 
-            config.AddItem(new MenuItem("Jungle.UseQ", "Q:").SetValue(new StringList(strLaneMinCount, 4))).SetFontStyle(FontStyle.Regular, Q.MenuColor());
-            config.AddItem(new MenuItem("Jungle.UseE", "E:").SetValue(new StringList(new[] {"Off", "On", "Just for big Monsters"}, 1))).SetFontStyle(FontStyle.Regular, E.MenuColor());
+            config.AddItem(new MenuItem("Jungle.UseQ", "Q:").SetValue(new StringList(strLaneMinCount, 4)))
+                .SetFontStyle(FontStyle.Regular, Q.MenuColor());
+            config.AddItem(
+                new MenuItem("Jungle.UseE", "E:").SetValue(new StringList(new[] {"Off", "On", "Just for big Monsters"},
+                    1))).SetFontStyle(FontStyle.Regular, E.MenuColor());
 
             return true;
         }
@@ -541,7 +564,7 @@ namespace Marksman.Champions
                 }
 
                 var fComboDamage = 0d;
-                    /*
+                /*
                     if (Q.IsReady())
                     {
                         var baseAttackSpeed = 0.656 + (0.656 / 100 * (Player.Level - 1) * 1.5);
@@ -554,23 +577,23 @@ namespace Marksman.Champions
                         fComboDamage += attackDelay;
                     }
                     */
-                    if (W.IsReady())
-                    {
-                        //fComboDamage += GetWDamage;
-                        fComboDamage += W.GetDamage(t);
-                    }
+                if (W.IsReady())
+                {
+                    //fComboDamage += GetWDamage;
+                    fComboDamage += W.GetDamage(t);
+                }
 
-                    if (E.IsReady())
-                    {
-                        fComboDamage += E.GetDamage(t);
-                    }
+                if (E.IsReady())
+                {
+                    fComboDamage += E.GetDamage(t);
+                }
 
-                    if (R.IsReady())
-                    {
-                        fComboDamage += R.GetDamage(t);
-                            //new double[] {300, 400, 500}[R.Level - 1] + Player.FlatMagicDamageMod);
-                    }
-                    return (float) fComboDamage;
+                if (R.IsReady())
+                {
+                    fComboDamage += R.GetDamage(t);
+                    //new double[] {300, 400, 500}[R.Level - 1] + Player.FlatMagicDamageMod);
+                }
+                return (float) fComboDamage;
             }
 
             public static Obj_AI_Hero GetEMarkedEnemy
